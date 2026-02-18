@@ -373,7 +373,7 @@ mage dev:message
 
 ## 下一步
 
-- 查看[设计文档](../design/instant-messaging-backend-design.md)了解系统架构
-- 查看[API文档](../api/)了解接口定义
+- 查看[设计文档](/design/instant-messaging-backend-design.md)了解系统架构
+- 查看[API文档](/api/README.md)了解接口定义
 - 阅读 `magefile.go` 了解更多构建任务
 - 开始实现你的第一个功能！

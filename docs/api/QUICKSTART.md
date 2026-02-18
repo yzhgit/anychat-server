@@ -430,7 +430,7 @@ npx @asyncapi/generator docs/api/asyncapi.yaml @asyncapi/html-template -o ./sdk/
 
 - 🧪 运行更多测试场景
 - 📝 编写自定义测试用例
-- 📚 查看 [开发指南](../development/getting-started.md)
+- 📚 查看 [开发指南](/development/getting-started.md)
 
 ## 获取帮助
 
