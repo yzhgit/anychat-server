@@ -11,8 +11,8 @@
 
 * API 文档
   * [API 快速开始](api/QUICKSTART.md)
-  * [Gateway HTTP API](/api/swagger-ui.html ':ignore')
-  * [Gateway WebSocket API](/api/asyncapi-ui.html ':ignore')
+  * [Gateway HTTP API](api/swagger-ui.html ':ignore')
+  * [Gateway WebSocket API](api/asyncapi-ui.html ':ignore')
 
 * 设计文档
   * [系统架构设计](design/instant-messaging-backend-design.md)
