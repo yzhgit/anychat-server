@@ -11,7 +11,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "AnyChat API Support",
-            "url": "https://github.com/yzhgit/anchat_server",
+            "url": "https://github.com/yzhgit/anchat-server",
             "email": "support@anychat.example.com"
         },
         "license": {

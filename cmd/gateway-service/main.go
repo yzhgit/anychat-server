@@ -33,7 +33,7 @@ import (
 // @description     所有需要认证的接口都需要在 Header 中携带 Authorization: Bearer <token>
 
 // @contact.name   AnyChat API Support
-// @contact.url    https://github.com/yzhgit/anchat_server
+// @contact.url    https://github.com/yzhgit/anchat-server
 // @contact.email  support@anychat.example.com
 
 // @license.name  MIT

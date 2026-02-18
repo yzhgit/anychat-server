@@ -35,7 +35,7 @@ mage -version
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/yzhgit/anchat_server
+git clone https://github.com/yzhgit/anchat-server
 cd server
 ```
 

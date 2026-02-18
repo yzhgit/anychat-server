@@ -19,5 +19,5 @@
 
 * 其他
   * [许可证](LICENSE.md)
-  * [GitHub 仓库](https://github.com/yzhgit/anchat_server)
-  * [问题反馈](https://github.com/yzhgit/anchat_server/issues)
+  * [GitHub 仓库](https://github.com/yzhgit/anchat-server)
+  * [问题反馈](https://github.com/yzhgit/anchat-server/issues)

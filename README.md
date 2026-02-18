@@ -41,7 +41,7 @@ go install github.com/magefile/mage@latest
 
 ```bash
 # 1. 克隆代码
-git clone https://github.com/yzhgit/anchat_server
+git clone https://github.com/yzhgit/anchat-server
 cd server
 
 # 2. 安装依赖
