@@ -13,7 +13,6 @@
 ### API 文档
 
 - [API 快速开始](api/QUICKSTART.md) - API 使用入门
-- [Gateway HTTP API](api/gateway-http-api.md) - 网关 HTTP 接口文档（交互式）
 
 ### 设计文档
 

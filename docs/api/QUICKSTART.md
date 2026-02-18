@@ -397,11 +397,11 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 AnyChat 提供完整的 API 规范文档，支持自动生成 SDK：
 
-- 📖 **[Gateway HTTP API](swagger-ui.html)** - 基于 OpenAPI 3.0 规范的 REST API 文档
+- 📖 **[Gateway HTTP API](api/swagger-ui.html ':ignore')** - 基于 OpenAPI 3.0 规范的 REST API 文档
   - 交互式 Swagger UI，可直接测试 API
   - 下载 `openapi.json` 用于 SDK 生成
 
-- 🔌 **[Gateway WebSocket API](asyncapi-ui.html)** - 基于 AsyncAPI 3.0 规范的 WebSocket API 文档
+- 🔌 **[Gateway WebSocket API](api/asyncapi-ui.html ':ignore')** - 基于 AsyncAPI 3.0 规范的 WebSocket API 文档
   - 实时消息和通知推送
   - 下载 `asyncapi.yaml` 用于 SDK 生成
 
