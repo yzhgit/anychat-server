@@ -17,7 +17,7 @@
 
 ### 设计文档
 
-- [系统架构设计](design/instant-messaging-backend-design.md) - 整体架构和设计思路
+- [系统架构设计](design/backend-design.md) - 整体架构和设计思路
 
 ## 项目简介
 

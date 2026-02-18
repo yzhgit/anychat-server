@@ -6,7 +6,6 @@
 
 ```
 docs/api/
-├── gateway-api.md       # Gateway HTTP API 文档
 └── README.md           # 本文件
 
 tests/api/
@@ -28,15 +27,6 @@ tests/api/
 > - `tests/integration/*_service_test.go` → 已删除（统一使用 Shell API 测试）
 > - `tests/e2e/test-e2e.sh` → 已删除（功能合并到模块化 API 测试）
 
-## API 文档
-
-### Gateway HTTP API
-
-查看 [gateway-api.md](./gateway-api.md) 获取完整的 HTTP API 文档。
-
-**主要接口：**
-- 认证：注册、登录、登出、刷新Token、修改密码
-- 用户：个人资料、用户信息、搜索、设置、二维码、推送Token
 
 ## 测试脚本使用
 

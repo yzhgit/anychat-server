@@ -468,7 +468,7 @@ mage docs:validate
 
 - Documentation is **automatically** generated and deployed to GitHub Pages on push to `main` branch
 - CI validates documentation on Pull Requests
-- Access deployed docs at: `https://yzhgit.github.io/anchat-server/`
+- Access deployed docs at: `https://yzhgit.github.io/anychat-server/`
 
 ### Documentation Structure
 

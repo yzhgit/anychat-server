@@ -41,7 +41,7 @@ go install github.com/magefile/mage@latest
 
 ```bash
 # 1. 克隆代码
-git clone https://github.com/yzhgit/anchat-server
+git clone https://github.com/yzhgit/anychat-server
 cd server
 
 # 2. 安装依赖
@@ -158,14 +158,14 @@ mage fmt
 
 ### 在线文档
 
-- **完整文档站点**: [GitHub Pages](https://yzhgit.github.io/anchat-server/) (自动部署)
+- **完整文档站点**: [GitHub Pages](https://yzhgit.github.io/anychat-server/) (自动部署)
 - **本地预览**: 运行 `mage docs:serve` 后访问 http://localhost:3000
 
 ### 文档内容
 
 - [快速开始](docs/development/getting-started.md) - 新手入门指南
 - [API 文档](docs/api/gateway-http-api.md) - 交互式 HTTP API 文档
-- [系统设计](docs/design/instant-messaging-backend-design.md) - 架构设计文档
+- [系统设计](docs/design/backend-design.md) - 架构设计文档
 - [API 文档编写](docs/development/writing-api-docs.md) - 如何编写 API 文档
 
 ### 生成和部署文档
@@ -187,7 +187,7 @@ mage docs:build
 
 - **触发条件**: 推送到 main 分支或创建 Pull Request
 - **部署目标**: GitHub Pages
-- **文档地址**: https://yzhgit.github.io/anchat-server/
+- **文档地址**: https://yzhgit.github.io/anychat-server/
 
 文档会在以下情况自动更新：
 1. Gateway 服务代码变更

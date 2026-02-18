@@ -15,9 +15,9 @@
   * [Gateway WebSocket API](api/asyncapi-ui.html ':ignore')
 
 * 设计文档
-  * [系统架构设计](design/instant-messaging-backend-design.md)
+  * [系统架构设计](design/backend-design.md)
 
 * 其他
   * [许可证](LICENSE.md)
-  * [GitHub 仓库](https://github.com/yzhgit/anchat-server)
-  * [问题反馈](https://github.com/yzhgit/anchat-server/issues)
+  * [GitHub 仓库](https://github.com/yzhgit/anychat-server)
+  * [问题反馈](https://github.com/yzhgit/anychat-server/issues)

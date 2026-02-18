@@ -647,7 +647,7 @@ info:
   contact:
     email: support@anychat.example.com
     name: AnyChat API Support
-    url: https://github.com/yzhgit/anchat-server
+    url: https://github.com/yzhgit/anychat-server
   description: |-
     AnyChat 即时通讯系统的网关 API 服务，提供用户认证、用户管理等功能的 HTTP 接口。
     所有需要认证的接口都需要在 Header 中携带 Authorization: Bearer <token>

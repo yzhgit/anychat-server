@@ -9,7 +9,7 @@
 #### 在线查看
 
 访问部署在 GitHub Pages 的文档站点：
-- https://yzhgit.github.io/anchat-server/
+- https://yzhgit.github.io/anychat-server/
 
 #### 本地查看
 
@@ -61,7 +61,7 @@ docs/
 │   ├── service-startup-guide.md
 │   └── port-allocation.md
 └── design/
-    └── instant-messaging-backend-design.md
+    └── backend-design.md
 ```
 
 ## Mage 文档命令

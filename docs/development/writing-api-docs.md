@@ -16,7 +16,7 @@ AnyChat 使用 [swaggo/swag](https://github.com/swaggo/swag) 工具从 Go 代码
 // @description     AnyChat 即时通讯系统的网关 API 服务
 
 // @contact.name   AnyChat API Support
-// @contact.url    https://github.com/yzhgit/anchat-server
+// @contact.url    https://github.com/yzhgit/anychat-server
 // @contact.email  support@anychat.example.com
 
 // @license.name  MIT

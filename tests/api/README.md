@@ -434,7 +434,7 @@ jobs:
 
 ## 参考
 
-- [设计文档](../../docs/design/instant-messaging-backend-design.md)
+- [设计文档](../../docs/design/backend-design.md)
 - [API快速开始](../../docs/api/QUICKSTART.md)
 - [开发指南](../../docs/development/getting-started.md)
 - [测试策略](../../docs/development/testing-strategy.md)
