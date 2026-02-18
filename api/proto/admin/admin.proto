@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package anychat.admin;
+
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/admin;adminpb";
+
+// AdminService 管理后台服务
+service AdminService {
+  // GetSystemStats 获取系统统计概览
+  rpc GetSystemStats(GetSystemStatsRequest) returns (GetSystemStatsResponse);
+  // BanUser 封禁用户
+  rpc BanUser(BanUserRequest) returns (common.Empty);
+  // UnbanUser 解封用户
+  rpc UnbanUser(UnbanUserRequest) returns (common.Empty);
+}
+
+message GetSystemStatsRequest {}
+
+message GetSystemStatsResponse {
+  int64 total_users    = 1; // 总用户数
+  int64 active_users   = 2; // 活跃用户数（近7天）
+  int64 total_groups   = 3; // 总群组数
+  int64 total_messages = 4; // 总消息数
+  int64 banned_users   = 5; // 封禁用户数
+}
+
+message BanUserRequest {
+  string user_id = 1;
+  string reason  = 2;
+}
+
+message UnbanUserRequest {
+  string user_id = 1;
+}

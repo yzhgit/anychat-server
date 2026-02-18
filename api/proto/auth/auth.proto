@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package anychat.auth;
+
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/auth;authpb";
+
+// AuthService 认证服务
+service AuthService {
+  // Register 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Login 用户登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Logout 用户登出
+  rpc Logout(LogoutRequest) returns (common.Empty);
+
+  // RefreshToken 刷新访问令牌
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // ChangePassword 修改密码
+  rpc ChangePassword(ChangePasswordRequest) returns (common.Empty);
+
+  // ValidateToken 验证Token（供gateway调用）
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+// RegisterRequest 注册请求
+message RegisterRequest {
+  optional string phone_number = 1;
+  optional string email = 2;
+  string password = 3;
+  string verify_code = 4;
+  optional string nickname = 5;
+  string device_type = 6;  // iOS/Android/Web
+  string device_id = 7;
+}
+
+// RegisterResponse 注册响应
+message RegisterResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+}
+
+// LoginRequest 登录请求
+message LoginRequest {
+  string account = 1;      // 手机号或邮箱
+  string password = 2;
+  string device_type = 3;
+  string device_id = 4;
+}
+
+// LoginResponse 登录响应
+message LoginResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+  common.UserInfo user = 5;
+}
+
+// LogoutRequest 登出请求
+message LogoutRequest {
+  string user_id = 1;      // 由gateway从JWT提取
+  string device_id = 2;
+}
+
+// RefreshTokenRequest 刷新Token请求
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// RefreshTokenResponse 刷新Token响应
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+}
+
+// ChangePasswordRequest 修改密码请求
+message ChangePasswordRequest {
+  string user_id = 1;       // 由gateway从JWT提取
+  string old_password = 2;
+  string new_password = 3;
+}
+
+// ValidateTokenRequest 验证Token请求
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+// ValidateTokenResponse 验证Token响应
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string device_id = 3;
+  string device_type = 4;
+}

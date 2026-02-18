@@ -1,0 +1,31 @@
+# LiveKit Server 配置
+# 文档: https://docs.livekit.io/oss/deployment/config/
+
+port: 7880
+bind_addresses:
+  - ""
+
+# API Keys: key -> secret
+keys:
+  devkey: secret
+
+# 日志级别
+logging:
+  level: info
+  pion_level: error
+
+# 房间配置
+room:
+  # 空房间自动关闭等待时间（秒），0=不关闭
+  empty_timeout: 300
+  # 每个房间最大参与者数
+  max_participants: 100
+  # 自动创建房间
+  auto_create: true
+
+# WebRTC 配置
+rtc:
+  udp_port: 7882
+  tcp_port: 7881
+  use_external_ip: false
+  stun_servers: []

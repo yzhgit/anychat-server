@@ -1,0 +1,22 @@
+{
+  "name": "anychat-docs",
+  "version": "1.0.0",
+  "description": "AnyChat Documentation Site",
+  "scripts": {
+    "serve": "docsify serve docs",
+    "preview": "docsify serve docs"
+  },
+  "keywords": [
+    "documentation",
+    "docsify",
+    "api",
+    "anychat"
+  ],
+  "author": "AnyChat Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@asyncapi/cli": "^1.2.26",
+    "docsify-cli": "^4.4.4",
+    "swagger2openapi": "^7.0.8"
+  }
+}

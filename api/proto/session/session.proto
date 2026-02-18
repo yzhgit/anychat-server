@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package anychat.session;
+
+import "google/protobuf/timestamp.proto";
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/session;sessionpb";
+
+// SessionService 会话管理服务
+service SessionService {
+  // GetSessions 获取用户会话列表（支持增量同步）
+  rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse);
+
+  // GetSession 获取单个会话详情
+  rpc GetSession(GetSessionRequest) returns (Session);
+
+  // CreateOrUpdateSession 创建或更新会话（消息到达时由消息服务调用）
+  rpc CreateOrUpdateSession(CreateOrUpdateSessionRequest) returns (Session);
+
+  // DeleteSession 删除会话
+  rpc DeleteSession(DeleteSessionRequest) returns (common.Empty);
+
+  // SetPinned 设置会话置顶/取消置顶
+  rpc SetPinned(SetPinnedRequest) returns (common.Empty);
+
+  // SetMuted 设置会话免打扰/取消免打扰
+  rpc SetMuted(SetMutedRequest) returns (common.Empty);
+
+  // ClearUnread 清除会话未读数（标记已读）
+  rpc ClearUnread(ClearUnreadRequest) returns (common.Empty);
+
+  // GetTotalUnread 获取用户所有会话的总未读数
+  rpc GetTotalUnread(GetTotalUnreadRequest) returns (GetTotalUnreadResponse);
+
+  // IncrUnread 增加会话未读数（消息到达时由消息服务调用）
+  rpc IncrUnread(IncrUnreadRequest) returns (common.Empty);
+}
+
+// Session 会话
+message Session {
+  string session_id = 1;
+  string session_type = 2;                       // single/group/system
+  string user_id = 3;
+  string target_id = 4;                          // 单聊为对方用户ID，群聊为群ID
+  string last_message_id = 5;
+  string last_message_content = 6;
+  google.protobuf.Timestamp last_message_time = 7;
+  int32 unread_count = 8;
+  bool is_pinned = 9;
+  bool is_muted = 10;
+  google.protobuf.Timestamp pin_time = 11;       // 置顶时间（用于排序）
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+// GetSessionsRequest 获取会话列表请求
+message GetSessionsRequest {
+  string user_id = 1;
+  int32 limit = 2;
+  optional int64 updated_before = 3;             // Unix时间戳，用于增量同步（仅返回此时间之前更新的会话）
+}
+
+// GetSessionsResponse 获取会话列表响应
+message GetSessionsResponse {
+  repeated Session sessions = 1;
+  bool has_more = 2;
+}
+
+// GetSessionRequest 获取单个会话请求
+message GetSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+// CreateOrUpdateSessionRequest 创建或更新会话请求
+message CreateOrUpdateSessionRequest {
+  string session_type = 1;                       // single/group/system
+  string user_id = 2;
+  string target_id = 3;
+  string last_message_id = 4;
+  string last_message_content = 5;
+  int64 last_message_timestamp = 6;              // Unix时间戳（秒）
+}
+
+// DeleteSessionRequest 删除会话请求
+message DeleteSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+// SetPinnedRequest 设置置顶请求
+message SetPinnedRequest {
+  string user_id = 1;
+  string session_id = 2;
+  bool pinned = 3;
+}
+
+// SetMutedRequest 设置免打扰请求
+message SetMutedRequest {
+  string user_id = 1;
+  string session_id = 2;
+  bool muted = 3;
+}
+
+// ClearUnreadRequest 清除未读数请求
+message ClearUnreadRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+// GetTotalUnreadRequest 获取总未读数请求
+message GetTotalUnreadRequest {
+  string user_id = 1;
+}
+
+// GetTotalUnreadResponse 获取总未读数响应
+message GetTotalUnreadResponse {
+  int32 total_unread = 1;
+}
+
+// IncrUnreadRequest 增加未读数请求
+message IncrUnreadRequest {
+  string user_id = 1;
+  string session_id = 2;
+  int32 count = 3;
+}

@@ -1,0 +1,104 @@
+server:
+  name: anychat-server
+  mode: development
+
+database:
+  postgres:
+    host: localhost
+    port: 5432
+    user: anychat
+    password: anychat123
+    database: anychat
+    max_open_conns: 100
+    max_idle_conns: 10
+    conn_max_lifetime: 3600
+
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
+    db: 0
+    pool_size: 10
+
+nats:
+  url: nats://localhost:4222
+
+minio:
+  endpoint: localhost:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  use_ssl: false
+  buckets:
+    - avatar
+    - group-avatar
+    - chat-file
+
+zitadel:
+  url: http://localhost:8090
+  project_id: ""
+  client_id: ""
+  client_secret: ""
+
+livekit:
+  url: ws://localhost:7880
+  api_key: devkey
+  api_secret: secret
+
+# 极光推送配置
+jpush:
+  app_key: ${JPUSH_APP_KEY:}
+  master_secret: ${JPUSH_MASTER_SECRET:}
+  apns_production: false  # true=生产环境 APNs，false=沙箱
+
+jwt:
+  secret: your-secret-key-change-in-production
+  access_token_expire: 7200
+  refresh_token_expire: 604800
+
+log:
+  level: debug
+  output: stdout
+  file_path: ./logs/app.log
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 2112
+  jaeger:
+    enabled: true
+    endpoint: http://localhost:14268/api/traces
+
+# 微服务gRPC地址配置
+services:
+  auth:
+    grpc_addr: ${AUTH_GRPC_ADDR:localhost:9001}
+  user:
+    grpc_addr: ${USER_GRPC_ADDR:localhost:9002}
+  friend:
+    grpc_addr: ${FRIEND_GRPC_ADDR:localhost:9003}
+  group:
+    grpc_addr: ${GROUP_GRPC_ADDR:localhost:9004}
+  message:
+    grpc_addr: ${MESSAGE_GRPC_ADDR:localhost:9005}
+  session:
+    grpc_addr: ${SESSION_GRPC_ADDR:localhost:9006}
+  file:
+    grpc_addr: ${FILE_GRPC_ADDR:localhost:9007}
+  push:
+    grpc_addr: ${PUSH_GRPC_ADDR:localhost:9008}
+  rtc:
+    grpc_addr: ${RTC_GRPC_ADDR:localhost:9009}
+  sync:
+    grpc_addr: ${SYNC_GRPC_ADDR:localhost:9010}
+  admin:
+    grpc_addr: ${ADMIN_GRPC_ADDR:localhost:9011}
+
+# Admin Service配置
+admin:
+  jwt:
+    secret: ${ADMIN_JWT_SECRET:admin-secret-change-in-production}
+    access_token_expire: 28800  # 8小时
+
+# Gateway服务配置
+gateway:
+  http_port: 8080

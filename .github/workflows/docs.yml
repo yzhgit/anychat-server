@@ -1,0 +1,205 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'cmd/gateway-service/**'
+      - 'internal/gateway/**'
+      - 'docs/**'
+      - 'api/proto/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'cmd/gateway-service/**'
+      - 'internal/gateway/**'
+      - 'docs/**'
+      - 'api/proto/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # 生成和验证文档
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          go mod download
+          go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate API documentation
+        run: |
+          swag init \
+            -g cmd/gateway-service/main.go \
+            --output docs/api/swagger \
+            --parseDependency \
+            --parseInternal
+
+      - name: Validate swagger.json
+        run: |
+          if [ ! -f docs/api/swagger/swagger.json ]; then
+            echo "Error: swagger.json not generated"
+            exit 1
+          fi
+          echo "✓ swagger.json generated successfully"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet docs/api/swagger/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: |
+            docs/api/swagger/openapi.json
+            docs/api/asyncapi.yaml
+
+      - name: Upload proto artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-proto
+          path: api/proto/**/*.proto
+
+      - name: Comment on PR (if docs changed)
+        if: github.event_name == 'pull_request' && steps.check_changes.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '📝 API documentation has been updated. Please review the changes in `docs/api/swagger/`.'
+            })
+
+  # 构建和部署文档站点到 GitHub Pages
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: generate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-docs
+          path: docs/api/swagger/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Summary
+        run: |
+          echo "## Documentation Deployed 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The documentation has been successfully deployed to GitHub Pages." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📖 [View Documentation](${{ steps.deployment.outputs.page_url }})" >> $GITHUB_STEP_SUMMARY
+
+  # 同步 API 契约到独立仓库，供 SDK/客户端项目消费
+  # 需要在 GitHub Secrets 中配置 CONTRACTS_REPO_TOKEN（有 contracts 仓库写权限的 PAT）
+  # 以及 CONTRACTS_REPO（格式：org/anychat-api-contracts）
+  sync-contracts:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
+
+      - name: Download api-docs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-docs
+          path: _artifacts/api-docs
+
+      - name: Download proto artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-proto
+          path: _artifacts/proto
+
+      - name: Checkout contracts repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.CONTRACTS_REPO }}
+          token: ${{ secrets.CONTRACTS_REPO_TOKEN }}
+          path: _contracts
+
+      - name: Sync files to contracts repo
+        run: |
+          # 同步 OpenAPI 规格
+          mkdir -p _contracts/http
+          cp _artifacts/api-docs/openapi.json _contracts/http/openapi.json
+
+          # 同步 AsyncAPI 规格
+          mkdir -p _contracts/websocket
+          cp docs/api/asyncapi.yaml _contracts/websocket/asyncapi.yaml
+
+          # 同步 proto 文件（仅 .proto，不含生成的 .pb.go）
+          mkdir -p _contracts/proto
+          rsync -av --include="*/" --include="*.proto" --exclude="*" \
+            _artifacts/proto/ _contracts/proto/
+
+          # 记录来源版本
+          echo "${{ github.sha }}" > _contracts/.backend-version
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > _contracts/.last-synced
+
+      - name: Commit and push to contracts repo
+        run: |
+          cd _contracts
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to sync."
+          else
+            git commit -m "sync: update from anychat-server@${{ github.sha }}"
+            git push
+          fi
+
+      - name: Summary
+        run: |
+          echo "## API Contracts Synced" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Synced: \`openapi.json\`, \`asyncapi.yaml\`, \`proto/**\`" >> $GITHUB_STEP_SUMMARY
+          echo "Source commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

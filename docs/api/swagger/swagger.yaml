@@ -1,0 +1,3464 @@
+basePath: /api/v1
+definitions:
+  github_com_anychat_server_internal_group_dto.CreateGroupRequest:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      joinVerify:
+        example: true
+        type: boolean
+      memberIds:
+        example:
+        - user-123
+        - user-456
+        items:
+          type: string
+        minItems: 1
+        type: array
+      name:
+        example: 技术交流群
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - memberIds
+    - name
+    type: object
+  github_com_anychat_server_internal_group_dto.GroupListResponse:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupResponse'
+        type: array
+      total:
+        example: 5
+        type: integer
+      updateTime:
+        example: 1609459200
+        type: integer
+    type: object
+  github_com_anychat_server_internal_group_dto.GroupMemberListResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupMemberResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 10
+        type: integer
+    type: object
+  github_com_anychat_server_internal_group_dto.GroupMemberResponse:
+    properties:
+      groupNickname:
+        example: 群内昵称
+        type: string
+      isMuted:
+        example: false
+        type: boolean
+      joinedAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      role:
+        example: member
+        type: string
+      userId:
+        example: user-123
+        type: string
+      userInfo:
+        $ref: '#/definitions/github_com_anychat_server_internal_group_dto.UserInfo'
+    type: object
+  github_com_anychat_server_internal_group_dto.GroupResponse:
+    properties:
+      announcement:
+        example: 欢迎加入
+        type: string
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      createdAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      groupId:
+        example: group-123
+        type: string
+      isMuted:
+        example: false
+        type: boolean
+      joinVerify:
+        example: true
+        type: boolean
+      maxMembers:
+        example: 500
+        type: integer
+      memberCount:
+        example: 10
+        type: integer
+      myRole:
+        example: member
+        type: string
+      name:
+        example: 技术交流群
+        type: string
+      ownerId:
+        example: user-123
+        type: string
+      updatedAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  github_com_anychat_server_internal_group_dto.HandleJoinRequestRequest:
+    properties:
+      accept:
+        example: true
+        type: boolean
+    type: object
+  github_com_anychat_server_internal_group_dto.InviteMembersRequest:
+    properties:
+      userIds:
+        example:
+        - user-123
+        - user-456
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - userIds
+    type: object
+  github_com_anychat_server_internal_group_dto.JoinGroupRequest:
+    properties:
+      message:
+        example: 你好，我想加入群组
+        maxLength: 200
+        type: string
+    type: object
+  github_com_anychat_server_internal_group_dto.JoinGroupResponse:
+    properties:
+      message:
+        example: 申请已提交，等待审核
+        type: string
+      needVerify:
+        example: true
+        type: boolean
+      requestId:
+        example: 123
+        type: integer
+    type: object
+  github_com_anychat_server_internal_group_dto.JoinRequestListResponse:
+    properties:
+      requests:
+        items:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.JoinRequestResponse'
+        type: array
+      total:
+        example: 3
+        type: integer
+    type: object
+  github_com_anychat_server_internal_group_dto.JoinRequestResponse:
+    properties:
+      createdAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      groupId:
+        example: group-123
+        type: string
+      id:
+        example: 123
+        type: integer
+      inviterId:
+        example: user-456
+        type: string
+      message:
+        example: 你好，我想加入
+        type: string
+      status:
+        example: pending
+        type: string
+      userId:
+        example: user-123
+        type: string
+      userInfo:
+        $ref: '#/definitions/github_com_anychat_server_internal_group_dto.UserInfo'
+    type: object
+  github_com_anychat_server_internal_group_dto.TransferOwnershipRequest:
+    properties:
+      newOwnerId:
+        example: user-456
+        type: string
+    required:
+    - newOwnerId
+    type: object
+  github_com_anychat_server_internal_group_dto.UpdateGroupRequest:
+    properties:
+      announcement:
+        example: 群公告内容
+        maxLength: 1000
+        type: string
+      avatar:
+        example: https://example.com/new-avatar.jpg
+        type: string
+      joinVerify:
+        example: false
+        type: boolean
+      name:
+        example: 新群名称
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  github_com_anychat_server_internal_group_dto.UpdateMemberNicknameRequest:
+    properties:
+      nickname:
+        example: 群内昵称
+        maxLength: 50
+        type: string
+    required:
+    - nickname
+    type: object
+  github_com_anychat_server_internal_group_dto.UpdateMemberRoleRequest:
+    properties:
+      role:
+        enum:
+        - admin
+        - member
+        example: admin
+        type: string
+    required:
+    - role
+    type: object
+  github_com_anychat_server_internal_group_dto.UserInfo:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      bio:
+        example: 个性签名
+        type: string
+      gender:
+        example: 1
+        type: integer
+      nickname:
+        example: 张三
+        type: string
+      userId:
+        example: user-123
+        type: string
+    type: object
+  github_com_anychat_server_pkg_response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  handler.banUserRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  handler.createAdminRequest:
+    properties:
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handler.loginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handler.updateAdminStatusRequest:
+    properties:
+      status:
+        type: integer
+    required:
+    - status
+    type: object
+  handler.updateConfigRequest:
+    properties:
+      value:
+        type: string
+    required:
+    - value
+    type: object
+  internal_gateway_handler.AuthResponse:
+    properties:
+      accessToken:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expiresIn:
+        example: 7200
+        type: integer
+      refreshToken:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/internal_gateway_handler.UserInfo'
+      userId:
+        example: user-123
+        type: string
+    type: object
+  internal_gateway_handler.ChangePasswordRequest:
+    properties:
+      newPassword:
+        example: newpass123
+        type: string
+      oldPassword:
+        example: oldpass123
+        type: string
+    required:
+    - newPassword
+    - oldPassword
+    type: object
+  internal_gateway_handler.LoginRequest:
+    properties:
+      account:
+        example: "13800138000"
+        type: string
+      deviceId:
+        example: device-uuid-123
+        type: string
+      deviceType:
+        enum:
+        - ios
+        - android
+        - web
+        example: ios
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - account
+    - deviceId
+    - deviceType
+    - password
+    type: object
+  internal_gateway_handler.LogoutRequest:
+    properties:
+      deviceId:
+        example: device-uuid-123
+        type: string
+    required:
+    - deviceId
+    type: object
+  internal_gateway_handler.RefreshTokenRequest:
+    properties:
+      refreshToken:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    required:
+    - refreshToken
+    type: object
+  internal_gateway_handler.RegisterRequest:
+    properties:
+      deviceId:
+        example: device-uuid-123
+        type: string
+      deviceType:
+        enum:
+        - ios
+        - android
+        - web
+        example: ios
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      nickname:
+        example: 张三
+        type: string
+      password:
+        example: password123
+        type: string
+      phoneNumber:
+        example: "13800138000"
+        type: string
+      verifyCode:
+        example: "123456"
+        type: string
+    required:
+    - deviceId
+    - deviceType
+    - password
+    - verifyCode
+    type: object
+  internal_gateway_handler.UpdateProfileRequest:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      birthday:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      gender:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
+      nickname:
+        example: 张三
+        type: string
+      region:
+        example: 北京
+        type: string
+      signature:
+        example: 这是我的个性签名
+        type: string
+    type: object
+  internal_gateway_handler.UpdatePushTokenRequest:
+    properties:
+      deviceId:
+        example: device-uuid-123
+        type: string
+      platform:
+        enum:
+        - ios
+        - android
+        example: ios
+        type: string
+      pushToken:
+        example: push-token-xxx
+        type: string
+    required:
+    - deviceId
+    - platform
+    - pushToken
+    type: object
+  internal_gateway_handler.UpdateSettingsRequest:
+    properties:
+      friendVerifyRequired:
+        example: true
+        type: boolean
+      language:
+        example: zh-CN
+        type: string
+      messagePreviewEnabled:
+        example: true
+        type: boolean
+      notificationEnabled:
+        example: true
+        type: boolean
+      searchById:
+        example: true
+        type: boolean
+      searchByPhone:
+        example: true
+        type: boolean
+      soundEnabled:
+        example: true
+        type: boolean
+      vibrationEnabled:
+        example: true
+        type: boolean
+    type: object
+  internal_gateway_handler.UserInfo:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      nickname:
+        example: 张三
+        type: string
+      phone:
+        example: "13800138000"
+        type: string
+      userId:
+        example: user-123
+        type: string
+    type: object
+  internal_gateway_handler.UserProfile:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      birthday:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      createdAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      gender:
+        example: 1
+        type: integer
+      nickname:
+        example: 张三
+        type: string
+      phone:
+        example: "13800138000"
+        type: string
+      qrcodeUrl:
+        example: https://example.com/qrcode.png
+        type: string
+      region:
+        example: 北京
+        type: string
+      signature:
+        example: 这是我的个性签名
+        type: string
+      userId:
+        example: user-123
+        type: string
+    type: object
+  internal_gateway_handler.UserSearchItem:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      nickname:
+        example: 张三
+        type: string
+      signature:
+        example: 这是我的个性签名
+        type: string
+      userId:
+        example: user-123
+        type: string
+    type: object
+  internal_gateway_handler.UserSearchResult:
+    properties:
+      total:
+        example: 100
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/internal_gateway_handler.UserSearchItem'
+        type: array
+    type: object
+  internal_gateway_handler.UserSettings:
+    properties:
+      friendVerifyRequired:
+        example: true
+        type: boolean
+      language:
+        example: zh-CN
+        type: string
+      messagePreviewEnabled:
+        example: true
+        type: boolean
+      notificationEnabled:
+        example: true
+        type: boolean
+      searchById:
+        example: true
+        type: boolean
+      searchByPhone:
+        example: true
+        type: boolean
+      soundEnabled:
+        example: true
+        type: boolean
+      userId:
+        example: user-123
+        type: string
+      vibrationEnabled:
+        example: true
+        type: boolean
+    type: object
+  internal_gateway_handler.conversationSeqItem:
+    properties:
+      conversationId:
+        type: string
+      conversationType:
+        type: string
+      lastSeq:
+        type: integer
+    type: object
+  internal_gateway_handler.createMeetingRequest:
+    properties:
+      maxParticipants:
+        type: integer
+      password:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  internal_gateway_handler.initiateCallRequest:
+    properties:
+      callType:
+        description: audio/video（默认 audio）
+        type: string
+      calleeId:
+        type: string
+    required:
+    - calleeId
+    type: object
+  internal_gateway_handler.joinMeetingRequest:
+    properties:
+      password:
+        type: string
+    type: object
+  internal_gateway_handler.setMutedRequest:
+    properties:
+      muted:
+        type: boolean
+    type: object
+  internal_gateway_handler.setPinnedRequest:
+    properties:
+      pinned:
+        type: boolean
+    type: object
+  internal_gateway_handler.syncMessagesRequest:
+    properties:
+      conversationSeqs:
+        items:
+          $ref: '#/definitions/internal_gateway_handler.conversationSeqItem'
+        type: array
+      limitPerConversation:
+        type: integer
+    type: object
+  internal_gateway_handler.syncRequest:
+    properties:
+      conversationSeqs:
+        items:
+          $ref: '#/definitions/internal_gateway_handler.conversationSeqItem'
+        type: array
+      lastSyncTime:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@anychat.example.com
+    name: AnyChat API Support
+    url: https://github.com/yzhgit/anchat_server
+  description: |-
+    AnyChat 即时通讯系统的网关 API 服务，提供用户认证、用户管理等功能的 HTTP 接口。
+    所有需要认证的接口都需要在 Header 中携带 Authorization: Bearer <token>
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: AnyChat Gateway API
+  version: "1.0"
+paths:
+  /admin/admins:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 管理员列表
+      tags:
+      - 管理后台-管理员管理
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 管理员信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建管理员
+      tags:
+      - 管理后台-管理员管理
+  /admin/admins/{adminId}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 管理员ID
+        in: path
+        name: adminId
+        required: true
+        type: string
+      - description: 状态
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateAdminStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新管理员状态
+      tags:
+      - 管理后台-管理员管理
+  /admin/audit-logs:
+    get:
+      parameters:
+      - description: 管理员ID筛选
+        in: query
+        name: adminId
+        type: string
+      - description: 操作类型筛选
+        in: query
+        name: action
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 查询审计日志
+      tags:
+      - 管理后台-审计日志
+  /admin/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 管理员通过用户名密码登录，返回访问Token
+      parameters:
+      - description: 登录信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 账号或密码错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      summary: 管理员登录
+      tags:
+      - 管理后台-认证
+  /admin/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 退出成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 管理员退出
+      tags:
+      - 管理后台-认证
+  /admin/config:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取系统配置
+      tags:
+      - 管理后台-系统配置
+  /admin/config/{key}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 配置键
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: 配置值
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新系统配置
+      tags:
+      - 管理后台-系统配置
+  /admin/groups/{groupId}:
+    delete:
+      parameters:
+      - description: 群组ID
+        in: path
+        name: groupId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 解散群组
+      tags:
+      - 管理后台-群组管理
+    get:
+      parameters:
+      - description: 群组ID
+        in: path
+        name: groupId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取群组详情
+      tags:
+      - 管理后台-群组管理
+  /admin/stats/overview:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 系统统计概览
+      tags:
+      - 管理后台-统计
+  /admin/users:
+    get:
+      description: 管理员搜索/列举系统用户
+      parameters:
+      - description: 搜索关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 查询用户列表
+      tags:
+      - 管理后台-用户管理
+  /admin/users/{userId}:
+    get:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取用户详情
+      tags:
+      - 管理后台-用户管理
+  /admin/users/{userId}/ban:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: 封禁原因
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handler.banUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 封禁用户
+      tags:
+      - 管理后台-用户管理
+  /admin/users/{userId}/unban:
+    post:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 解封用户
+      tags:
+      - 管理后台-用户管理
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户通过账号密码登录
+      parameters:
+      - description: 登录信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.AuthResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 账号或密码错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      summary: 用户登录
+      tags:
+      - 认证
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 用户登出，使当前设备的令牌失效
+      parameters:
+      - description: 登出信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 用户登出
+      tags:
+      - 认证
+  /auth/password/change:
+    post:
+      consumes:
+      - application/json
+      description: 用户修改登录密码
+      parameters:
+      - description: 修改密码信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权或原密码错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改密码
+      tags:
+      - 认证
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用刷新令牌获取新的访问令牌
+      parameters:
+      - description: 刷新令牌
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 刷新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.AuthResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 刷新令牌无效
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      summary: 刷新访问令牌
+      tags:
+      - 认证
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 用户通过手机号或邮箱注册新账号
+      parameters:
+      - description: 注册信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.AuthResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "409":
+          description: 用户已存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      summary: 用户注册
+      tags:
+      - 认证
+  /files:
+    get:
+      consumes:
+      - application/json
+      description: 分页列出当前用户的文件，支持按类型过滤
+      parameters:
+      - description: 文件类型（image/video/audio/file）
+        in: query
+        name: fileType
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 列出用户文件
+      tags:
+      - 文件
+  /files/{fileId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除文件（包括MinIO中的对象）
+      parameters:
+      - description: 文件ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权访问
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 文件不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除文件
+      tags:
+      - 文件
+    get:
+      consumes:
+      - application/json
+      description: 获取文件元数据信息
+      parameters:
+      - description: 文件ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权访问
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 文件不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取文件信息
+      tags:
+      - 文件
+  /files/{fileId}/complete:
+    post:
+      consumes:
+      - application/json
+      description: 客户端上传完成后，通知服务端激活文件
+      parameters:
+      - description: 文件ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 文件不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 完成文件上传
+      tags:
+      - 文件
+  /files/{fileId}/download:
+    get:
+      consumes:
+      - application/json
+      description: 生成预签名下载URL，客户端使用此URL直接从MinIO下载
+      parameters:
+      - description: 文件ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      - default: 60
+        description: URL有效期（分钟）
+        in: query
+        name: expiresMinutes
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权访问
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 文件不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 生成文件下载链接
+      tags:
+      - 文件
+  /files/upload-token:
+    post:
+      consumes:
+      - application/json
+      description: 生成预签名上传URL，客户端使用此URL直接上传到MinIO
+      parameters:
+      - description: 上传请求
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 生成文件上传凭证
+      tags:
+      - 文件
+  /friends:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的所有好友,支持增量同步
+      parameters:
+      - description: 上次更新时间戳(增量同步)
+        format: int64
+        in: query
+        name: lastUpdateTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取好友列表
+      tags:
+      - 好友
+  /friends/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定好友
+      parameters:
+      - description: 好友用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除好友
+      tags:
+      - 好友
+  /friends/{id}/remark:
+    put:
+      consumes:
+      - application/json
+      description: 更新指定好友的备注名称
+      parameters:
+      - description: 好友用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 备注信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新好友备注
+      tags:
+      - 好友
+  /friends/blacklist:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的黑名单列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取黑名单
+      tags:
+      - 好友
+    post:
+      consumes:
+      - application/json
+      description: 将指定用户添加到黑名单
+      parameters:
+      - description: 用户ID
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 添加黑名单
+      tags:
+      - 好友
+  /friends/blacklist/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 将指定用户从黑名单移除
+      parameters:
+      - description: 被拉黑用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 从黑名单移除
+      tags:
+      - 好友
+  /friends/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取收到的或发送的好友申请列表
+      parameters:
+      - default: received
+        description: '类型: received(收到的)/sent(发送的)'
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取好友申请列表
+      tags:
+      - 好友
+    post:
+      consumes:
+      - application/json
+      description: 向指定用户发送好友申请
+      parameters:
+      - description: 申请信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发送好友申请
+      tags:
+      - 好友
+  /friends/requests/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 接受或拒绝好友申请
+      parameters:
+      - description: 申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 处理动作
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 处理好友申请
+      tags:
+      - 好友
+  /groups:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户加入的所有群组列表
+      parameters:
+      - description: 最后更新时间戳（增量同步）
+        in: query
+        name: lastUpdateTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupListResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取我的群组列表
+      tags:
+      - 群组
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的群组，至少需要2个成员（包括创建者）
+      parameters:
+      - description: 群组信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.CreateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建群组
+      tags:
+      - 群组
+  /groups/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 解散群组（仅群主可操作）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解散成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 解散群组
+      tags:
+      - 群组
+    get:
+      consumes:
+      - application/json
+      description: 获取指定群组的详细信息
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 群组不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取群组信息
+      tags:
+      - 群组
+    put:
+      consumes:
+      - application/json
+      description: 更新群组的名称、头像、公告等信息（需要管理员权限）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.UpdateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新群信息
+      tags:
+      - 群组
+  /groups/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: 申请加入指定群组
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 申请信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.JoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 申请成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.JoinGroupResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 加入群组
+      tags:
+      - 群组
+  /groups/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定群组的成员列表，支持分页
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.GroupMemberListResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 群组不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取群成员列表
+      tags:
+      - 群组
+    post:
+      consumes:
+      - application/json
+      description: 邀请用户加入群组
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 邀请信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.InviteMembersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 邀请成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 邀请成员
+      tags:
+      - 群组
+  /groups/{id}/members/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: 从群组中移除成员（需要管理员权限）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 要移除的用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 移除成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 移除成员
+      tags:
+      - 群组
+  /groups/{id}/members/{userId}/role:
+    put:
+      consumes:
+      - application/json
+      description: 设置或取消群管理员（仅群主可操作）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: 角色信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.UpdateMemberRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新成员角色
+      tags:
+      - 群组
+  /groups/{id}/nickname:
+    put:
+      consumes:
+      - application/json
+      description: 设置自己在群内的昵称
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 昵称信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.UpdateMemberNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新群昵称
+      tags:
+      - 群组
+  /groups/{id}/quit:
+    post:
+      consumes:
+      - application/json
+      description: 退出指定群组
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 退出成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 退出群组
+      tags:
+      - 群组
+  /groups/{id}/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定群组的入群申请列表（需要管理员权限）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 申请状态（pending/accepted/rejected）
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_anychat_server_internal_group_dto.JoinRequestListResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取入群申请列表
+      tags:
+      - 群组
+  /groups/{id}/requests/{requestId}:
+    put:
+      consumes:
+      - application/json
+      description: 接受或拒绝入群申请（需要管理员权限）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 申请ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      - description: 处理信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.HandleJoinRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 处理成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 处理入群申请
+      tags:
+      - 群组
+  /groups/{id}/transfer:
+    post:
+      consumes:
+      - application/json
+      description: 将群主转让给其他成员（仅群主可操作）
+      parameters:
+      - description: 群组ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 转让信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_anychat_server_internal_group_dto.TransferOwnershipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 转让成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 转让群主
+      tags:
+      - 群组
+  /rtc/calls:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的通话历史记录
+      parameters:
+      - description: 页码（默认1）
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量（默认20）
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 通话记录
+      tags:
+      - RTC
+    post:
+      consumes:
+      - application/json
+      description: 向指定用户发起音视频通话，返回 RTC Room 名称和 JWT Token
+      parameters:
+      - description: 通话请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.initiateCallRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 通话发起成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发起通话
+      tags:
+      - RTC
+  /rtc/calls/{callId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定通话会话的详细信息
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取通话详情
+      tags:
+      - RTC
+  /rtc/calls/{callId}/end:
+    post:
+      consumes:
+      - application/json
+      description: 主叫方或被叫方挂断通话
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 挂断成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 挂断通话
+      tags:
+      - RTC
+  /rtc/calls/{callId}/join:
+    post:
+      consumes:
+      - application/json
+      description: 被叫方接受通话邀请，返回 RTC Room 名称和 JWT Token
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 接听成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 接听通话
+      tags:
+      - RTC
+  /rtc/calls/{callId}/reject:
+    post:
+      consumes:
+      - application/json
+      description: 被叫方拒绝通话邀请
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 拒绝成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 拒绝通话
+      tags:
+      - RTC
+  /rtc/meetings:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前活跃的会议室列表
+      parameters:
+      - description: 页码（默认1）
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量（默认20）
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 会议室列表
+      tags:
+      - RTC
+    post:
+      consumes:
+      - application/json
+      description: 创建新的音视频会议室，返回会议信息和 RTC Token
+      parameters:
+      - description: 会议室信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.createMeetingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建会议室
+      tags:
+      - RTC
+  /rtc/meetings/{roomId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定会议室的详细信息
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取会议室
+      tags:
+      - RTC
+  /rtc/meetings/{roomId}/end:
+    post:
+      consumes:
+      - application/json
+      description: 创建者结束会议室，会议室关闭后所有参与者将被移出
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 结束会议室
+      tags:
+      - RTC
+  /rtc/meetings/{roomId}/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入指定会议室，返回 RTC Token
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: 会议室密码（若有）
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.joinMeetingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 加入成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 密码错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 加入会议室
+      tags:
+      - RTC
+  /sessions:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的会话列表，支持增量同步（通过updatedBefore参数）
+      parameters:
+      - description: 返回数量（默认20，最大100）
+        in: query
+        name: limit
+        type: integer
+      - description: Unix时间戳，仅返回此时间之前更新的会话（增量同步）
+        format: int64
+        in: query
+        name: updatedBefore
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取会话列表
+      tags:
+      - 会话
+  /sessions/{sessionId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定会话（不影响消息，仅从会话列表中移除）
+      parameters:
+      - description: 会话ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除会话
+      tags:
+      - 会话
+    get:
+      consumes:
+      - application/json
+      description: 获取指定会话的详情
+      parameters:
+      - description: 会话ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取单个会话
+      tags:
+      - 会话
+  /sessions/{sessionId}/mute:
+    put:
+      consumes:
+      - application/json
+      description: 开启或关闭指定会话的免打扰
+      parameters:
+      - description: 会话ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: 免打扰状态
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.setMutedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 设置会话免打扰
+      tags:
+      - 会话
+  /sessions/{sessionId}/pin:
+    put:
+      consumes:
+      - application/json
+      description: 置顶或取消置顶指定会话
+      parameters:
+      - description: 会话ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: 置顶状态
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.setPinnedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 设置会话置顶
+      tags:
+      - 会话
+  /sessions/{sessionId}/read:
+    post:
+      consumes:
+      - application/json
+      description: 清除指定会话的未读消息数
+      parameters:
+      - description: 会话ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 标记会话已读
+      tags:
+      - 会话
+  /sessions/unread/total:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户所有会话的总未读消息数（免打扰会话不计入）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取总未读数
+      tags:
+      - 会话
+  /sync:
+    post:
+      consumes:
+      - application/json
+      description: 客户端登录或从后台恢复时调用，返回自 lastSyncTime 后的好友、群组、会话变更，以及各会话的离线消息。lastSyncTime=0
+        表示全量同步。
+      parameters:
+      - description: 同步请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.syncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 同步成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 数据同步
+      tags:
+      - 同步
+  /sync/messages:
+    post:
+      consumes:
+      - application/json
+      description: 按照每个会话的最新已知序列号，拉取离线消息
+      parameters:
+      - description: 每个会话最多返回的消息数（默认50）
+        in: query
+        name: limit
+        type: integer
+      - description: 消息补齐请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.syncMessagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 消息补齐
+      tags:
+      - 同步
+  /users/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定用户的公开信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserSearchItem'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户信息
+      tags:
+      - 用户
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户的详细资料
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserProfile'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取个人资料
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新当前登录用户的个人资料
+      parameters:
+      - description: 资料信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserProfile'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新个人资料
+      tags:
+      - 用户
+  /users/me/push-token:
+    post:
+      consumes:
+      - application/json
+      description: 更新设备的推送通知Token
+      parameters:
+      - description: 推送Token信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.UpdatePushTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新推送Token
+      tags:
+      - 用户
+  /users/me/settings:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的偏好设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserSettings'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户设置
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新当前用户的偏好设置
+      parameters:
+      - description: 设置信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserSettings'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新用户设置
+      tags:
+      - 用户
+  /users/search:
+    get:
+      consumes:
+      - application/json
+      description: 通过关键字搜索用户（支持昵称、手机号、用户ID）
+      parameters:
+      - description: 搜索关键字
+        in: query
+        name: keyword
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 搜索成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_gateway_handler.UserSearchResult'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 搜索用户
+      tags:
+      - 用户
+  /ws:
+    get:
+      description: 客户端通过WebSocket保持长连接，接收实时通知和消息推送。由于WebSocket协议不支持自定义Header，JWT token通过URL
+        query参数传入。
+      parameters:
+      - description: JWT access token
+        in: query
+        name: token
+        required: true
+        type: string
+      responses: {}
+      summary: 建立WebSocket长连接
+      tags:
+      - 实时通信
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

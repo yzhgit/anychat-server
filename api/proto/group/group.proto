@@ -1,0 +1,269 @@
+syntax = "proto3";
+
+package anychat.group;
+
+import "google/protobuf/timestamp.proto";
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/group;grouppb";
+
+// GroupService 群组服务
+service GroupService {
+  // ========== 内部服务调用接口 ==========
+
+  // GetGroupInfo 获取群信息（供Message Service调用）
+  rpc GetGroupInfo(GetGroupInfoRequest) returns (GetGroupInfoResponse);
+
+  // GetGroupMembers 获取群成员列表（供Message Service调用）
+  rpc GetGroupMembers(GetGroupMembersRequest) returns (GetGroupMembersResponse);
+
+  // IsMember 检查是否为群成员（供Message Service调用）
+  rpc IsMember(IsMemberRequest) returns (IsMemberResponse);
+
+  // GetUserGroups 获取用户加入的群列表（支持增量同步）
+  rpc GetUserGroups(GetUserGroupsRequest) returns (GetUserGroupsResponse);
+
+  // ========== Gateway HTTP API调用接口 ==========
+
+  // CreateGroup 创建群组
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
+
+  // UpdateGroup 更新群信息
+  rpc UpdateGroup(UpdateGroupRequest) returns (common.Empty);
+
+  // DissolveGroup 解散群组
+  rpc DissolveGroup(DissolveGroupRequest) returns (common.Empty);
+
+  // InviteMembers 邀请成员
+  rpc InviteMembers(InviteMembersRequest) returns (common.Empty);
+
+  // RemoveMember 移除成员
+  rpc RemoveMember(RemoveMemberRequest) returns (common.Empty);
+
+  // QuitGroup 退出群组
+  rpc QuitGroup(QuitGroupRequest) returns (common.Empty);
+
+  // UpdateMemberRole 更新成员角色
+  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (common.Empty);
+
+  // UpdateMemberNickname 更新群昵称
+  rpc UpdateMemberNickname(UpdateMemberNicknameRequest) returns (common.Empty);
+
+  // TransferOwnership 转让群主
+  rpc TransferOwnership(TransferOwnershipRequest) returns (common.Empty);
+
+  // JoinGroup 加入群组（申请或直接加入）
+  rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse);
+
+  // HandleJoinRequest 处理入群申请
+  rpc HandleJoinRequest(HandleJoinRequestRequest) returns (common.Empty);
+
+  // GetJoinRequests 获取入群申请列表
+  rpc GetJoinRequests(GetJoinRequestsRequest) returns (GetJoinRequestsResponse);
+
+  // UpdateGroupSettings 更新群组设置
+  rpc UpdateGroupSettings(UpdateGroupSettingsRequest) returns (common.Empty);
+
+  // GetGroupSettings 获取群组设置
+  rpc GetGroupSettings(GetGroupSettingsRequest) returns (GetGroupSettingsResponse);
+}
+
+// ========== 内部调用消息 ==========
+
+message GetGroupInfoRequest {
+  string group_id = 1;
+}
+
+message GetGroupInfoResponse {
+  string group_id = 1;
+  string name = 2;
+  string avatar = 3;
+  string announcement = 4;
+  string owner_id = 5;
+  int32 member_count = 6;
+  int32 max_members = 7;
+  bool join_verify = 8;
+  bool is_muted = 9;
+  int32 status = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message GetGroupMembersRequest {
+  string group_id = 1;  // Keep original field number!
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  string user_id = 4;  // Add new field with new number
+}
+
+message GetGroupMembersResponse {
+  repeated GroupMember members = 1;
+  int64 total = 2;
+}
+
+message GroupMember {
+  string user_id = 1;
+  optional string group_nickname = 2;
+  string role = 3;  // owner/admin/member
+  bool is_muted = 4;
+  google.protobuf.Timestamp joined_at = 5;
+  optional common.UserInfo user_info = 6;
+}
+
+message IsMemberRequest {
+  string group_id = 1;
+  string user_id = 2;
+}
+
+message IsMemberResponse {
+  bool is_member = 1;
+  string role = 2;
+}
+
+message GetUserGroupsRequest {
+  string user_id = 1;
+  optional int64 last_update_time = 2;  // Unix timestamp for incremental sync
+}
+
+message GetUserGroupsResponse {
+  repeated GroupInfo groups = 1;
+  int64 update_time = 2;  // Current server timestamp
+  int64 total = 3;  // Total number of groups
+}
+
+message GroupInfo {
+  string group_id = 1;
+  string name = 2;
+  string avatar = 3;
+  int32 member_count = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// ========== Gateway调用消息 ==========
+
+message CreateGroupRequest {
+  string user_id = 1;
+  string name = 2;
+  optional string avatar = 3;
+  repeated string member_ids = 4;
+  optional bool join_verify = 5;
+}
+
+message CreateGroupResponse {
+  string group_id = 1;
+  string name = 2;
+  optional string avatar = 3;
+  string owner_id = 4;
+  int32 member_count = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message UpdateGroupRequest {
+  string user_id = 1;
+  string group_id = 2;
+  optional string name = 3;
+  optional string avatar = 4;
+  optional string announcement = 5;
+  optional bool join_verify = 6;
+}
+
+message DissolveGroupRequest {
+  string user_id = 1;
+  string group_id = 2;
+}
+
+message InviteMembersRequest {
+  string user_id = 1;
+  string group_id = 2;
+  repeated string invitee_ids = 3;
+}
+
+message RemoveMemberRequest {
+  string user_id = 1;
+  string group_id = 2;
+  string target_user_id = 3;
+}
+
+message QuitGroupRequest {
+  string user_id = 1;
+  string group_id = 2;
+}
+
+message UpdateMemberRoleRequest {
+  string user_id = 1;
+  string group_id = 2;
+  string target_user_id = 3;
+  string role = 4;  // admin/member
+}
+
+message UpdateMemberNicknameRequest {
+  string user_id = 1;
+  string group_id = 2;
+  string nickname = 3;
+}
+
+message TransferOwnershipRequest {
+  string user_id = 1;
+  string group_id = 2;
+  string new_owner_id = 3;
+}
+
+message JoinGroupRequest {
+  string user_id = 1;
+  string group_id = 2;
+  optional string message = 3;
+  optional string inviter_id = 4;
+}
+
+message JoinGroupResponse {
+  bool need_verify = 1;
+  optional int64 request_id = 2;  // If need_verify=true
+}
+
+message HandleJoinRequestRequest {
+  string user_id = 1;
+  int64 request_id = 2;
+  bool accept = 3;
+}
+
+message GetJoinRequestsRequest {
+  string group_id = 1;
+  optional string status = 2;  // pending/accepted/rejected
+}
+
+message GetJoinRequestsResponse {
+  repeated JoinRequest requests = 1;
+  int64 total = 2;
+}
+
+message JoinRequest {
+  int64 id = 1;
+  string group_id = 2;
+  string user_id = 3;
+  optional string inviter_id = 4;
+  optional string message = 5;
+  string status = 6;
+  google.protobuf.Timestamp created_at = 7;
+  optional common.UserInfo user_info = 8;
+}
+
+message UpdateGroupSettingsRequest {
+  string user_id = 1;
+  string group_id = 2;
+  optional bool allow_member_invite = 3;
+  optional bool allow_view_history = 4;
+  optional bool allow_add_friend = 5;
+  optional bool show_member_nickname = 6;
+}
+
+message GetGroupSettingsRequest {
+  string group_id = 1;
+}
+
+message GetGroupSettingsResponse {
+  string group_id = 1;
+  bool allow_member_invite = 2;
+  bool allow_view_history = 3;
+  bool allow_add_friend = 4;
+  bool show_member_nickname = 5;
+}

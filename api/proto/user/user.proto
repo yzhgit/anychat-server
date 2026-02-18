@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package anychat.user;
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/anychat/server/api/proto/user;userpb";
+
+// UserService 用户服务
+service UserService {
+  // GetProfile 获取个人资料
+  rpc GetProfile(GetProfileRequest) returns (UserProfileResponse);
+
+  // UpdateProfile 更新个人资料
+  rpc UpdateProfile(UpdateProfileRequest) returns (UserProfileResponse);
+
+  // GetUserInfo 获取用户信息（查询其他用户）
+  rpc GetUserInfo(GetUserInfoRequest) returns (UserInfoResponse);
+
+  // SearchUsers 搜索用户
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse);
+
+  // GetSettings 获取用户设置
+  rpc GetSettings(GetSettingsRequest) returns (UserSettingsResponse);
+
+  // UpdateSettings 更新用户设置
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UserSettingsResponse);
+
+  // RefreshQRCode 刷新二维码
+  rpc RefreshQRCode(RefreshQRCodeRequest) returns (QRCodeResponse);
+
+  // GetUserByQRCode 通过二维码获取用户
+  rpc GetUserByQRCode(GetUserByQRCodeRequest) returns (UserInfoResponse);
+
+  // UpdatePushToken 更新推送Token
+  rpc UpdatePushToken(UpdatePushTokenRequest) returns (common.Empty);
+
+  // InitUserData 初始化用户数据（供auth-service调用）
+  rpc InitUserData(InitUserDataRequest) returns (common.Empty);
+}
+
+// GetProfileRequest 获取个人资料请求
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+// UpdateProfileRequest 更新个人资料请求
+message UpdateProfileRequest {
+  string user_id = 1;
+  optional string nickname = 2;
+  optional string avatar = 3;
+  optional string signature = 4;
+  optional int32 gender = 5;  // 0:未知 1:男 2:女
+  optional google.protobuf.Timestamp birthday = 6;
+  optional string region = 7;
+}
+
+// UserProfileResponse 用户资料响应
+message UserProfileResponse {
+  string user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  string signature = 4;
+  int32 gender = 5;
+  google.protobuf.Timestamp birthday = 6;
+  string region = 7;
+  optional string phone = 8;
+  optional string email = 9;
+  string qrcode_url = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+// GetUserInfoRequest 获取用户信息请求
+message GetUserInfoRequest {
+  string user_id = 1;        // 查询者ID
+  string target_user_id = 2; // 目标用户ID
+}
+
+// UserInfoResponse 用户信息响应
+message UserInfoResponse {
+  string user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  string signature = 4;
+  int32 gender = 5;
+  string region = 6;
+  bool is_friend = 7;
+  bool is_blocked = 8;
+}
+
+// SearchUsersRequest 搜索用户请求
+message SearchUsersRequest {
+  string keyword = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// SearchUsersResponse 搜索用户响应
+message SearchUsersResponse {
+  int64 total = 1;
+  repeated UserBriefInfo users = 2;
+}
+
+// UserBriefInfo 用户简要信息
+message UserBriefInfo {
+  string user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  string signature = 4;
+}
+
+// GetSettingsRequest 获取用户设置请求
+message GetSettingsRequest {
+  string user_id = 1;
+}
+
+// UpdateSettingsRequest 更新用户设置请求
+message UpdateSettingsRequest {
+  string user_id = 1;
+  optional bool notification_enabled = 2;
+  optional bool sound_enabled = 3;
+  optional bool vibration_enabled = 4;
+  optional bool message_preview_enabled = 5;
+  optional bool friend_verify_required = 6;
+  optional bool search_by_phone = 7;
+  optional bool search_by_id = 8;
+  optional string language = 9;
+}
+
+// UserSettingsResponse 用户设置响应
+message UserSettingsResponse {
+  string user_id = 1;
+  bool notification_enabled = 2;
+  bool sound_enabled = 3;
+  bool vibration_enabled = 4;
+  bool message_preview_enabled = 5;
+  bool friend_verify_required = 6;
+  bool search_by_phone = 7;
+  bool search_by_id = 8;
+  string language = 9;
+}
+
+// RefreshQRCodeRequest 刷新二维码请求
+message RefreshQRCodeRequest {
+  string user_id = 1;
+}
+
+// QRCodeResponse 二维码响应
+message QRCodeResponse {
+  string qrcode_url = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+// GetUserByQRCodeRequest 通过二维码获取用户请求
+message GetUserByQRCodeRequest {
+  string qrcode = 1;
+}
+
+// UpdatePushTokenRequest 更新推送Token请求
+message UpdatePushTokenRequest {
+  string user_id = 1;
+  string device_id = 2;
+  string push_token = 3;
+  string platform = 4;  // iOS/Android
+}
+
+// InitUserDataRequest 初始化用户数据请求
+message InitUserDataRequest {
+  string user_id = 1;
+  string nickname = 2;
+}

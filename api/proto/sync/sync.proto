@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package anychat.sync;
+
+import "friend/friend.proto";
+import "group/group.proto";
+import "session/session.proto";
+import "message/message.proto";
+
+option go_package = "github.com/anychat/server/api/proto/sync;syncpb";
+
+// SyncService 数据同步服务
+// 负责多端增量同步，聚合 friend/group/session/message 服务的数据
+service SyncService {
+  // Sync 全量/增量同步
+  // 客户端登录或从后台恢复时调用，返回自 last_sync_time 后的所有变更
+  rpc Sync(SyncRequest) returns (SyncResponse);
+
+  // SyncMessages 消息补齐
+  // 针对每个会话，按序列号拉取离线消息
+  rpc SyncMessages(SyncMessagesRequest) returns (SyncMessagesResponse);
+}
+
+// ConversationSeq 会话的最新已知序列号
+message ConversationSeq {
+  string conversation_id = 1;
+  string conversation_type = 2;  // single/group
+  int64 last_seq = 3;
+}
+
+// SyncRequest 同步请求
+message SyncRequest {
+  string user_id = 1;
+  // 上次同步时间（Unix 秒），0 表示全量同步
+  int64 last_sync_time = 2;
+  // 需要补齐消息的会话列表（只同步有新消息的会话）
+  repeated ConversationSeq conversation_seqs = 3;
+}
+
+// SyncFriendData 好友增量数据
+message SyncFriendData {
+  repeated anychat.friend.Friend friends = 1;
+  int64 total = 2;
+}
+
+// SyncGroupData 群组增量数据
+message SyncGroupData {
+  repeated anychat.group.GroupInfo groups = 1;
+  int64 total = 2;
+}
+
+// SyncSessionData 会话增量数据
+message SyncSessionData {
+  repeated anychat.session.Session sessions = 1;
+  bool has_more = 2;
+}
+
+// ConversationMessages 单个会话的新消息
+message ConversationMessages {
+  string conversation_id = 1;
+  string conversation_type = 2;
+  repeated anychat.message.Message messages = 3;
+  bool has_more = 4;
+}
+
+// SyncResponse 同步响应
+message SyncResponse {
+  SyncFriendData friends = 1;
+  SyncGroupData groups = 2;
+  SyncSessionData sessions = 3;
+  repeated ConversationMessages conversations = 4;
+  // 本次同步的服务器时间戳，客户端保存作为下次同步的 last_sync_time
+  int64 sync_time = 5;
+}
+
+// SyncMessagesRequest 消息补齐请求
+message SyncMessagesRequest {
+  string user_id = 1;
+  repeated ConversationSeq conversation_seqs = 2;
+  // 每个会话最多返回的消息数，默认 50
+  int32 limit_per_conversation = 3;
+}
+
+// SyncMessagesResponse 消息补齐响应
+message SyncMessagesResponse {
+  repeated ConversationMessages conversations = 1;
+}

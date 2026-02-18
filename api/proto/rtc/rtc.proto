@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package anychat.rtc;
+
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/rtc;rtcpb";
+
+// RTCService 音视频 RTC 服务接口（实现无关，当前由 LiveKit 提供）
+service RTCService {
+  // ── 一对一通话 ──────────────────────────────────────────
+  // InitiateCall 发起通话（返回 RTC Token 供主叫方加入 Room）
+  rpc InitiateCall(InitiateCallRequest) returns (InitiateCallResponse);
+  // JoinCall 接听通话（返回 RTC Token 供被叫方加入 Room）
+  rpc JoinCall(JoinCallRequest) returns (JoinCallResponse);
+  // RejectCall 拒绝通话
+  rpc RejectCall(RejectCallRequest) returns (common.Empty);
+  // EndCall 挂断通话
+  rpc EndCall(EndCallRequest) returns (common.Empty);
+  // GetCallSession 获取通话会话详情
+  rpc GetCallSession(GetCallSessionRequest) returns (CallSession);
+  // ListCallLogs 获取通话记录
+  rpc ListCallLogs(ListCallLogsRequest) returns (ListCallLogsResponse);
+
+  // ── 会议室 ────────────────────────────────────────────
+  // CreateMeeting 创建会议室
+  rpc CreateMeeting(CreateMeetingRequest) returns (CreateMeetingResponse);
+  // JoinMeeting 加入会议室（返回 RTC Token）
+  rpc JoinMeeting(JoinMeetingRequest) returns (JoinMeetingResponse);
+  // EndMeeting 结束会议室
+  rpc EndMeeting(EndMeetingRequest) returns (common.Empty);
+  // GetMeeting 获取会议室信息
+  rpc GetMeeting(GetMeetingRequest) returns (MeetingRoom);
+  // ListMeetings 列举活跃会议室
+  rpc ListMeetings(ListMeetingsRequest) returns (ListMeetingsResponse);
+}
+
+// ── 通话相关消息 ─────────────────────────────────────────
+
+// CallType 通话类型
+enum CallType {
+  CALL_TYPE_AUDIO = 0; // 语音通话
+  CALL_TYPE_VIDEO = 1; // 视频通话
+}
+
+// CallStatus 通话状态
+enum CallStatus {
+  CALL_STATUS_RINGING   = 0; // 振铃中
+  CALL_STATUS_CONNECTED = 1; // 已接通
+  CALL_STATUS_ENDED     = 2; // 已结束
+  CALL_STATUS_REJECTED  = 3; // 已拒绝
+  CALL_STATUS_MISSED    = 4; // 未接
+  CALL_STATUS_CANCELLED = 5; // 已取消
+}
+
+// CallSession 通话会话
+message CallSession {
+  string call_id      = 1;
+  string caller_id    = 2;
+  string callee_id    = 3;
+  CallType call_type  = 4;
+  CallStatus status   = 5;
+  string room_name    = 6;
+  int64 started_at    = 7; // Unix 秒
+  int64 connected_at  = 8;
+  int64 ended_at      = 9;
+  int32 duration      = 10; // 通话时长（秒）
+  int64 created_at    = 11;
+}
+
+message InitiateCallRequest {
+  string caller_id = 1;
+  string callee_id = 2;
+  CallType call_type = 3;
+}
+
+message InitiateCallResponse {
+  string call_id   = 1;
+  string room_name = 2;
+  string token     = 3; // RTC JWT，主叫方使用
+}
+
+message JoinCallRequest {
+  string call_id = 1;
+  string user_id = 2; // 被叫方 ID
+}
+
+message JoinCallResponse {
+  string room_name = 1;
+  string token     = 2; // RTC JWT，被叫方使用
+}
+
+message RejectCallRequest {
+  string call_id = 1;
+  string user_id = 2;
+}
+
+message EndCallRequest {
+  string call_id = 1;
+  string user_id = 2;
+}
+
+message GetCallSessionRequest {
+  string call_id = 1;
+  string user_id = 2; // 用于鉴权（必须是参与者）
+}
+
+message ListCallLogsRequest {
+  string user_id  = 1;
+  int32  page     = 2;
+  int32  page_size = 3;
+}
+
+message ListCallLogsResponse {
+  repeated CallSession sessions = 1;
+  int64 total = 2;
+}
+
+// ── 会议室相关消息 ───────────────────────────────────────
+
+// MeetingStatus 会议状态
+enum MeetingStatus {
+  MEETING_STATUS_ACTIVE = 0;
+  MEETING_STATUS_ENDED  = 1;
+}
+
+// MeetingRoom 会议室
+message MeetingRoom {
+  string room_id          = 1;
+  string creator_id       = 2;
+  string title            = 3;
+  string room_name        = 4; // RTC Room 名称
+  bool   has_password     = 5;
+  int32  max_participants = 6;
+  MeetingStatus status    = 7;
+  int64 started_at        = 8;
+  int64 ended_at          = 9;
+  int64 created_at        = 10;
+}
+
+message CreateMeetingRequest {
+  string creator_id       = 1;
+  string title            = 2;
+  string password         = 3; // 可选，不设则公开
+  int32  max_participants = 4; // 0 = 不限
+}
+
+message CreateMeetingResponse {
+  MeetingRoom meeting = 1;
+  string token        = 2; // 创建者的 RTC JWT
+}
+
+message JoinMeetingRequest {
+  string user_id  = 1;
+  string room_id  = 2;
+  string password = 3; // 若会议室有密码则必填
+}
+
+message JoinMeetingResponse {
+  MeetingRoom meeting = 1;
+  string token        = 2; // RTC JWT
+}
+
+message EndMeetingRequest {
+  string room_id    = 1;
+  string creator_id = 2; // 只有创建者可结束
+}
+
+message GetMeetingRequest {
+  string room_id = 1;
+}
+
+message ListMeetingsRequest {
+  int32 page      = 1;
+  int32 page_size = 2;
+}
+
+message ListMeetingsResponse {
+  repeated MeetingRoom meetings = 1;
+  int64 total = 2;
+}

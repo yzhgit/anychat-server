@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package anychat.message;
+
+import "google/protobuf/timestamp.proto";
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/message;messagepb";
+
+// MessageService 消息服务
+service MessageService {
+  // SendMessage 发送消息（单聊/群聊）
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+
+  // GetMessages 获取消息列表（历史消息）
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+
+  // GetMessageById 根据ID获取消息
+  rpc GetMessageById(GetMessageByIdRequest) returns (Message);
+
+  // RecallMessage 撤回消息
+  rpc RecallMessage(RecallMessageRequest) returns (common.Empty);
+
+  // DeleteMessage 删除消息
+  rpc DeleteMessage(DeleteMessageRequest) returns (common.Empty);
+
+  // MarkAsRead 标记消息已读
+  rpc MarkAsRead(MarkAsReadRequest) returns (common.Empty);
+
+  // GetUnreadCount 获取未读消息数
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse);
+
+  // GetReadReceipts 获取已读回执信息
+  rpc GetReadReceipts(GetReadReceiptsRequest) returns (GetReadReceiptsResponse);
+
+  // GetConversationSequence 获取会话当前序列号
+  rpc GetConversationSequence(GetConversationSequenceRequest) returns (GetConversationSequenceResponse);
+
+  // SearchMessages 搜索消息
+  rpc SearchMessages(SearchMessagesRequest) returns (SearchMessagesResponse);
+}
+
+// Message 消息
+message Message {
+  string message_id = 1;
+  string conversation_id = 2;
+  string conversation_type = 3;  // single/group
+  string sender_id = 4;
+  string content_type = 5;  // text/image/video/audio/file/location/card
+  string content = 6;  // JSON string
+  int64 sequence = 7;
+  optional string reply_to = 8;
+  repeated string at_users = 9;
+  int32 status = 10;  // 0-正常 1-撤回 2-删除
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+
+  // 扩展字段（用于客户端显示）
+  optional common.UserInfo sender_info = 20;
+  optional Message reply_to_message = 21;
+}
+
+// SendMessageRequest 发送消息请求
+message SendMessageRequest {
+  string sender_id = 1;
+  string conversation_id = 2;
+  string conversation_type = 3;  // single/group
+  string content_type = 4;
+  string content = 5;  // JSON string
+  optional string reply_to = 6;
+  repeated string at_users = 7;
+  optional string local_id = 8;  // 客户端本地ID（用于关联）
+}
+
+// SendMessageResponse 发送消息响应
+message SendMessageResponse {
+  string message_id = 1;
+  int64 sequence = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// GetMessagesRequest 获取消息列表请求
+message GetMessagesRequest {
+  string conversation_id = 1;
+  optional int64 start_seq = 2;  // 起始序列号
+  optional int64 end_seq = 3;  // 结束序列号
+  int32 limit = 4;  // 数量限制
+  bool reverse = 5;  // 是否倒序（从新到旧）
+}
+
+// GetMessagesResponse 获取消息列表响应
+message GetMessagesResponse {
+  repeated Message messages = 1;
+  int64 total = 2;
+  bool has_more = 3;
+}
+
+// GetMessageByIdRequest 根据ID获取消息请求
+message GetMessageByIdRequest {
+  string message_id = 1;
+}
+
+// RecallMessageRequest 撤回消息请求
+message RecallMessageRequest {
+  string message_id = 1;
+  string user_id = 2;  // 撤回者ID
+}
+
+// DeleteMessageRequest 删除消息请求
+message DeleteMessageRequest {
+  string message_id = 1;
+  string user_id = 2;  // 删除者ID
+}
+
+// MarkAsReadRequest 标记已读请求
+message MarkAsReadRequest {
+  string conversation_id = 1;
+  string conversation_type = 2;
+  string user_id = 3;
+  int64 last_read_seq = 4;
+  optional string last_read_message_id = 5;
+}
+
+// GetUnreadCountRequest 获取未读数请求
+message GetUnreadCountRequest {
+  string conversation_id = 1;
+  string user_id = 2;
+  optional int64 last_read_seq = 3;
+}
+
+// GetUnreadCountResponse 获取未读数响应
+message GetUnreadCountResponse {
+  int64 unread_count = 1;
+  int64 last_message_seq = 2;
+  optional Message last_message = 3;
+}
+
+// GetReadReceiptsRequest 获取已读回执请求
+message GetReadReceiptsRequest {
+  string conversation_id = 1;
+  string user_id = 2;
+}
+
+// ReadReceipt 已读回执
+message ReadReceipt {
+  string user_id = 1;
+  int64 last_read_seq = 2;
+  optional string last_read_message_id = 3;
+  google.protobuf.Timestamp read_at = 4;
+  optional common.UserInfo user_info = 5;
+}
+
+// GetReadReceiptsResponse 获取已读回执响应
+message GetReadReceiptsResponse {
+  repeated ReadReceipt receipts = 1;
+}
+
+// GetConversationSequenceRequest 获取会话序列号请求
+message GetConversationSequenceRequest {
+  string conversation_id = 1;
+}
+
+// GetConversationSequenceResponse 获取会话序列号响应
+message GetConversationSequenceResponse {
+  int64 current_seq = 1;
+}
+
+// SearchMessagesRequest 搜索消息请求
+message SearchMessagesRequest {
+  string user_id = 1;
+  string keyword = 2;
+  optional string conversation_id = 3;
+  optional string content_type = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+}
+
+// SearchMessagesResponse 搜索消息响应
+message SearchMessagesResponse {
+  repeated Message messages = 1;
+  int64 total = 2;
+}

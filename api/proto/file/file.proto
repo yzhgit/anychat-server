@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package file;
+
+option go_package = "github.com/anychat/server/api/proto/file;file";
+
+// FileService 文件服务
+service FileService {
+  // GenerateUploadToken 生成上传凭证
+  rpc GenerateUploadToken(GenerateUploadTokenRequest) returns (GenerateUploadTokenResponse);
+
+  // CompleteUpload 完成上传
+  rpc CompleteUpload(CompleteUploadRequest) returns (FileInfo);
+
+  // GenerateDownloadURL 生成下载链接
+  rpc GenerateDownloadURL(GenerateDownloadURLRequest) returns (GenerateDownloadURLResponse);
+
+  // GetFileInfo 获取文件信息
+  rpc GetFileInfo(GetFileInfoRequest) returns (FileInfo);
+
+  // DeleteFile 删除文件
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+
+  // ListUserFiles 列出用户文件
+  rpc ListUserFiles(ListUserFilesRequest) returns (ListUserFilesResponse);
+
+  // BatchGetFileInfo 批量获取文件信息
+  rpc BatchGetFileInfo(BatchGetFileInfoRequest) returns (BatchGetFileInfoResponse);
+}
+
+// FileInfo 文件信息
+message FileInfo {
+  string file_id = 1;
+  string user_id = 2;
+  string file_name = 3;
+  string file_type = 4;  // image/video/audio/file
+  int64 file_size = 5;
+  string mime_type = 6;
+  string storage_path = 7;
+  string thumbnail_path = 8;
+  string bucket_name = 9;
+  int32 status = 10;  // 0-deleted 1-active 2-processing
+  int64 created_at = 11;
+  optional int64 expires_at = 12;
+  optional string metadata = 13;  // JSON string
+  optional string download_url = 14;
+  optional string thumbnail_url = 15;
+}
+
+// GenerateUploadTokenRequest 生成上传凭证请求
+message GenerateUploadTokenRequest {
+  string user_id = 1;
+  string file_name = 2;
+  int64 file_size = 3;
+  string mime_type = 4;
+  string file_type = 5;  // image/video/audio/file
+  optional int32 expires_hours = 6;  // 文件过期时间（小时），0表示永不过期
+}
+
+// GenerateUploadTokenResponse 生成上传凭证响应
+message GenerateUploadTokenResponse {
+  string file_id = 1;
+  string upload_url = 2;
+  int64 expires_in = 3;  // URL有效期（秒）
+}
+
+// CompleteUploadRequest 完成上传请求
+message CompleteUploadRequest {
+  string file_id = 1;
+  string user_id = 2;
+}
+
+// GenerateDownloadURLRequest 生成下载链接请求
+message GenerateDownloadURLRequest {
+  string file_id = 1;
+  string user_id = 2;
+  optional int32 expires_minutes = 3;  // URL有效期（分钟），默认60分钟
+}
+
+// GenerateDownloadURLResponse 生成下载链接响应
+message GenerateDownloadURLResponse {
+  string download_url = 1;
+  int64 expires_in = 2;  // URL有效期（秒）
+  optional string thumbnail_url = 3;
+}
+
+// GetFileInfoRequest 获取文件信息请求
+message GetFileInfoRequest {
+  string file_id = 1;
+  string user_id = 2;
+}
+
+// DeleteFileRequest 删除文件请求
+message DeleteFileRequest {
+  string file_id = 1;
+  string user_id = 2;
+}
+
+// DeleteFileResponse 删除文件响应
+message DeleteFileResponse {
+  bool success = 1;
+}
+
+// ListUserFilesRequest 列出用户文件请求
+message ListUserFilesRequest {
+  string user_id = 1;
+  optional string file_type = 2;  // 可选：按文件类型过滤
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ListUserFilesResponse 列出用户文件响应
+message ListUserFilesResponse {
+  repeated FileInfo files = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// BatchGetFileInfoRequest 批量获取文件信息请求
+message BatchGetFileInfoRequest {
+  repeated string file_ids = 1;
+  string user_id = 2;
+}
+
+// BatchGetFileInfoResponse 批量获取文件信息响应
+message BatchGetFileInfoResponse {
+  repeated FileInfo files = 1;
+}
