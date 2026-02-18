@@ -41,10 +41,16 @@ jobs:
           go-version: '1.24'
           cache: true
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install dependencies
         run: |
           go mod download
           go install github.com/swaggo/swag/cmd/swag@latest
+          npm install --no-save swagger2openapi
 
       - name: Generate API documentation
         run: |
@@ -54,13 +60,25 @@ jobs:
             --parseDependency \
             --parseInternal
 
-      - name: Validate swagger.json
+      - name: Convert to OpenAPI 3.0
+        run: |
+          npx swagger2openapi \
+            --warnOnly \
+            --outfile docs/api/swagger/openapi.json \
+            docs/api/swagger/swagger.json
+
+      - name: Validate generated files
         run: |
           if [ ! -f docs/api/swagger/swagger.json ]; then
             echo "Error: swagger.json not generated"
             exit 1
           fi
           echo "✓ swagger.json generated successfully"
+          if [ ! -f docs/api/swagger/openapi.json ]; then
+            echo "Error: openapi.json not generated"
+            exit 1
+          fi
+          echo "✓ openapi.json generated successfully"
 
       - name: Check for changes
         id: check_changes
@@ -71,13 +89,17 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Stage artifact files
+        run: |
+          mkdir -p _artifact_staging
+          cp docs/api/swagger/openapi.json _artifact_staging/openapi.json
+          cp docs/api/asyncapi.yaml _artifact_staging/asyncapi.yaml
+
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
           name: api-docs
-          path: |
-            docs/api/swagger/openapi.json
-            docs/api/asyncapi.yaml
+          path: _artifact_staging/
 
       - name: Upload proto artifact
         uses: actions/upload-artifact@v4
