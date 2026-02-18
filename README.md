@@ -158,7 +158,7 @@ mage fmt
 
 ### 在线文档
 
-- **完整文档站点**: [GitHub Pages](https://anychat.github.io/server/) (自动部署)
+- **完整文档站点**: [GitHub Pages](https://yzhgit.github.io/anchat-server/) (自动部署)
 - **本地预览**: 运行 `mage docs:serve` 后访问 http://localhost:3000
 
 ### 文档内容
@@ -187,7 +187,7 @@ mage docs:build
 
 - **触发条件**: 推送到 main 分支或创建 Pull Request
 - **部署目标**: GitHub Pages
-- **文档地址**: https://anychat.github.io/server/
+- **文档地址**: https://yzhgit.github.io/anchat-server/
 
 文档会在以下情况自动更新：
 1. Gateway 服务代码变更

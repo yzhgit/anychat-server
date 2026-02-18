@@ -9,7 +9,7 @@
 #### 在线查看
 
 访问部署在 GitHub Pages 的文档站点：
-- https://anychat.github.io/server/
+- https://yzhgit.github.io/anchat-server/
 
 #### 本地查看
 
