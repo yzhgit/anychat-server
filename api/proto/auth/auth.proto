@@ -36,6 +36,7 @@ message RegisterRequest {
   optional string nickname = 5;
   string device_type = 6;  // iOS/Android/Web
   string device_id = 7;
+  string client_version = 8;  // 客户端版本号，用于客户端升级判断
 }
 
 // RegisterResponse 注册响应
@@ -52,6 +53,7 @@ message LoginRequest {
   string password = 2;
   string device_type = 3;
   string device_id = 4;
+  string client_version = 5;  // 客户端版本号，用于客户端升级判断
 }
 
 // LoginResponse 登录响应

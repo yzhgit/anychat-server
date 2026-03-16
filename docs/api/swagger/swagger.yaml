@@ -331,6 +331,9 @@ definitions:
       account:
         example: "13800138000"
         type: string
+      clientVersion:
+        example: 1.0.0
+        type: string
       deviceId:
         example: device-uuid-123
         type: string
@@ -346,6 +349,7 @@ definitions:
         type: string
     required:
     - account
+    - clientVersion
     - deviceId
     - deviceType
     - password
@@ -368,6 +372,9 @@ definitions:
     type: object
   internal_gateway_handler.RegisterRequest:
     properties:
+      clientVersion:
+        example: 1.0.0
+        type: string
       deviceId:
         example: device-uuid-123
         type: string
@@ -394,6 +401,7 @@ definitions:
         example: "123456"
         type: string
     required:
+    - clientVersion
     - deviceId
     - deviceType
     - password

@@ -5082,6 +5082,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "account",
+                "clientVersion",
                 "deviceId",
                 "deviceType",
                 "password"
@@ -5090,6 +5091,10 @@ const docTemplate = `{
                 "account": {
                     "type": "string",
                     "example": "13800138000"
+                },
+                "clientVersion": {
+                    "type": "string",
+                    "example": "1.0.0"
                 },
                 "deviceId": {
                     "type": "string",
@@ -5137,12 +5142,17 @@ const docTemplate = `{
         "internal_gateway_handler.RegisterRequest": {
             "type": "object",
             "required": [
+                "clientVersion",
                 "deviceId",
                 "deviceType",
                 "password",
                 "verifyCode"
             ],
             "properties": {
+                "clientVersion": {
+                    "type": "string",
+                    "example": "1.0.0"
+                },
                 "deviceId": {
                     "type": "string",
                     "example": "device-uuid-123"

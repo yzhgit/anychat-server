@@ -54,6 +54,118 @@ check_command() {
     fi
 }
 
+# 比较版本号（语义化版本，仅比较 major.minor.patch）
+# 返回 0 表示 $1 >= $2，返回 1 表示 $1 < $2
+version_gte() {
+    local actual=$1
+    local required=$2
+
+    # 将版本号拆分为数组
+    IFS='.' read -r -a actual_parts <<< "$actual"
+    IFS='.' read -r -a required_parts <<< "$required"
+
+    for i in 0 1 2; do
+        local a=${actual_parts[$i]:-0}
+        local r=${required_parts[$i]:-0}
+        if [ "$a" -gt "$r" ]; then return 0; fi
+        if [ "$a" -lt "$r" ]; then return 1; fi
+    done
+    return 0
+}
+
+# 检查 Docker 版本（>= 28.1.1）
+check_docker_version() {
+    local required="28.1.1"
+
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker 未安装"
+        print_info "安装提示: https://docs.docker.com/get-docker/"
+        return 1
+    fi
+
+    local raw
+    raw=$(docker --version 2>&1)
+    # 格式: "Docker version 24.0.5, build ced0996"
+    local ver
+    ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+    if version_gte "$ver" "$required"; then
+        print_success "Docker 已安装: $raw"
+        return 0
+    else
+        print_error "Docker 版本过低: $ver（要求 >= $required）"
+        print_info "请升级 Docker: https://docs.docker.com/get-docker/"
+        return 1
+    fi
+}
+
+# 检查 Docker Compose 版本（>= 2.35.1）
+check_docker_compose_version() {
+    local required="2.35.1"
+
+    # 优先检测 docker compose（v2 插件形式）
+    if docker compose version &> /dev/null; then
+        local raw
+        raw=$(docker compose version 2>&1)
+        local ver
+        ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if version_gte "$ver" "$required"; then
+            print_success "Docker Compose 已安装: $raw"
+            return 0
+        else
+            print_error "Docker Compose 版本过低: $ver（要求 >= $required）"
+            return 1
+        fi
+    fi
+
+    # 回退到独立的 docker-compose 命令
+    if command -v docker-compose &> /dev/null; then
+        local raw
+        raw=$(docker-compose --version 2>&1)
+        local ver
+        ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if version_gte "$ver" "$required"; then
+            print_success "Docker Compose 已安装: $raw"
+            return 0
+        else
+            print_error "Docker Compose 版本过低: $ver（要求 >= $required）"
+            print_info "请升级 Docker Compose: https://docs.docker.com/compose/install/"
+            return 1
+        fi
+    fi
+
+    print_error "Docker Compose 未安装"
+    print_info "安装提示: https://docs.docker.com/compose/install/"
+    return 1
+}
+
+# 检查 protoc 版本（>= 3.12.4，且支持 proto3 optional）
+check_protoc_version() {
+    local required="3.12.4"
+
+    if ! command -v protoc &> /dev/null; then
+        print_warning "protoc 未安装，无法生成 proto 代码"
+        print_info "安装提示: https://grpc.io/docs/protoc-installation/"
+        print_info "要求版本: >= $required（支持 --experimental_allow_proto3_optional）"
+        return 1
+    fi
+
+    local raw
+    raw=$(protoc --version 2>&1)
+    # 格式: "libprotoc 3.12.4"
+    local ver
+    ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+    if version_gte "$ver" "$required"; then
+        print_success "protoc 已安装: $raw"
+        return 0
+    else
+        print_error "protoc 版本过低: $ver（要求 >= $required，需支持 --experimental_allow_proto3_optional）"
+        print_info "请升级 protoc: https://grpc.io/docs/protoc-installation/"
+        return 1
+    fi
+}
+
 # 检查服务端口
 check_port() {
     local port=$1
@@ -94,11 +206,11 @@ check_dev_tools() {
     # Go
     check_command go "Go" "https://go.dev/doc/install" || ((failed++))
 
-    # Docker
-    check_command docker "Docker" "https://docs.docker.com/get-docker/" || ((failed++))
+    # Docker（含版本检查）
+    check_docker_version || ((failed++))
 
-    # Docker Compose
-    check_command docker-compose "Docker Compose" "https://docs.docker.com/compose/install/" || ((failed++))
+    # Docker Compose（含版本检查）
+    check_docker_compose_version || ((failed++))
 
     # jq (用于 JSON 处理)
     check_command jq "jq" "apt-get install jq 或 brew install jq" || ((failed++))
@@ -113,8 +225,8 @@ check_dev_tools() {
         print_success "nc (netcat) 已安装"
     fi
 
-    # protoc
-    check_command protoc "Protocol Buffers" "https://grpc.io/docs/protoc-installation/" || print_warning "protoc 未安装，无法生成 proto 代码"
+    # protoc（含版本检查）
+    check_protoc_version || ((failed++))
 
     # mage
     if command -v mage &> /dev/null; then

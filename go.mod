@@ -1,8 +1,6 @@
 module github.com/anychat/server
 
-go 1.24.0
-
-toolchain go1.24.9
+go 1.24.9
 
 require (
 	github.com/gin-contrib/cors v1.4.0
@@ -11,7 +9,10 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
-	github.com/magefile/mage v1.15.0
+	github.com/gorilla/websocket v1.5.3
+	github.com/livekit/protocol v1.9.7
+	github.com/livekit/server-sdk-go v1.1.8
+	github.com/magefile/mage v1.16.0
 	github.com/minio/minio-go/v7 v7.0.98
 	github.com/nats-io/nats.go v1.48.0
 	github.com/spf13/viper v1.17.0
@@ -62,7 +63,6 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -79,9 +79,7 @@ require (
 	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20230125210925-54e8a70427c1 // indirect
 	github.com/livekit/mediatransportutil v0.0.0-20231213075826-cccbf2b93d3f // indirect
-	github.com/livekit/protocol v1.9.7 // indirect
 	github.com/livekit/psrpc v0.5.3-0.20231214055026-06ce27a934c9 // indirect
-	github.com/livekit/server-sdk-go v1.1.8 // indirect
 	github.com/mackerelio/go-osstat v0.2.4 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

@@ -17,21 +17,23 @@ type AuthHandler struct {
 
 // RegisterRequest 用户注册请求
 type RegisterRequest struct {
-	PhoneNumber *string `json:"phoneNumber" example:"13800138000"`
-	Email       *string `json:"email" example:"user@example.com"`
-	Password    string  `json:"password" binding:"required" example:"password123"`
-	VerifyCode  string  `json:"verifyCode" binding:"required" example:"123456"`
-	Nickname    *string `json:"nickname" example:"张三"`
-	DeviceType  string  `json:"deviceType" binding:"required" example:"ios" enums:"ios,android,web"`
-	DeviceID    string  `json:"deviceId" binding:"required" example:"device-uuid-123"`
+	PhoneNumber   *string `json:"phoneNumber" example:"13800138000"`
+	Email         *string `json:"email" example:"user@example.com"`
+	Password      string  `json:"password" binding:"required" example:"password123"`
+	VerifyCode    string  `json:"verifyCode" binding:"required" example:"123456"`
+	Nickname      *string `json:"nickname" example:"张三"`
+	DeviceType    string  `json:"deviceType" binding:"required" example:"ios" enums:"ios,android,web"`
+	DeviceID      string  `json:"deviceId" binding:"required" example:"device-uuid-123"`
+	ClientVersion string  `json:"clientVersion" binding:"required" example:"1.0.0"`
 }
 
 // LoginRequest 用户登录请求
 type LoginRequest struct {
-	Account    string `json:"account" binding:"required" example:"13800138000"`
-	Password   string `json:"password" binding:"required" example:"password123"`
-	DeviceType string `json:"deviceType" binding:"required" example:"ios" enums:"ios,android,web"`
-	DeviceID   string `json:"deviceId" binding:"required" example:"device-uuid-123"`
+	Account       string `json:"account" binding:"required" example:"13800138000"`
+	Password      string `json:"password" binding:"required" example:"password123"`
+	DeviceType    string `json:"deviceType" binding:"required" example:"ios" enums:"ios,android,web"`
+	DeviceID      string `json:"deviceId" binding:"required" example:"device-uuid-123"`
+	ClientVersion string `json:"clientVersion" binding:"required" example:"1.0.0"`
 }
 
 // RefreshTokenRequest 刷新令牌请求
@@ -97,13 +99,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	// 调用auth-service gRPC
 	resp, err := h.clientManager.Auth().Register(c.Request.Context(), &authpb.RegisterRequest{
-		PhoneNumber: req.PhoneNumber,
-		Email:       req.Email,
-		Password:    req.Password,
-		VerifyCode:  req.VerifyCode,
-		Nickname:    req.Nickname,
-		DeviceType:  req.DeviceType,
-		DeviceId:    req.DeviceID,
+		PhoneNumber:   req.PhoneNumber,
+		Email:         req.Email,
+		Password:      req.Password,
+		VerifyCode:    req.VerifyCode,
+		Nickname:      req.Nickname,
+		DeviceType:    req.DeviceType,
+		DeviceId:      req.DeviceID,
+		ClientVersion: req.ClientVersion,
 	})
 
 	if err != nil {
@@ -141,10 +144,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// 调用auth-service gRPC
 	resp, err := h.clientManager.Auth().Login(c.Request.Context(), &authpb.LoginRequest{
-		Account:    req.Account,
-		Password:   req.Password,
-		DeviceType: req.DeviceType,
-		DeviceId:   req.DeviceID,
+		Account:       req.Account,
+		Password:      req.Password,
+		DeviceType:    req.DeviceType,
+		DeviceId:      req.DeviceID,
+		ClientVersion: req.ClientVersion,
 	})
 
 	if err != nil {

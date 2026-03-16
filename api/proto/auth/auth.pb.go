@@ -32,6 +32,7 @@ type RegisterRequest struct {
 	Nickname      *string                `protobuf:"bytes,5,opt,name=nickname,proto3,oneof" json:"nickname,omitempty"`
 	DeviceType    string                 `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"` // iOS/Android/Web
 	DeviceId      string                 `protobuf:"bytes,7,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	ClientVersion string                 `protobuf:"bytes,8,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty"` // 客户端版本号，用于客户端升级判断
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -115,6 +116,13 @@ func (x *RegisterRequest) GetDeviceId() string {
 	return ""
 }
 
+func (x *RegisterRequest) GetClientVersion() string {
+	if x != nil {
+		return x.ClientVersion
+	}
+	return ""
+}
+
 // RegisterResponse 注册响应
 type RegisterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -191,6 +199,7 @@ type LoginRequest struct {
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	DeviceType    string                 `protobuf:"bytes,3,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
 	DeviceId      string                 `protobuf:"bytes,4,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	ClientVersion string                 `protobuf:"bytes,5,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty"` // 客户端版本号，用于客户端升级判断
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -249,6 +258,13 @@ func (x *LoginRequest) GetDeviceType() string {
 func (x *LoginRequest) GetDeviceId() string {
 	if x != nil {
 		return x.DeviceId
+	}
+	return ""
+}
+
+func (x *LoginRequest) GetClientVersion() string {
+	if x != nil {
+		return x.ClientVersion
 	}
 	return ""
 }
@@ -668,7 +684,7 @@ var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x0fauth/auth.proto\x12\fanychat.auth\x1a\x13common/common.proto\"\x98\x02\n" +
+	"\x0fauth/auth.proto\x12\fanychat.auth\x1a\x13common/common.proto\"\xbf\x02\n" +
 	"\x0fRegisterRequest\x12&\n" +
 	"\fphone_number\x18\x01 \x01(\tH\x00R\vphoneNumber\x88\x01\x01\x12\x19\n" +
 	"\x05email\x18\x02 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x1a\n" +
@@ -678,7 +694,8 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\bnickname\x18\x05 \x01(\tH\x02R\bnickname\x88\x01\x01\x12\x1f\n" +
 	"\vdevice_type\x18\x06 \x01(\tR\n" +
 	"deviceType\x12\x1b\n" +
-	"\tdevice_id\x18\a \x01(\tR\bdeviceIdB\x0f\n" +
+	"\tdevice_id\x18\a \x01(\tR\bdeviceId\x12%\n" +
+	"\x0eclient_version\x18\b \x01(\tR\rclientVersionB\x0f\n" +
 	"\r_phone_numberB\b\n" +
 	"\x06_emailB\v\n" +
 	"\t_nickname\"\x92\x01\n" +
@@ -687,13 +704,14 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x04 \x01(\x03R\texpiresIn\"\x82\x01\n" +
+	"expires_in\x18\x04 \x01(\x03R\texpiresIn\"\xa9\x01\n" +
 	"\fLoginRequest\x12\x18\n" +
 	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1f\n" +
 	"\vdevice_type\x18\x03 \x01(\tR\n" +
 	"deviceType\x12\x1b\n" +
-	"\tdevice_id\x18\x04 \x01(\tR\bdeviceId\"\xbd\x01\n" +
+	"\tdevice_id\x18\x04 \x01(\tR\bdeviceId\x12%\n" +
+	"\x0eclient_version\x18\x05 \x01(\tR\rclientVersion\"\xbd\x01\n" +
 	"\rLoginResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +

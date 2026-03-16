@@ -2,21 +2,23 @@ package dto
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-	PhoneNumber string `json:"phoneNumber" binding:"required_without=Email"`
-	Email       string `json:"email" binding:"required_without=PhoneNumber,omitempty,email"`
-	Password    string `json:"password" binding:"required,min=8,max=32"`
-	VerifyCode  string `json:"verifyCode" binding:"required"`
-	Nickname    string `json:"nickname"`
-	DeviceType  string `json:"deviceType" binding:"required"`
-	DeviceID    string `json:"deviceId" binding:"required"`
+	PhoneNumber   string `json:"phoneNumber" binding:"required_without=Email"`
+	Email         string `json:"email" binding:"required_without=PhoneNumber,omitempty,email"`
+	Password      string `json:"password" binding:"required,min=8,max=32"`
+	VerifyCode    string `json:"verifyCode" binding:"required"`
+	Nickname      string `json:"nickname"`
+	DeviceType    string `json:"deviceType" binding:"required"`
+	DeviceID      string `json:"deviceId" binding:"required"`
+	ClientVersion string `json:"clientVersion" binding:"required"`
 }
 
 // LoginRequest 登录请求
 type LoginRequest struct {
-	Account    string `json:"account" binding:"required"`
-	Password   string `json:"password" binding:"required"`
-	DeviceType string `json:"deviceType" binding:"required"`
-	DeviceID   string `json:"deviceId" binding:"required"`
+	Account       string `json:"account" binding:"required"`
+	Password      string `json:"password" binding:"required"`
+	DeviceType    string `json:"deviceType" binding:"required"`
+	DeviceID      string `json:"deviceId" binding:"required"`
+	ClientVersion string `json:"clientVersion" binding:"required"`
 }
 
 // RefreshTokenRequest 刷新Token请求

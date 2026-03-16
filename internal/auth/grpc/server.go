@@ -29,10 +29,11 @@ func NewAuthServer(authService service.AuthService) *AuthServer {
 func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
 	// Proto -> DTO 转换
 	dtoReq := &dto.RegisterRequest{
-		Password:   req.Password,
-		VerifyCode: req.VerifyCode,
-		DeviceType: req.DeviceType,
-		DeviceID:   req.DeviceId,
+		Password:      req.Password,
+		VerifyCode:    req.VerifyCode,
+		DeviceType:    req.DeviceType,
+		DeviceID:      req.DeviceId,
+		ClientVersion: req.ClientVersion,
 	}
 	if req.PhoneNumber != nil {
 		dtoReq.PhoneNumber = *req.PhoneNumber
@@ -63,10 +64,11 @@ func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) 
 func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	// Proto -> DTO 转换
 	dtoReq := &dto.LoginRequest{
-		Account:    req.Account,
-		Password:   req.Password,
-		DeviceType: req.DeviceType,
-		DeviceID:   req.DeviceId,
+		Account:       req.Account,
+		Password:      req.Password,
+		DeviceType:    req.DeviceType,
+		DeviceID:      req.DeviceId,
+		ClientVersion: req.ClientVersion,
 	}
 
 	// 调用service层

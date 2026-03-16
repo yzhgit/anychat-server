@@ -13,7 +13,7 @@
 
 ## 技术栈
 
-- **开发语言**: Go 1.24+
+- **开发语言**: Go 1.24.9+
 - **数据库**: PostgreSQL 18+
 - **缓存**: Redis 7.0+
 - **消息队列**: NATS
@@ -27,9 +27,10 @@
 
 ### 环境要求
 
-- Go 1.24+
-- Docker & Docker Compose
-- Mage (构建工具)
+- Go 1.24.9+
+- Docker 28.1.1+ & Docker Compose 2.35.1+
+- protoc 3.12.4+（用于生成 gRPC 代码，需开启 `--experimental_allow_proto3_optional`）
+- Mage（构建工具）
 
 ### 安装 Mage
 
