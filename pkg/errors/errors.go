@@ -44,6 +44,12 @@ const (
 	CodeUserProfileNotFound = 20103 // 用户不存在
 	CodeQRCodeExpired       = 20104 // 二维码已过期
 	CodeQRCodeInvalid       = 20105 // 二维码无效
+	CodePhoneFormatInvalid  = 20106 // 手机号格式错误
+	CodePhoneAlreadyBound   = 20107 // 手机号已被绑定
+	CodeEmailFormatInvalid  = 20108 // 邮箱格式错误
+	CodeEmailAlreadyBound   = 20109 // 邮箱已被绑定
+	CodeOldPhoneNotMatch    = 20110 // 旧手机号不匹配
+	CodeOldEmailNotMatch    = 20111 // 旧邮箱不匹配
 )
 
 // Friend Service 错误码 (30xxx)
@@ -188,6 +194,12 @@ var errorMessages = map[int]string{
 	CodeUserProfileNotFound: "用户不存在",
 	CodeQRCodeExpired:       "二维码已过期",
 	CodeQRCodeInvalid:       "二维码无效",
+	CodePhoneFormatInvalid:  "手机号格式错误",
+	CodePhoneAlreadyBound:   "手机号已被占用",
+	CodeEmailFormatInvalid:  "邮箱格式错误",
+	CodeEmailAlreadyBound:   "邮箱已被占用",
+	CodeOldPhoneNotMatch:    "旧手机号不匹配",
+	CodeOldEmailNotMatch:    "旧邮箱不匹配",
 
 	CodeAlreadyFriend:         "已经是好友",
 	CodeBlockedByUser:         "对方已拉黑你",

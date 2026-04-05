@@ -67,8 +67,8 @@ sequenceDiagram
 
 | 错误码 | 说明 |
 |--------|------|
-| 4002 | RefreshToken无效 |
-| 4003 | RefreshToken过期 |
+| 10107 | RefreshToken无效 |
+| 10108 | RefreshToken已过期 |
 
 ## 7. 安全考虑
 
