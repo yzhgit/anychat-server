@@ -86,8 +86,8 @@ services:
     grpc_addr: ${FILE_GRPC_ADDR:localhost:9007}
   push:
     grpc_addr: ${PUSH_GRPC_ADDR:localhost:9008}
-  rtc:
-    grpc_addr: ${RTC_GRPC_ADDR:localhost:9009}
+  calling:
+    grpc_addr: ${CALLING_GRPC_ADDR:localhost:9009}
   sync:
     grpc_addr: ${SYNC_GRPC_ADDR:localhost:9010}
   admin:

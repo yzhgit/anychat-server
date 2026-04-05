@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# LiveKit RTC Service API 测试脚本
+# LiveKit Calling Service API 测试脚本
 #
 
 set -e
@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/../common.sh"
 BASE_URL="${GATEWAY_URL:-http://localhost:8080}/api/v1"
 
 echo "=================================================="
-echo "  LiveKit RTC Service API 测试"
+echo "  LiveKit Calling Service API 测试"
 echo "=================================================="
 echo ""
 
@@ -26,9 +26,9 @@ fail() { echo -e "${RED}✗ FAIL${NC}: $1"; FAIL=$((FAIL + 1)); }
 # 注册并登录用户，返回 token
 register_and_login() {
     local suffix="$1"
-    local email="rtc_${suffix}@test.com"
+    local email="calling_${suffix}@test.com"
     local password="Test@1234"
-    local device_id="rtc-dev-${suffix}"
+    local device_id="calling-dev-${suffix}"
 
     curl -s -X POST "${BASE_URL}/auth/register" \
         -H "Content-Type: application/json" \
@@ -49,7 +49,7 @@ TOKEN_A=$(register_and_login "00000001")
 TOKEN_B=$(register_and_login "00000002")
 
 if [ -z "$TOKEN_A" ] || [ -z "$TOKEN_B" ]; then
-    echo -e "${RED}错误: 无法获取测试用户 token，跳过 RTC 测试${NC}"
+    echo -e "${RED}错误: 无法获取测试用户 token，跳过 Calling 测试${NC}"
     exit 0
 fi
 
@@ -60,7 +60,7 @@ echo ""
 # ── 测试 1: 未认证发起通话（应返回 401）────────────────
 
 echo "测试 1: 未认证发起通话"
-RESP=$(curl -s -X POST "${BASE_URL}/rtc/calls" \
+RESP=$(curl -s -X POST "${BASE_URL}/calling/calls" \
     -H "Content-Type: application/json" \
     -d '{"calleeId":"user-xxx","callType":"audio"}')
 CODE=$(echo "$RESP" | grep -o '"code":[0-9]*' | cut -d: -f2)
@@ -73,7 +73,7 @@ fi
 # ── 测试 2: 缺少 calleeId（应返回 400）────────────────
 
 echo "测试 2: 缺少 calleeId"
-RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/rtc/calls" \
+RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/calling/calls" \
     -H "Authorization: Bearer $TOKEN_A" \
     -H "Content-Type: application/json" \
     -d '{}')
@@ -86,9 +86,9 @@ fi
 # ── 测试 3: 获取通话记录（空列表）────────────────────
 
 echo "测试 3: 获取通话记录（初始为空）"
-RESP=$(curl -s "${BASE_URL}/rtc/calls" \
+RESP=$(curl -s "${BASE_URL}/calling/calls" \
     -H "Authorization: Bearer $TOKEN_A")
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/rtc/calls" \
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/calling/calls" \
     -H "Authorization: Bearer $TOKEN_A")
 if [ "$HTTP_CODE" = "200" ]; then
     pass "获取通话记录成功（HTTP 200）"
@@ -99,7 +99,7 @@ fi
 # ── 测试 4: 获取不存在的通话（应返回错误）────────────
 
 echo "测试 4: 获取不存在的通话"
-RESP=$(curl -s "${BASE_URL}/rtc/calls/nonexistent-call-id" \
+RESP=$(curl -s "${BASE_URL}/calling/calls/nonexistent-call-id" \
     -H "Authorization: Bearer $TOKEN_A")
 CODE=$(echo "$RESP" | grep -o '"code":[0-9]*' | cut -d: -f2)
 if [ "$CODE" = "404" ] || [ "$CODE" = "500" ]; then
@@ -111,7 +111,7 @@ fi
 # ── 测试 5: 未认证创建会议室（应返回 401）────────────
 
 echo "测试 5: 未认证创建会议室"
-RESP=$(curl -s -X POST "${BASE_URL}/rtc/meetings" \
+RESP=$(curl -s -X POST "${BASE_URL}/calling/meetings" \
     -H "Content-Type: application/json" \
     -d '{"title":"Test Meeting"}')
 CODE=$(echo "$RESP" | grep -o '"code":[0-9]*' | cut -d: -f2)
@@ -124,7 +124,7 @@ fi
 # ── 测试 6: 缺少 title（应返回 400）────────────────────
 
 echo "测试 6: 创建会议室缺少 title"
-RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/rtc/meetings" \
+RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/calling/meetings" \
     -H "Authorization: Bearer $TOKEN_A" \
     -H "Content-Type: application/json" \
     -d '{}')
@@ -134,22 +134,22 @@ else
     fail "期望 400，实际 $RESP"
 fi
 
-# ── 测试 7: 列举会议室（无需 rtc-service 可用）────
+# ── 测试 7: 列举会议室（初始为空）────────────────────
 
-echo "测试 7: 列举会议室（初始为空或报错）"
+echo "测试 7: 列举会议室（初始为空）"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-    "${BASE_URL}/rtc/meetings" \
+    "${BASE_URL}/calling/meetings" \
     -H "Authorization: Bearer $TOKEN_A")
-if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "500" ]; then
-    pass "列举会议室接口可达（HTTP ${HTTP_CODE}）"
+if [ "$HTTP_CODE" = "200" ]; then
+    pass "列举会议室成功（HTTP 200）"
 else
-    fail "期望 200/500，实际 $HTTP_CODE"
+    fail "期望 200，实际 $HTTP_CODE"
 fi
 
 # ── 测试 8: 接听不存在的通话（应返回错误）────────────
 
 echo "测试 8: 接听不存在的通话"
-RESP=$(curl -s -X POST "${BASE_URL}/rtc/calls/fake-call-id/join" \
+RESP=$(curl -s -X POST "${BASE_URL}/calling/calls/fake-call-id/join" \
     -H "Authorization: Bearer $TOKEN_B")
 CODE=$(echo "$RESP" | grep -o '"code":[0-9]*' | cut -d: -f2)
 if [ "$CODE" = "404" ] || [ "$CODE" = "500" ]; then
@@ -161,7 +161,7 @@ fi
 # ── 测试 9: 获取不存在的会议室（应返回错误）─────────
 
 echo "测试 9: 获取不存在的会议室"
-RESP=$(curl -s "${BASE_URL}/rtc/meetings/nonexistent-room" \
+RESP=$(curl -s "${BASE_URL}/calling/meetings/nonexistent-room" \
     -H "Authorization: Bearer $TOKEN_A")
 CODE=$(echo "$RESP" | grep -o '"code":[0-9]*' | cut -d: -f2)
 if [ "$CODE" = "404" ] || [ "$CODE" = "500" ]; then

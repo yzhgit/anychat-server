@@ -21,7 +21,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 	wsHandler := NewWSHandler(clientManager, jwtManager, wsManager, subscriber)
 	sessionHandler := NewSessionHandler(clientManager)
 	syncHandler := NewSyncHandler(clientManager)
-	rtcHandler := NewRTCHandler(clientManager)
+	callingHandler := NewCallingHandler(clientManager)
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
@@ -146,24 +146,8 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				sync.POST("/messages", syncHandler.SyncMessages)
 			}
 
-			// RTC路由
-			rtc := authorized.Group("/rtc")
-			{
-				// 一对一通话
-				rtc.POST("/calls", rtcHandler.InitiateCall)
-				rtc.GET("/calls", rtcHandler.ListCallLogs)
-				rtc.GET("/calls/:callId", rtcHandler.GetCallSession)
-				rtc.POST("/calls/:callId/join", rtcHandler.JoinCall)
-				rtc.POST("/calls/:callId/reject", rtcHandler.RejectCall)
-				rtc.POST("/calls/:callId/end", rtcHandler.EndCall)
-
-				// 会议室
-				rtc.POST("/meetings", rtcHandler.CreateMeeting)
-				rtc.GET("/meetings", rtcHandler.ListMeetings)
-				rtc.GET("/meetings/:roomId", rtcHandler.GetMeeting)
-				rtc.POST("/meetings/:roomId/join", rtcHandler.JoinMeeting)
-				rtc.POST("/meetings/:roomId/end", rtcHandler.EndMeeting)
-			}
+			// Calling 路由（推荐）
+			registerCallingRoutes(authorized.Group("/calling"), callingHandler)
 		}
 	}
 
@@ -174,4 +158,21 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			"service": "gateway-service",
 		})
 	})
+}
+
+func registerCallingRoutes(group *gin.RouterGroup, handler *CallingHandler) {
+	// 一对一通话
+	group.POST("/calls", handler.InitiateCall)
+	group.GET("/calls", handler.ListCallLogs)
+	group.GET("/calls/:callId", handler.GetCallSession)
+	group.POST("/calls/:callId/join", handler.JoinCall)
+	group.POST("/calls/:callId/reject", handler.RejectCall)
+	group.POST("/calls/:callId/end", handler.EndCall)
+
+	// 会议室
+	group.POST("/meetings", handler.CreateMeeting)
+	group.GET("/meetings", handler.ListMeetings)
+	group.GET("/meetings/:roomId", handler.GetMeeting)
+	group.POST("/meetings/:roomId/join", handler.JoinMeeting)
+	group.POST("/meetings/:roomId/end", handler.EndMeeting)
 }

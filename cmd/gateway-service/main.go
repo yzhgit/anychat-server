@@ -81,7 +81,7 @@ func main() {
 		viper.GetString("services.message.grpc_addr"),
 		viper.GetString("services.session.grpc_addr"),
 		viper.GetString("services.sync.grpc_addr"),
-		viper.GetString("services.rtc.grpc_addr"),
+		getCallingGRPCAddr(),
 	)
 	if err != nil {
 		logger.Fatal("Failed to connect to backend services", zap.Error(err))
@@ -152,7 +152,7 @@ func loadConfig() error {
 	viper.SetDefault("services.message.grpc_addr", "localhost:9005")
 	viper.SetDefault("services.session.grpc_addr", "localhost:9006")
 	viper.SetDefault("services.sync.grpc_addr", "localhost:9010")
-	viper.SetDefault("services.rtc.grpc_addr", "localhost:9009")
+	viper.SetDefault("services.calling.grpc_addr", "localhost:9009")
 	viper.SetDefault("nats.url", "nats://localhost:4222")
 	viper.SetDefault("jwt.secret", "your-secret-key-change-in-production")
 	viper.SetDefault("jwt.access_token_expire", 7200)
@@ -174,6 +174,16 @@ func loadConfig() error {
 	config.ExpandEnvInConfig()
 
 	return nil
+}
+
+func getCallingGRPCAddr() string {
+	if viper.InConfig("services.calling.grpc_addr") {
+		return viper.GetString("services.calling.grpc_addr")
+	}
+	if addr := viper.GetString("services.calling.grpc_addr"); addr != "" {
+		return addr
+	}
+	return "localhost:9009"
 }
 
 // initLogger 初始化日志

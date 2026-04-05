@@ -1297,6 +1297,450 @@ paths:
       summary: 发送验证码
       tags:
       - 认证
+  /calling/calls:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的通话历史记录
+      parameters:
+      - description: 页码（默认1）
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量（默认20）
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 通话记录
+      tags:
+      - Calling
+    post:
+      consumes:
+      - application/json
+      description: 向指定用户发起音视频通话，返回 Calling Room 名称和 JWT Token
+      parameters:
+      - description: 通话请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.initiateCallRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 通话发起成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发起通话
+      tags:
+      - Calling
+  /calling/calls/{callId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定通话会话的详细信息
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取通话详情
+      tags:
+      - Calling
+  /calling/calls/{callId}/end:
+    post:
+      consumes:
+      - application/json
+      description: 主叫方或被叫方挂断通话
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 挂断成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 挂断通话
+      tags:
+      - Calling
+  /calling/calls/{callId}/join:
+    post:
+      consumes:
+      - application/json
+      description: 被叫方接受通话邀请，返回 Calling Room 名称和 JWT Token
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 接听成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 接听通话
+      tags:
+      - Calling
+  /calling/calls/{callId}/reject:
+    post:
+      consumes:
+      - application/json
+      description: 被叫方拒绝通话邀请
+      parameters:
+      - description: 通话ID
+        in: path
+        name: callId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 拒绝成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 通话不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 拒绝通话
+      tags:
+      - Calling
+  /calling/meetings:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前活跃的会议室列表
+      parameters:
+      - description: 页码（默认1）
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量（默认20）
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 会议室列表
+      tags:
+      - Calling
+    post:
+      consumes:
+      - application/json
+      description: 创建新的音视频会议室，返回会议信息和 Calling Token
+      parameters:
+      - description: 会议室信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.createMeetingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建会议室
+      tags:
+      - Calling
+  /calling/meetings/{roomId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定会议室的详细信息
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取会议室
+      tags:
+      - Calling
+  /calling/meetings/{roomId}/end:
+    post:
+      consumes:
+      - application/json
+      description: 创建者结束会议室，会议室关闭后所有参与者将被移出
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 结束会议室
+      tags:
+      - Calling
+  /calling/meetings/{roomId}/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入指定会议室，返回 Calling Token
+      parameters:
+      - description: 会议室ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: 会议室密码（若有）
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_gateway_handler.joinMeetingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 加入成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "403":
+          description: 密码错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "404":
+          description: 会议室不存在
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 加入会议室
+      tags:
+      - Calling
   /files:
     get:
       consumes:
@@ -2469,450 +2913,6 @@ paths:
       summary: 转让群主
       tags:
       - 群组
-  /rtc/calls:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前用户的通话历史记录
-      parameters:
-      - description: 页码（默认1）
-        in: query
-        name: page
-        type: integer
-      - description: 每页数量（默认20）
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 通话记录
-      tags:
-      - RTC
-    post:
-      consumes:
-      - application/json
-      description: 向指定用户发起音视频通话，返回 RTC Room 名称和 JWT Token
-      parameters:
-      - description: 通话请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_gateway_handler.initiateCallRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 通话发起成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 发起通话
-      tags:
-      - RTC
-  /rtc/calls/{callId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取指定通话会话的详细信息
-      parameters:
-      - description: 通话ID
-        in: path
-        name: callId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 通话不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 获取通话详情
-      tags:
-      - RTC
-  /rtc/calls/{callId}/end:
-    post:
-      consumes:
-      - application/json
-      description: 主叫方或被叫方挂断通话
-      parameters:
-      - description: 通话ID
-        in: path
-        name: callId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 挂断成功
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 通话不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 挂断通话
-      tags:
-      - RTC
-  /rtc/calls/{callId}/join:
-    post:
-      consumes:
-      - application/json
-      description: 被叫方接受通话邀请，返回 RTC Room 名称和 JWT Token
-      parameters:
-      - description: 通话ID
-        in: path
-        name: callId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 接听成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 通话不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 接听通话
-      tags:
-      - RTC
-  /rtc/calls/{callId}/reject:
-    post:
-      consumes:
-      - application/json
-      description: 被叫方拒绝通话邀请
-      parameters:
-      - description: 通话ID
-        in: path
-        name: callId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 拒绝成功
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 通话不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 拒绝通话
-      tags:
-      - RTC
-  /rtc/meetings:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前活跃的会议室列表
-      parameters:
-      - description: 页码（默认1）
-        in: query
-        name: page
-        type: integer
-      - description: 每页数量（默认20）
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 会议室列表
-      tags:
-      - RTC
-    post:
-      consumes:
-      - application/json
-      description: 创建新的音视频会议室，返回会议信息和 RTC Token
-      parameters:
-      - description: 会议室信息
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_gateway_handler.createMeetingRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 创建成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 创建会议室
-      tags:
-      - RTC
-  /rtc/meetings/{roomId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取指定会议室的详细信息
-      parameters:
-      - description: 会议室ID
-        in: path
-        name: roomId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 会议室不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 获取会议室
-      tags:
-      - RTC
-  /rtc/meetings/{roomId}/end:
-    post:
-      consumes:
-      - application/json
-      description: 创建者结束会议室，会议室关闭后所有参与者将被移出
-      parameters:
-      - description: 会议室ID
-        in: path
-        name: roomId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "403":
-          description: 无权限
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 会议室不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 结束会议室
-      tags:
-      - RTC
-  /rtc/meetings/{roomId}/join:
-    post:
-      consumes:
-      - application/json
-      description: 加入指定会议室，返回 RTC Token
-      parameters:
-      - description: 会议室ID
-        in: path
-        name: roomId
-        required: true
-        type: string
-      - description: 会议室密码（若有）
-        in: body
-        name: request
-        schema:
-          $ref: '#/definitions/internal_gateway_handler.joinMeetingRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 加入成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "401":
-          description: 未授权
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "403":
-          description: 密码错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "404":
-          description: 会议室不存在
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/github_com_anychat_server_pkg_response.Response'
-      security:
-      - BearerAuth: []
-      summary: 加入会议室
-      tags:
-      - RTC
   /sessions:
     get:
       consumes:

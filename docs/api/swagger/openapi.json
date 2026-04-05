@@ -3372,7 +3372,7 @@
                 }
             }
         },
-        "/rtc/calls": {
+        "/calling/calls": {
             "get": {
                 "security": [
                     {
@@ -3381,7 +3381,7 @@
                 ],
                 "description": "获取当前用户的通话历史记录",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "通话记录",
                 "parameters": [
@@ -3453,9 +3453,9 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "向指定用户发起音视频通话，返回 RTC Room 名称和 JWT Token",
+                "description": "向指定用户发起音视频通话，返回 Calling Room 名称和 JWT Token",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "发起通话",
                 "requestBody": {
@@ -3525,7 +3525,7 @@
                 }
             }
         },
-        "/rtc/calls/{callId}": {
+        "/calling/calls/{callId}": {
             "get": {
                 "security": [
                     {
@@ -3534,7 +3534,7 @@
                 ],
                 "description": "获取指定通话会话的详细信息",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "获取通话详情",
                 "parameters": [
@@ -3604,7 +3604,7 @@
                 }
             }
         },
-        "/rtc/calls/{callId}/end": {
+        "/calling/calls/{callId}/end": {
             "post": {
                 "security": [
                     {
@@ -3613,7 +3613,7 @@
                 ],
                 "description": "主叫方或被叫方挂断通话",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "挂断通话",
                 "parameters": [
@@ -3671,16 +3671,16 @@
                 }
             }
         },
-        "/rtc/calls/{callId}/join": {
+        "/calling/calls/{callId}/join": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "被叫方接受通话邀请，返回 RTC Room 名称和 JWT Token",
+                "description": "被叫方接受通话邀请，返回 Calling Room 名称和 JWT Token",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "接听通话",
                 "parameters": [
@@ -3760,7 +3760,7 @@
                 }
             }
         },
-        "/rtc/calls/{callId}/reject": {
+        "/calling/calls/{callId}/reject": {
             "post": {
                 "security": [
                     {
@@ -3769,7 +3769,7 @@
                 ],
                 "description": "被叫方拒绝通话邀请",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "拒绝通话",
                 "parameters": [
@@ -3827,7 +3827,7 @@
                 }
             }
         },
-        "/rtc/meetings": {
+        "/calling/meetings": {
             "get": {
                 "security": [
                     {
@@ -3836,7 +3836,7 @@
                 ],
                 "description": "获取当前活跃的会议室列表",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "会议室列表",
                 "parameters": [
@@ -3908,9 +3908,9 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "创建新的音视频会议室，返回会议信息和 RTC Token",
+                "description": "创建新的音视频会议室，返回会议信息和 Calling Token",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "创建会议室",
                 "requestBody": {
@@ -3980,7 +3980,7 @@
                 }
             }
         },
-        "/rtc/meetings/{roomId}": {
+        "/calling/meetings/{roomId}": {
             "get": {
                 "security": [
                     {
@@ -3989,7 +3989,7 @@
                 ],
                 "description": "获取指定会议室的详细信息",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "获取会议室",
                 "parameters": [
@@ -4059,7 +4059,7 @@
                 }
             }
         },
-        "/rtc/meetings/{roomId}/end": {
+        "/calling/meetings/{roomId}/end": {
             "post": {
                 "security": [
                     {
@@ -4068,7 +4068,7 @@
                 ],
                 "description": "创建者结束会议室，会议室关闭后所有参与者将被移出",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "结束会议室",
                 "parameters": [
@@ -4136,16 +4136,16 @@
                 }
             }
         },
-        "/rtc/meetings/{roomId}/join": {
+        "/calling/meetings/{roomId}/join": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "加入指定会议室，返回 RTC Token",
+                "description": "加入指定会议室，返回 Calling Token",
                 "tags": [
-                    "RTC"
+                    "Calling"
                 ],
                 "summary": "加入会议室",
                 "parameters": [

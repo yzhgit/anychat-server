@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-RTC服务基于LiveKit实现一对一音视频通话功能。
+Calling Service 基于 LiveKit 实现一对一音视频通话功能。
 
 ## 2. 功能列表
 
@@ -18,17 +18,17 @@ RTC服务基于LiveKit实现一对一音视频通话功能。
 ```mermaid
 sequenceDiagram
     participant Caller
-    participant RTCService
+    participant CallingService
     participant LiveKit
     participant Callee
 
-    Caller->>RTCService: InitiateCall(callerID, calleeID, callType)
-    RTCService->>RTCService: 生成CallID
-    RTCService->>LiveKit: 创建Room
-    LiveKit-->>RTCService: Room创建成功
-    RTCService->>RTCService: 生成Token
-    RTCService->>RTCService: 发布通话邀请通知
-    RTCService-->>Caller: CallID + Token
+    Caller->>CallingService: InitiateCall(callerID, calleeID, callType)
+    CallingService->>CallingService: 生成CallID
+    CallingService->>LiveKit: 创建Room
+    LiveKit-->>CallingService: Room创建成功
+    CallingService->>CallingService: 生成Token
+    CallingService->>CallingService: 发布通话邀请通知
+    CallingService-->>Caller: CallID + Token
 ```
 
 ### 3.2 接听通话
@@ -36,14 +36,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Callee
-    participant RTCService
+    participant CallingService
     participant LiveKit
 
-    Callee->>RTCService: JoinCall(callID, userID)
-    RTCService->>LiveKit: 生成JoinToken
-    LiveKit-->>RTCService: Token
-    RTCService->>RTCService: 发布通话开始通知
-    RTCService-->>Callee: Token + Room信息
+    Callee->>CallingService: JoinCall(callID, userID)
+    CallingService->>LiveKit: 生成JoinToken
+    LiveKit-->>CallingService: Token
+    CallingService->>CallingService: 发布通话开始通知
+    CallingService-->>Callee: Token + Room信息
 ```
 
 ## 4. API设计

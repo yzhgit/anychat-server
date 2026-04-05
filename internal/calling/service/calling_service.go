@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	lksdk "github.com/livekit/server-sdk-go"
 	"github.com/livekit/protocol/auth"
 	lkproto "github.com/livekit/protocol/livekit"
+	lksdk "github.com/livekit/server-sdk-go"
 
-	rtcpb "github.com/anychat/server/api/proto/rtc"
-	"github.com/anychat/server/internal/rtc/model"
-	"github.com/anychat/server/internal/rtc/repository"
+	callingpb "github.com/anychat/server/api/proto/calling"
+	"github.com/anychat/server/internal/calling/model"
+	"github.com/anychat/server/internal/calling/repository"
 	"github.com/anychat/server/pkg/logger"
 	"github.com/anychat/server/pkg/notification"
 	"github.com/google/uuid"
@@ -23,22 +23,22 @@ import (
 
 const tokenTTL = 2 * time.Hour
 
-// RTCService RTC 音视频服务接口
-type RTCService interface {
-	InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*rtcpb.InitiateCallResponse, error)
-	JoinCall(ctx context.Context, callID, userID string) (*rtcpb.JoinCallResponse, error)
+// CallingService 音视频服务接口
+type CallingService interface {
+	InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*callingpb.InitiateCallResponse, error)
+	JoinCall(ctx context.Context, callID, userID string) (*callingpb.JoinCallResponse, error)
 	RejectCall(ctx context.Context, callID, userID string) error
 	EndCall(ctx context.Context, callID, userID string) error
-	GetCallSession(ctx context.Context, callID, userID string) (*rtcpb.CallSession, error)
-	ListCallLogs(ctx context.Context, userID string, page, pageSize int) (*rtcpb.ListCallLogsResponse, error)
-	CreateMeeting(ctx context.Context, creatorID, title, password string, maxParticipants int) (*rtcpb.CreateMeetingResponse, error)
-	JoinMeeting(ctx context.Context, userID, roomID, password string) (*rtcpb.JoinMeetingResponse, error)
+	GetCallSession(ctx context.Context, callID, userID string) (*callingpb.CallSession, error)
+	ListCallLogs(ctx context.Context, userID string, page, pageSize int) (*callingpb.ListCallLogsResponse, error)
+	CreateMeeting(ctx context.Context, creatorID, title, password string, maxParticipants int) (*callingpb.CreateMeetingResponse, error)
+	JoinMeeting(ctx context.Context, userID, roomID, password string) (*callingpb.JoinMeetingResponse, error)
 	EndMeeting(ctx context.Context, roomID, creatorID string) error
-	GetMeeting(ctx context.Context, roomID string) (*rtcpb.MeetingRoom, error)
-	ListMeetings(ctx context.Context, page, pageSize int) (*rtcpb.ListMeetingsResponse, error)
+	GetMeeting(ctx context.Context, roomID string) (*callingpb.MeetingRoom, error)
+	ListMeetings(ctx context.Context, page, pageSize int) (*callingpb.ListMeetingsResponse, error)
 }
 
-type rtcServiceImpl struct {
+type callingServiceImpl struct {
 	apiKey          string
 	apiSecret       string
 	serverURL       string
@@ -48,15 +48,15 @@ type rtcServiceImpl struct {
 	notificationPub notification.Publisher
 }
 
-// NewRTCService 创建音视频服务
-func NewRTCService(
+// NewCallingService 创建音视频服务
+func NewCallingService(
 	serverURL, apiKey, apiSecret string,
 	callRepo repository.CallRepository,
 	meetingRepo repository.MeetingRepository,
 	notificationPub notification.Publisher,
-) RTCService {
+) CallingService {
 	roomClient := lksdk.NewRoomServiceClient(serverURL, apiKey, apiSecret)
-	return &rtcServiceImpl{
+	return &callingServiceImpl{
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
 		serverURL:       serverURL,
@@ -69,7 +69,7 @@ func NewRTCService(
 
 // ── 通话相关 ──────────────────────────────────────────────
 
-func (s *rtcServiceImpl) InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*rtcpb.InitiateCallResponse, error) {
+func (s *callingServiceImpl) InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*callingpb.InitiateCallResponse, error) {
 	callID := uuid.NewString()
 	roomName := "call_" + callID
 
@@ -113,14 +113,14 @@ func (s *rtcServiceImpl) InitiateCall(ctx context.Context, callerID, calleeID, c
 		logger.Warn("InitiateCall: notify callee failed", zap.Error(err))
 	}
 
-	return &rtcpb.InitiateCallResponse{
+	return &callingpb.InitiateCallResponse{
 		CallId:   callID,
 		RoomName: roomName,
 		Token:    token,
 	}, nil
 }
 
-func (s *rtcServiceImpl) JoinCall(ctx context.Context, callID, userID string) (*rtcpb.JoinCallResponse, error) {
+func (s *callingServiceImpl) JoinCall(ctx context.Context, callID, userID string) (*callingpb.JoinCallResponse, error) {
 	session, err := s.callRepo.GetCallSession(callID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "call session not found")
@@ -154,13 +154,13 @@ func (s *rtcServiceImpl) JoinCall(ctx context.Context, callID, userID string) (*
 		logger.Warn("JoinCall: notify caller failed", zap.Error(err))
 	}
 
-	return &rtcpb.JoinCallResponse{
+	return &callingpb.JoinCallResponse{
 		RoomName: session.RoomName,
 		Token:    token,
 	}, nil
 }
 
-func (s *rtcServiceImpl) RejectCall(ctx context.Context, callID, userID string) error {
+func (s *callingServiceImpl) RejectCall(ctx context.Context, callID, userID string) error {
 	session, err := s.callRepo.GetCallSession(callID)
 	if err != nil {
 		return status.Error(codes.NotFound, "call session not found")
@@ -192,7 +192,7 @@ func (s *rtcServiceImpl) RejectCall(ctx context.Context, callID, userID string) 
 	return nil
 }
 
-func (s *rtcServiceImpl) EndCall(ctx context.Context, callID, userID string) error {
+func (s *callingServiceImpl) EndCall(ctx context.Context, callID, userID string) error {
 	session, err := s.callRepo.GetCallSession(callID)
 	if err != nil {
 		return status.Error(codes.NotFound, "call session not found")
@@ -234,7 +234,7 @@ func (s *rtcServiceImpl) EndCall(ctx context.Context, callID, userID string) err
 	return nil
 }
 
-func (s *rtcServiceImpl) GetCallSession(ctx context.Context, callID, userID string) (*rtcpb.CallSession, error) {
+func (s *callingServiceImpl) GetCallSession(ctx context.Context, callID, userID string) (*callingpb.CallSession, error) {
 	session, err := s.callRepo.GetCallSession(callID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "call session not found")
@@ -245,21 +245,21 @@ func (s *rtcServiceImpl) GetCallSession(ctx context.Context, callID, userID stri
 	return toProtoCallSession(session), nil
 }
 
-func (s *rtcServiceImpl) ListCallLogs(ctx context.Context, userID string, page, pageSize int) (*rtcpb.ListCallLogsResponse, error) {
+func (s *callingServiceImpl) ListCallLogs(ctx context.Context, userID string, page, pageSize int) (*callingpb.ListCallLogsResponse, error) {
 	sessions, total, err := s.callRepo.ListCallLogs(userID, page, pageSize)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "list call logs: %v", err)
 	}
-	pbSessions := make([]*rtcpb.CallSession, len(sessions))
+	pbSessions := make([]*callingpb.CallSession, len(sessions))
 	for i, s := range sessions {
 		pbSessions[i] = toProtoCallSession(s)
 	}
-	return &rtcpb.ListCallLogsResponse{Sessions: pbSessions, Total: total}, nil
+	return &callingpb.ListCallLogsResponse{Sessions: pbSessions, Total: total}, nil
 }
 
 // ── 会议室相关 ────────────────────────────────────────────
 
-func (s *rtcServiceImpl) CreateMeeting(ctx context.Context, creatorID, title, password string, maxParticipants int) (*rtcpb.CreateMeetingResponse, error) {
+func (s *callingServiceImpl) CreateMeeting(ctx context.Context, creatorID, title, password string, maxParticipants int) (*callingpb.CreateMeetingResponse, error) {
 	roomID := uuid.NewString()
 	roomName := "meeting_" + roomID
 
@@ -296,13 +296,13 @@ func (s *rtcServiceImpl) CreateMeeting(ctx context.Context, creatorID, title, pa
 		return nil, status.Errorf(codes.Internal, "generate token: %v", err)
 	}
 
-	return &rtcpb.CreateMeetingResponse{
+	return &callingpb.CreateMeetingResponse{
 		Meeting: toProtoMeeting(meeting),
 		Token:   token,
 	}, nil
 }
 
-func (s *rtcServiceImpl) JoinMeeting(ctx context.Context, userID, roomID, password string) (*rtcpb.JoinMeetingResponse, error) {
+func (s *callingServiceImpl) JoinMeeting(ctx context.Context, userID, roomID, password string) (*callingpb.JoinMeetingResponse, error) {
 	meeting, err := s.meetingRepo.GetMeetingByRoomID(roomID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "meeting not found")
@@ -319,13 +319,13 @@ func (s *rtcServiceImpl) JoinMeeting(ctx context.Context, userID, roomID, passwo
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "generate token: %v", err)
 	}
-	return &rtcpb.JoinMeetingResponse{
+	return &callingpb.JoinMeetingResponse{
 		Meeting: toProtoMeeting(meeting),
 		Token:   token,
 	}, nil
 }
 
-func (s *rtcServiceImpl) EndMeeting(ctx context.Context, roomID, creatorID string) error {
+func (s *callingServiceImpl) EndMeeting(ctx context.Context, roomID, creatorID string) error {
 	meeting, err := s.meetingRepo.GetMeetingByRoomID(roomID)
 	if err != nil {
 		return status.Error(codes.NotFound, "meeting not found")
@@ -348,7 +348,7 @@ func (s *rtcServiceImpl) EndMeeting(ctx context.Context, roomID, creatorID strin
 	return nil
 }
 
-func (s *rtcServiceImpl) GetMeeting(ctx context.Context, roomID string) (*rtcpb.MeetingRoom, error) {
+func (s *callingServiceImpl) GetMeeting(ctx context.Context, roomID string) (*callingpb.MeetingRoom, error) {
 	meeting, err := s.meetingRepo.GetMeetingByRoomID(roomID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "meeting not found")
@@ -356,23 +356,23 @@ func (s *rtcServiceImpl) GetMeeting(ctx context.Context, roomID string) (*rtcpb.
 	return toProtoMeeting(meeting), nil
 }
 
-func (s *rtcServiceImpl) ListMeetings(ctx context.Context, page, pageSize int) (*rtcpb.ListMeetingsResponse, error) {
+func (s *callingServiceImpl) ListMeetings(ctx context.Context, page, pageSize int) (*callingpb.ListMeetingsResponse, error) {
 	meetings, total, err := s.meetingRepo.ListActiveMeetings(page, pageSize)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "list meetings: %v", err)
 	}
-	pbMeetings := make([]*rtcpb.MeetingRoom, len(meetings))
+	pbMeetings := make([]*callingpb.MeetingRoom, len(meetings))
 	for i, m := range meetings {
 		pbMeetings[i] = toProtoMeeting(m)
 	}
-	return &rtcpb.ListMeetingsResponse{Meetings: pbMeetings, Total: total}, nil
+	return &callingpb.ListMeetingsResponse{Meetings: pbMeetings, Total: total}, nil
 }
 
 // ── 内部辅助 ──────────────────────────────────────────────
 
 // generateToken 生成 LiveKit JWT
 // isAdmin=true 时附加 RoomAdmin 权限（会议室创建者/通话主叫方）
-func (s *rtcServiceImpl) generateToken(roomName, identity string, isAdmin bool) (string, error) {
+func (s *callingServiceImpl) generateToken(roomName, identity string, isAdmin bool) (string, error) {
 	at := auth.NewAccessToken(s.apiKey, s.apiSecret)
 	grant := &auth.VideoGrant{
 		RoomJoin:  true,
@@ -385,7 +385,7 @@ func (s *rtcServiceImpl) generateToken(roomName, identity string, isAdmin bool) 
 	return at.ToJWT()
 }
 
-func (s *rtcServiceImpl) deleteRoom(roomName string) {
+func (s *callingServiceImpl) deleteRoom(roomName string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if _, err := s.roomClient.DeleteRoom(ctx, &lkproto.DeleteRoomRequest{Room: roomName}); err != nil {
@@ -400,8 +400,8 @@ func hashPassword(password string) string {
 
 // ── Proto 转换 ────────────────────────────────────────────
 
-func toProtoCallSession(s *model.CallSession) *rtcpb.CallSession {
-	pb := &rtcpb.CallSession{
+func toProtoCallSession(s *model.CallSession) *callingpb.CallSession {
+	pb := &callingpb.CallSession{
 		CallId:    s.CallID,
 		CallerId:  s.CallerID,
 		CalleeId:  s.CalleeID,
@@ -413,24 +413,24 @@ func toProtoCallSession(s *model.CallSession) *rtcpb.CallSession {
 
 	switch s.CallType {
 	case "video":
-		pb.CallType = rtcpb.CallType_CALL_TYPE_VIDEO
+		pb.CallType = callingpb.CallType_CALL_TYPE_VIDEO
 	default:
-		pb.CallType = rtcpb.CallType_CALL_TYPE_AUDIO
+		pb.CallType = callingpb.CallType_CALL_TYPE_AUDIO
 	}
 
 	switch s.Status {
 	case "connected":
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_CONNECTED
+		pb.Status = callingpb.CallStatus_CALL_STATUS_CONNECTED
 	case "ended":
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_ENDED
+		pb.Status = callingpb.CallStatus_CALL_STATUS_ENDED
 	case "rejected":
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_REJECTED
+		pb.Status = callingpb.CallStatus_CALL_STATUS_REJECTED
 	case "missed":
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_MISSED
+		pb.Status = callingpb.CallStatus_CALL_STATUS_MISSED
 	case "cancelled":
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_CANCELLED
+		pb.Status = callingpb.CallStatus_CALL_STATUS_CANCELLED
 	default:
-		pb.Status = rtcpb.CallStatus_CALL_STATUS_RINGING
+		pb.Status = callingpb.CallStatus_CALL_STATUS_RINGING
 	}
 
 	if s.ConnectedAt != nil {
@@ -442,8 +442,8 @@ func toProtoCallSession(s *model.CallSession) *rtcpb.CallSession {
 	return pb
 }
 
-func toProtoMeeting(m *model.MeetingRoom) *rtcpb.MeetingRoom {
-	pb := &rtcpb.MeetingRoom{
+func toProtoMeeting(m *model.MeetingRoom) *callingpb.MeetingRoom {
+	pb := &callingpb.MeetingRoom{
 		RoomId:          m.RoomID,
 		CreatorId:       m.CreatorID,
 		Title:           m.Title,
@@ -454,7 +454,7 @@ func toProtoMeeting(m *model.MeetingRoom) *rtcpb.MeetingRoom {
 		CreatedAt:       m.CreatedAt.Unix(),
 	}
 	if m.Status == "ended" {
-		pb.Status = rtcpb.MeetingStatus_MEETING_STATUS_ENDED
+		pb.Status = callingpb.MeetingStatus_MEETING_STATUS_ENDED
 	}
 	if m.EndedAt != nil {
 		pb.EndedAt = m.EndedAt.Unix()

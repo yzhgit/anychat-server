@@ -26,8 +26,8 @@ tests/
 │   │   └── test-sync-api.sh      # Sync Service API测试
 │   ├── push/
 │   │   └── test-push-api.sh      # Push Service API测试
-│   ├── rtc/
-│   │   └── test-rtc-api.sh       # RTC Service API测试
+│   ├── calling/
+│   │   └── test-calling-api.sh      # Calling Service API测试
 │   └── admin/
 │       └── test-admin-api.sh     # Admin Service API测试
 └── README.md              # 本文件
@@ -58,7 +58,7 @@ tests/
 ./tests/api/session/test-session-api.sh
 ./tests/api/sync/test-sync-api.sh
 ./tests/api/push/test-push-api.sh
-./tests/api/rtc/test-rtc-api.sh
+./tests/api/calling/test-calling-api.sh
 ADMIN_URL=http://localhost:8011 ./tests/api/admin/test-admin-api.sh
 ```
 

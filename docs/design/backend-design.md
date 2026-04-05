@@ -23,7 +23,7 @@
 | File Service | [file/总体设计.md](file/README.md) | 文件上传下载 |
 | Push Service | [push/总体设计.md](push/README.md) | 离线推送 |
 | Gateway Service | [gateway/总体设计.md](gateway/README.md) | WebSocket网关 |
-| RTC Service | [rtc/总体设计.md](rtc/README.md) | 音视频通话 |
+| Calling Service | [calling/总体设计.md](calling/README.md) | 音视频通话 |
 | Sync Service | [sync/总体设计.md](sync/README.md) | 数据同步 |
 | Admin Service | [admin/总体设计.md](admin/README.md) | 管理后台服务 |
 
@@ -59,7 +59,7 @@ graph TB
         end
 
         subgraph Row3[" "]
-            LiveKit[RTC Service<br/>8009/9009]
+            LiveKit[Calling Service<br/>8009/9009]
             Sync[Sync Service<br/>8010/9010]
             Admin[Admin Service<br/>8011/9011]
         end
@@ -290,7 +290,7 @@ graph TB
 
 ---
 
-### 3.10 RTC Service (音视频服务)
+### 3.10 Calling Service (音视频服务)
 
 **职责**: 音视频通话、视频会议
 
@@ -300,8 +300,8 @@ graph TB
 - 视频会议
 
 **详细设计**:
-- [音视频通话](rtc/call.md)
-- [视频会议](rtc/meeting.md)
+- [音视频通话](calling/call.md)
+- [视频会议](calling/meeting.md)
 
 ---
 
@@ -901,7 +901,7 @@ Gateway Service作为推送通知的核心枢纽，负责：
 
 ---
 
-### 4.10 RTC Service (音视频服务)
+### 4.10 Calling Service (音视频服务)
 
 **职责**: 音视频通话、视频会议（基于LiveKit）
 
@@ -961,7 +961,7 @@ Gateway Service作为推送通知的核心枢纽，负责：
 - `notification.livekit.call_rejected.{from_user_id}` - 通话拒绝通知
 
 **依赖服务**:
-- RTC Service: 音视频引擎
+- Calling Service: 音视频引擎
 - User Service: 用户信息
 - Group Service: 群信息
 - Message Service: 通话消息记录
@@ -1111,7 +1111,7 @@ Gateway Service作为推送通知的核心枢纽，负责：
    - **Group**: 群组邀请、成员加入/退出、信息更新、角色变更、禁言、解散
    - **Session**: 未读数更新、置顶状态、免打扰设置
    - **File**: 上传完成、处理进度、过期提醒
-   - **RTC**: 通话邀请、状态变更、拒绝通知
+   - **Calling**: 通话邀请、状态变更、拒绝通知
    - **Admin**: 系统公告、用户封禁、维护通知
 
 **NATS主题命名规范**:
@@ -3720,7 +3720,7 @@ CREATE TABLE audit_logs (
 - 07: File Service
 - 08: Push Service
 - 09: Gateway Service
-- 10: RTC Service
+- 10: Calling Service
 - 11: Sync Service
 - 12: Admin Service
 

@@ -104,12 +104,12 @@ echo ""
 # fi
 # echo ""
 
-# 运行RTC Service测试
-echo -e "${YELLOW}[8/9] 运行 RTC Service API 测试...${NC}"
-if "${SCRIPT_DIR}/rtc/test-rtc-api.sh"; then
-    echo -e "${GREEN}✓ RTC Service 测试通过${NC}"
+# 运行Calling Service测试
+echo -e "${YELLOW}[8/9] 运行 Calling Service API 测试...${NC}"
+if "${SCRIPT_DIR}/calling/test-calling-api.sh"; then
+    echo -e "${GREEN}✓ Calling Service 测试通过${NC}"
 else
-    echo -e "${RED}✗ RTC Service 测试失败${NC}"
+    echo -e "${RED}✗ Calling Service 测试失败${NC}"
     ((FAILED++))
 fi
 echo ""

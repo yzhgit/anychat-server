@@ -10,10 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	rtcpb "github.com/anychat/server/api/proto/rtc"
-	rtcgrpc "github.com/anychat/server/internal/rtc/grpc"
-	"github.com/anychat/server/internal/rtc/repository"
-	"github.com/anychat/server/internal/rtc/service"
+	callingpb "github.com/anychat/server/api/proto/calling"
+	callinggrpc "github.com/anychat/server/internal/calling/grpc"
+	"github.com/anychat/server/internal/calling/repository"
+	"github.com/anychat/server/internal/calling/service"
+	"github.com/anychat/server/pkg/config"
 	"github.com/anychat/server/pkg/database"
 	grpcpkg "github.com/anychat/server/pkg/grpc"
 	"github.com/anychat/server/pkg/logger"
@@ -25,11 +26,10 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/anychat/server/pkg/config"
 )
 
 const (
-	serviceName = "rtc-service"
+	serviceName = "calling-service"
 	version     = "v1.0.0"
 )
 
@@ -44,7 +44,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info("Starting rtc-service", zap.String("version", version))
+	logger.Info("Starting calling-service", zap.String("version", version))
 
 	// 连接数据库
 	db, err := initDatabase()
@@ -69,7 +69,7 @@ func main() {
 	meetingRepo := repository.NewMeetingRepository(db)
 
 	// 初始化 LiveKit 服务
-	lkSvc := service.NewRTCService(
+	lkSvc := service.NewCallingService(
 		viper.GetString("livekit.url"),
 		viper.GetString("livekit.api_key"),
 		viper.GetString("livekit.api_secret"),
@@ -85,7 +85,7 @@ func main() {
 			grpcpkg.LoggingInterceptor(),
 		),
 	)
-	rtcpb.RegisterRTCServiceServer(grpcServer, rtcgrpc.NewServer(lkSvc))
+	callingpb.RegisterCallingServiceServer(grpcServer, callinggrpc.NewServer(lkSvc))
 
 	go func() {
 		grpcPort := viper.GetInt("server.grpc_port")
@@ -109,7 +109,7 @@ func main() {
 		}
 	}()
 
-	logger.Info("RTC service started successfully")
+	logger.Info("Calling service started successfully")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

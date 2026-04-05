@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	authpb "github.com/anychat/server/api/proto/auth"
+	callingpb "github.com/anychat/server/api/proto/calling"
 	filepb "github.com/anychat/server/api/proto/file"
 	friendpb "github.com/anychat/server/api/proto/friend"
 	grouppb "github.com/anychat/server/api/proto/group"
 	messagepb "github.com/anychat/server/api/proto/message"
-	rtcpb "github.com/anychat/server/api/proto/rtc"
 	sessionpb "github.com/anychat/server/api/proto/session"
 	syncpb "github.com/anychat/server/api/proto/sync"
 	userpb "github.com/anychat/server/api/proto/user"
@@ -28,7 +28,7 @@ type Manager struct {
 	messageConn   *grpc.ClientConn
 	sessionConn   *grpc.ClientConn
 	syncConn      *grpc.ClientConn
-	rtcConn       *grpc.ClientConn
+	callingConn   *grpc.ClientConn
 	authClient    authpb.AuthServiceClient
 	userClient    userpb.UserServiceClient
 	friendClient  friendpb.FriendServiceClient
@@ -37,11 +37,11 @@ type Manager struct {
 	messageClient messagepb.MessageServiceClient
 	sessionClient sessionpb.SessionServiceClient
 	syncClient    syncpb.SyncServiceClient
-	rtcClient     rtcpb.RTCServiceClient
+	callingClient callingpb.CallingServiceClient
 }
 
 // NewManager 创建gRPC客户端管理器
-func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr, sessionAddr, syncAddr, rtcAddr string) (*Manager, error) {
+func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr, sessionAddr, syncAddr, callingAddr string) (*Manager, error) {
 	// 连接auth-service
 	authConn, err := grpc.NewClient(
 		authAddr,
@@ -150,9 +150,9 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to sync-service", zap.String("addr", syncAddr))
 
-	// 连接rtc-service
-	rtcConn, err := grpc.NewClient(
-		rtcAddr,
+	// 连接calling-service
+	callingConn, err := grpc.NewClient(
+		callingAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -164,9 +164,9 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 		messageConn.Close()
 		sessionConn.Close()
 		syncConn.Close()
-		return nil, fmt.Errorf("failed to connect to rtc-service: %w", err)
+		return nil, fmt.Errorf("failed to connect to calling-service: %w", err)
 	}
-	logger.Info("Connected to rtc-service", zap.String("addr", rtcAddr))
+	logger.Info("Connected to calling-service", zap.String("addr", callingAddr))
 
 	return &Manager{
 		authConn:      authConn,
@@ -177,7 +177,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 		messageConn:   messageConn,
 		sessionConn:   sessionConn,
 		syncConn:      syncConn,
-		rtcConn:       rtcConn,
+		callingConn:   callingConn,
 		authClient:    authpb.NewAuthServiceClient(authConn),
 		userClient:    userpb.NewUserServiceClient(userConn),
 		friendClient:  friendpb.NewFriendServiceClient(friendConn),
@@ -186,7 +186,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 		messageClient: messagepb.NewMessageServiceClient(messageConn),
 		sessionClient: sessionpb.NewSessionServiceClient(sessionConn),
 		syncClient:    syncpb.NewSyncServiceClient(syncConn),
-		rtcClient:     rtcpb.NewRTCServiceClient(rtcConn),
+		callingClient: callingpb.NewCallingServiceClient(callingConn),
 	}, nil
 }
 
@@ -230,9 +230,9 @@ func (m *Manager) Sync() syncpb.SyncServiceClient {
 	return m.syncClient
 }
 
-// RTC 获取rtc服务客户端
-func (m *Manager) RTC() rtcpb.RTCServiceClient {
-	return m.rtcClient
+// Calling 获取音视频通话服务客户端
+func (m *Manager) Calling() callingpb.CallingServiceClient {
+	return m.callingClient
 }
 
 // Close 关闭所有连接
@@ -287,9 +287,9 @@ func (m *Manager) Close() error {
 		}
 	}
 
-	if m.rtcConn != nil {
-		if err := m.rtcConn.Close(); err != nil {
-			errs = append(errs, fmt.Errorf("failed to close rtc connection: %w", err))
+	if m.callingConn != nil {
+		if err := m.callingConn.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("failed to close calling connection: %w", err))
 		}
 	}
 

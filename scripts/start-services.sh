@@ -174,12 +174,12 @@ start_app_services() {
     start_service "session-service" "dev:session"  9006
 }
 
-# 启动辅助服务（第三层，推送/RTC/同步）
+# 启动辅助服务（第三层，推送/Calling/同步）
 start_auxiliary_services() {
     print_header "启动辅助服务"
 
     start_service "push-service"    "dev:push"    9008
-    start_service "rtc-service" "dev:rtc" 9009
+    start_service "calling-service" "dev:calling" 9009
     start_service "sync-service"    "dev:sync"    9010
 }
 
@@ -214,7 +214,7 @@ show_status() {
 
     echo -e "\n${YELLOW}辅助服务:${NC}"
     echo "  push-service:     grpc://localhost:9008  logs/push-service.log"
-    echo "  rtc-service:      grpc://localhost:9009  logs/rtc-service.log"
+    echo "  calling-service: grpc://localhost:9009  logs/calling-service.log"
     echo "  sync-service:     grpc://localhost:9010  logs/sync-service.log"
 
     echo -e "\n${YELLOW}管理服务:${NC}"

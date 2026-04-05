@@ -27,8 +27,8 @@ api/
 │   └── test-sync-api.sh      # Sync Service API测试（7个用例）
 ├── push/
 │   └── test-push-api.sh      # Push Service API测试
-├── rtc/
-│   └── test-rtc-api.sh       # RTC Service API测试（9个用例）
+├── calling/
+│   └── test-calling-api.sh      # Calling Service API测试（9个用例）
 └── admin/
     └── test-admin-api.sh     # Admin Service API测试
 ```
@@ -128,7 +128,7 @@ api/
 - 未认证发送推送（返回401）
 - 发送推送通知
 
-### RTC Service (9个测试用例)
+### Calling Service (9个测试用例)
 - 未认证发起通话（返回401）
 - 缺少 calleeId 发起通话（返回400）
 - 获取通话记录（初始为空）
@@ -202,8 +202,8 @@ api/
 # Push Service
 ./tests/api/push/test-push-api.sh
 
-# RTC Service
-./tests/api/rtc/test-rtc-api.sh
+# Calling Service
+./tests/api/calling/test-calling-api.sh
 
 # Admin Service
 ADMIN_URL=http://localhost:8011 ./tests/api/admin/test-admin-api.sh

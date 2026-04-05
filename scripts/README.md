@@ -75,7 +75,7 @@ mage dev:session
 mage dev:file
 mage dev:gateway
 mage dev:push
-mage dev:rtc
+mage dev:calling
 mage dev:sync
 mage dev:admin
 ```

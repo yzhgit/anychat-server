@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/anychat/server/internal/rtc/model"
+	"github.com/anychat/server/internal/calling/model"
 	"gorm.io/gorm"
 )
 
@@ -50,15 +50,14 @@ func (r *callRepository) ListCallLogs(userID string, page, pageSize int) ([]*mod
 	var total int64
 
 	query := r.db.Model(&model.CallSession{}).
-		Where("caller_id = ? OR callee_id = ?", userID, userID).
-		Order("created_at DESC")
+		Where("caller_id = ? OR callee_id = ?", userID, userID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Find(&sessions).Error; err != nil {
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&sessions).Error; err != nil {
 		return nil, 0, err
 	}
 	return sessions, total, nil
@@ -109,15 +108,14 @@ func (r *meetingRepository) ListActiveMeetings(page, pageSize int) ([]*model.Mee
 	var total int64
 
 	query := r.db.Model(&model.MeetingRoom{}).
-		Where("status = ?", "active").
-		Order("created_at DESC")
+		Where("status = ?", "active")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Find(&meetings).Error; err != nil {
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&meetings).Error; err != nil {
 		return nil, 0, err
 	}
 	return meetings, total, nil

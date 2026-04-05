@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v3.12.4
-// source: rtc/rtc.proto
+// source: calling/calling.proto
 
-package rtcpb
+package callingpb
 
 import (
 	common "github.com/anychat/server/api/proto/common"
@@ -53,11 +53,11 @@ func (x CallType) String() string {
 }
 
 func (CallType) Descriptor() protoreflect.EnumDescriptor {
-	return file_rtc_rtc_proto_enumTypes[0].Descriptor()
+	return file_calling_calling_proto_enumTypes[0].Descriptor()
 }
 
 func (CallType) Type() protoreflect.EnumType {
-	return &file_rtc_rtc_proto_enumTypes[0]
+	return &file_calling_calling_proto_enumTypes[0]
 }
 
 func (x CallType) Number() protoreflect.EnumNumber {
@@ -66,7 +66,7 @@ func (x CallType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CallType.Descriptor instead.
 func (CallType) EnumDescriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{0}
+	return file_calling_calling_proto_rawDescGZIP(), []int{0}
 }
 
 // CallStatus 通话状态
@@ -112,11 +112,11 @@ func (x CallStatus) String() string {
 }
 
 func (CallStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_rtc_rtc_proto_enumTypes[1].Descriptor()
+	return file_calling_calling_proto_enumTypes[1].Descriptor()
 }
 
 func (CallStatus) Type() protoreflect.EnumType {
-	return &file_rtc_rtc_proto_enumTypes[1]
+	return &file_calling_calling_proto_enumTypes[1]
 }
 
 func (x CallStatus) Number() protoreflect.EnumNumber {
@@ -125,7 +125,7 @@ func (x CallStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CallStatus.Descriptor instead.
 func (CallStatus) EnumDescriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{1}
+	return file_calling_calling_proto_rawDescGZIP(), []int{1}
 }
 
 // MeetingStatus 会议状态
@@ -159,11 +159,11 @@ func (x MeetingStatus) String() string {
 }
 
 func (MeetingStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_rtc_rtc_proto_enumTypes[2].Descriptor()
+	return file_calling_calling_proto_enumTypes[2].Descriptor()
 }
 
 func (MeetingStatus) Type() protoreflect.EnumType {
-	return &file_rtc_rtc_proto_enumTypes[2]
+	return &file_calling_calling_proto_enumTypes[2]
 }
 
 func (x MeetingStatus) Number() protoreflect.EnumNumber {
@@ -172,7 +172,7 @@ func (x MeetingStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MeetingStatus.Descriptor instead.
 func (MeetingStatus) EnumDescriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{2}
+	return file_calling_calling_proto_rawDescGZIP(), []int{2}
 }
 
 // CallSession 通话会话
@@ -181,8 +181,8 @@ type CallSession struct {
 	CallId        string                 `protobuf:"bytes,1,opt,name=call_id,json=callId,proto3" json:"call_id,omitempty"`
 	CallerId      string                 `protobuf:"bytes,2,opt,name=caller_id,json=callerId,proto3" json:"caller_id,omitempty"`
 	CalleeId      string                 `protobuf:"bytes,3,opt,name=callee_id,json=calleeId,proto3" json:"callee_id,omitempty"`
-	CallType      CallType               `protobuf:"varint,4,opt,name=call_type,json=callType,proto3,enum=anychat.rtc.CallType" json:"call_type,omitempty"`
-	Status        CallStatus             `protobuf:"varint,5,opt,name=status,proto3,enum=anychat.rtc.CallStatus" json:"status,omitempty"`
+	CallType      CallType               `protobuf:"varint,4,opt,name=call_type,json=callType,proto3,enum=anychat.calling.CallType" json:"call_type,omitempty"`
+	Status        CallStatus             `protobuf:"varint,5,opt,name=status,proto3,enum=anychat.calling.CallStatus" json:"status,omitempty"`
 	RoomName      string                 `protobuf:"bytes,6,opt,name=room_name,json=roomName,proto3" json:"room_name,omitempty"`
 	StartedAt     int64                  `protobuf:"varint,7,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"` // Unix 秒
 	ConnectedAt   int64                  `protobuf:"varint,8,opt,name=connected_at,json=connectedAt,proto3" json:"connected_at,omitempty"`
@@ -195,7 +195,7 @@ type CallSession struct {
 
 func (x *CallSession) Reset() {
 	*x = CallSession{}
-	mi := &file_rtc_rtc_proto_msgTypes[0]
+	mi := &file_calling_calling_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -207,7 +207,7 @@ func (x *CallSession) String() string {
 func (*CallSession) ProtoMessage() {}
 
 func (x *CallSession) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[0]
+	mi := &file_calling_calling_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -220,7 +220,7 @@ func (x *CallSession) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallSession.ProtoReflect.Descriptor instead.
 func (*CallSession) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{0}
+	return file_calling_calling_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CallSession) GetCallId() string {
@@ -304,14 +304,14 @@ type InitiateCallRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CallerId      string                 `protobuf:"bytes,1,opt,name=caller_id,json=callerId,proto3" json:"caller_id,omitempty"`
 	CalleeId      string                 `protobuf:"bytes,2,opt,name=callee_id,json=calleeId,proto3" json:"callee_id,omitempty"`
-	CallType      CallType               `protobuf:"varint,3,opt,name=call_type,json=callType,proto3,enum=anychat.rtc.CallType" json:"call_type,omitempty"`
+	CallType      CallType               `protobuf:"varint,3,opt,name=call_type,json=callType,proto3,enum=anychat.calling.CallType" json:"call_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *InitiateCallRequest) Reset() {
 	*x = InitiateCallRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[1]
+	mi := &file_calling_calling_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -323,7 +323,7 @@ func (x *InitiateCallRequest) String() string {
 func (*InitiateCallRequest) ProtoMessage() {}
 
 func (x *InitiateCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[1]
+	mi := &file_calling_calling_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -336,7 +336,7 @@ func (x *InitiateCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitiateCallRequest.ProtoReflect.Descriptor instead.
 func (*InitiateCallRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{1}
+	return file_calling_calling_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *InitiateCallRequest) GetCallerId() string {
@@ -364,14 +364,14 @@ type InitiateCallResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CallId        string                 `protobuf:"bytes,1,opt,name=call_id,json=callId,proto3" json:"call_id,omitempty"`
 	RoomName      string                 `protobuf:"bytes,2,opt,name=room_name,json=roomName,proto3" json:"room_name,omitempty"`
-	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"` // RTC JWT，主叫方使用
+	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"` // Calling JWT，主叫方使用
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *InitiateCallResponse) Reset() {
 	*x = InitiateCallResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[2]
+	mi := &file_calling_calling_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +383,7 @@ func (x *InitiateCallResponse) String() string {
 func (*InitiateCallResponse) ProtoMessage() {}
 
 func (x *InitiateCallResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[2]
+	mi := &file_calling_calling_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +396,7 @@ func (x *InitiateCallResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitiateCallResponse.ProtoReflect.Descriptor instead.
 func (*InitiateCallResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{2}
+	return file_calling_calling_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *InitiateCallResponse) GetCallId() string {
@@ -430,7 +430,7 @@ type JoinCallRequest struct {
 
 func (x *JoinCallRequest) Reset() {
 	*x = JoinCallRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[3]
+	mi := &file_calling_calling_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +442,7 @@ func (x *JoinCallRequest) String() string {
 func (*JoinCallRequest) ProtoMessage() {}
 
 func (x *JoinCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[3]
+	mi := &file_calling_calling_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +455,7 @@ func (x *JoinCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinCallRequest.ProtoReflect.Descriptor instead.
 func (*JoinCallRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{3}
+	return file_calling_calling_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *JoinCallRequest) GetCallId() string {
@@ -475,14 +475,14 @@ func (x *JoinCallRequest) GetUserId() string {
 type JoinCallResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RoomName      string                 `protobuf:"bytes,1,opt,name=room_name,json=roomName,proto3" json:"room_name,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // RTC JWT，被叫方使用
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // Calling JWT，被叫方使用
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JoinCallResponse) Reset() {
 	*x = JoinCallResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[4]
+	mi := &file_calling_calling_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -494,7 +494,7 @@ func (x *JoinCallResponse) String() string {
 func (*JoinCallResponse) ProtoMessage() {}
 
 func (x *JoinCallResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[4]
+	mi := &file_calling_calling_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -507,7 +507,7 @@ func (x *JoinCallResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinCallResponse.ProtoReflect.Descriptor instead.
 func (*JoinCallResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{4}
+	return file_calling_calling_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *JoinCallResponse) GetRoomName() string {
@@ -534,7 +534,7 @@ type RejectCallRequest struct {
 
 func (x *RejectCallRequest) Reset() {
 	*x = RejectCallRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[5]
+	mi := &file_calling_calling_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -546,7 +546,7 @@ func (x *RejectCallRequest) String() string {
 func (*RejectCallRequest) ProtoMessage() {}
 
 func (x *RejectCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[5]
+	mi := &file_calling_calling_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -559,7 +559,7 @@ func (x *RejectCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectCallRequest.ProtoReflect.Descriptor instead.
 func (*RejectCallRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{5}
+	return file_calling_calling_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RejectCallRequest) GetCallId() string {
@@ -586,7 +586,7 @@ type EndCallRequest struct {
 
 func (x *EndCallRequest) Reset() {
 	*x = EndCallRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[6]
+	mi := &file_calling_calling_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -598,7 +598,7 @@ func (x *EndCallRequest) String() string {
 func (*EndCallRequest) ProtoMessage() {}
 
 func (x *EndCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[6]
+	mi := &file_calling_calling_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -611,7 +611,7 @@ func (x *EndCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndCallRequest.ProtoReflect.Descriptor instead.
 func (*EndCallRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{6}
+	return file_calling_calling_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *EndCallRequest) GetCallId() string {
@@ -638,7 +638,7 @@ type GetCallSessionRequest struct {
 
 func (x *GetCallSessionRequest) Reset() {
 	*x = GetCallSessionRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[7]
+	mi := &file_calling_calling_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -650,7 +650,7 @@ func (x *GetCallSessionRequest) String() string {
 func (*GetCallSessionRequest) ProtoMessage() {}
 
 func (x *GetCallSessionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[7]
+	mi := &file_calling_calling_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -663,7 +663,7 @@ func (x *GetCallSessionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCallSessionRequest.ProtoReflect.Descriptor instead.
 func (*GetCallSessionRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{7}
+	return file_calling_calling_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetCallSessionRequest) GetCallId() string {
@@ -691,7 +691,7 @@ type ListCallLogsRequest struct {
 
 func (x *ListCallLogsRequest) Reset() {
 	*x = ListCallLogsRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[8]
+	mi := &file_calling_calling_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -703,7 +703,7 @@ func (x *ListCallLogsRequest) String() string {
 func (*ListCallLogsRequest) ProtoMessage() {}
 
 func (x *ListCallLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[8]
+	mi := &file_calling_calling_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -716,7 +716,7 @@ func (x *ListCallLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCallLogsRequest.ProtoReflect.Descriptor instead.
 func (*ListCallLogsRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{8}
+	return file_calling_calling_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListCallLogsRequest) GetUserId() string {
@@ -750,7 +750,7 @@ type ListCallLogsResponse struct {
 
 func (x *ListCallLogsResponse) Reset() {
 	*x = ListCallLogsResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[9]
+	mi := &file_calling_calling_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -762,7 +762,7 @@ func (x *ListCallLogsResponse) String() string {
 func (*ListCallLogsResponse) ProtoMessage() {}
 
 func (x *ListCallLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[9]
+	mi := &file_calling_calling_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -775,7 +775,7 @@ func (x *ListCallLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCallLogsResponse.ProtoReflect.Descriptor instead.
 func (*ListCallLogsResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{9}
+	return file_calling_calling_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListCallLogsResponse) GetSessions() []*CallSession {
@@ -798,10 +798,10 @@ type MeetingRoom struct {
 	RoomId          string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	CreatorId       string                 `protobuf:"bytes,2,opt,name=creator_id,json=creatorId,proto3" json:"creator_id,omitempty"`
 	Title           string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	RoomName        string                 `protobuf:"bytes,4,opt,name=room_name,json=roomName,proto3" json:"room_name,omitempty"` // RTC Room 名称
+	RoomName        string                 `protobuf:"bytes,4,opt,name=room_name,json=roomName,proto3" json:"room_name,omitempty"` // Calling Room 名称
 	HasPassword     bool                   `protobuf:"varint,5,opt,name=has_password,json=hasPassword,proto3" json:"has_password,omitempty"`
 	MaxParticipants int32                  `protobuf:"varint,6,opt,name=max_participants,json=maxParticipants,proto3" json:"max_participants,omitempty"`
-	Status          MeetingStatus          `protobuf:"varint,7,opt,name=status,proto3,enum=anychat.rtc.MeetingStatus" json:"status,omitempty"`
+	Status          MeetingStatus          `protobuf:"varint,7,opt,name=status,proto3,enum=anychat.calling.MeetingStatus" json:"status,omitempty"`
 	StartedAt       int64                  `protobuf:"varint,8,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	EndedAt         int64                  `protobuf:"varint,9,opt,name=ended_at,json=endedAt,proto3" json:"ended_at,omitempty"`
 	CreatedAt       int64                  `protobuf:"varint,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -811,7 +811,7 @@ type MeetingRoom struct {
 
 func (x *MeetingRoom) Reset() {
 	*x = MeetingRoom{}
-	mi := &file_rtc_rtc_proto_msgTypes[10]
+	mi := &file_calling_calling_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +823,7 @@ func (x *MeetingRoom) String() string {
 func (*MeetingRoom) ProtoMessage() {}
 
 func (x *MeetingRoom) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[10]
+	mi := &file_calling_calling_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +836,7 @@ func (x *MeetingRoom) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeetingRoom.ProtoReflect.Descriptor instead.
 func (*MeetingRoom) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{10}
+	return file_calling_calling_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MeetingRoom) GetRoomId() string {
@@ -921,7 +921,7 @@ type CreateMeetingRequest struct {
 
 func (x *CreateMeetingRequest) Reset() {
 	*x = CreateMeetingRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[11]
+	mi := &file_calling_calling_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -933,7 +933,7 @@ func (x *CreateMeetingRequest) String() string {
 func (*CreateMeetingRequest) ProtoMessage() {}
 
 func (x *CreateMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[11]
+	mi := &file_calling_calling_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -946,7 +946,7 @@ func (x *CreateMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateMeetingRequest.ProtoReflect.Descriptor instead.
 func (*CreateMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{11}
+	return file_calling_calling_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateMeetingRequest) GetCreatorId() string {
@@ -980,14 +980,14 @@ func (x *CreateMeetingRequest) GetMaxParticipants() int32 {
 type CreateMeetingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Meeting       *MeetingRoom           `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // 创建者的 RTC JWT
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // 创建者的 Calling JWT
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateMeetingResponse) Reset() {
 	*x = CreateMeetingResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[12]
+	mi := &file_calling_calling_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -999,7 +999,7 @@ func (x *CreateMeetingResponse) String() string {
 func (*CreateMeetingResponse) ProtoMessage() {}
 
 func (x *CreateMeetingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[12]
+	mi := &file_calling_calling_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1012,7 +1012,7 @@ func (x *CreateMeetingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateMeetingResponse.ProtoReflect.Descriptor instead.
 func (*CreateMeetingResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{12}
+	return file_calling_calling_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateMeetingResponse) GetMeeting() *MeetingRoom {
@@ -1040,7 +1040,7 @@ type JoinMeetingRequest struct {
 
 func (x *JoinMeetingRequest) Reset() {
 	*x = JoinMeetingRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[13]
+	mi := &file_calling_calling_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1052,7 +1052,7 @@ func (x *JoinMeetingRequest) String() string {
 func (*JoinMeetingRequest) ProtoMessage() {}
 
 func (x *JoinMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[13]
+	mi := &file_calling_calling_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1065,7 +1065,7 @@ func (x *JoinMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinMeetingRequest.ProtoReflect.Descriptor instead.
 func (*JoinMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{13}
+	return file_calling_calling_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *JoinMeetingRequest) GetUserId() string {
@@ -1092,14 +1092,14 @@ func (x *JoinMeetingRequest) GetPassword() string {
 type JoinMeetingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Meeting       *MeetingRoom           `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // RTC JWT
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // Calling JWT
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JoinMeetingResponse) Reset() {
 	*x = JoinMeetingResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[14]
+	mi := &file_calling_calling_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1111,7 +1111,7 @@ func (x *JoinMeetingResponse) String() string {
 func (*JoinMeetingResponse) ProtoMessage() {}
 
 func (x *JoinMeetingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[14]
+	mi := &file_calling_calling_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1124,7 +1124,7 @@ func (x *JoinMeetingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinMeetingResponse.ProtoReflect.Descriptor instead.
 func (*JoinMeetingResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{14}
+	return file_calling_calling_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *JoinMeetingResponse) GetMeeting() *MeetingRoom {
@@ -1151,7 +1151,7 @@ type EndMeetingRequest struct {
 
 func (x *EndMeetingRequest) Reset() {
 	*x = EndMeetingRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[15]
+	mi := &file_calling_calling_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1163,7 +1163,7 @@ func (x *EndMeetingRequest) String() string {
 func (*EndMeetingRequest) ProtoMessage() {}
 
 func (x *EndMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[15]
+	mi := &file_calling_calling_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1176,7 +1176,7 @@ func (x *EndMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndMeetingRequest.ProtoReflect.Descriptor instead.
 func (*EndMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{15}
+	return file_calling_calling_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *EndMeetingRequest) GetRoomId() string {
@@ -1202,7 +1202,7 @@ type GetMeetingRequest struct {
 
 func (x *GetMeetingRequest) Reset() {
 	*x = GetMeetingRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[16]
+	mi := &file_calling_calling_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1214,7 +1214,7 @@ func (x *GetMeetingRequest) String() string {
 func (*GetMeetingRequest) ProtoMessage() {}
 
 func (x *GetMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[16]
+	mi := &file_calling_calling_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1227,7 +1227,7 @@ func (x *GetMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMeetingRequest.ProtoReflect.Descriptor instead.
 func (*GetMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{16}
+	return file_calling_calling_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetMeetingRequest) GetRoomId() string {
@@ -1247,7 +1247,7 @@ type ListMeetingsRequest struct {
 
 func (x *ListMeetingsRequest) Reset() {
 	*x = ListMeetingsRequest{}
-	mi := &file_rtc_rtc_proto_msgTypes[17]
+	mi := &file_calling_calling_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1259,7 +1259,7 @@ func (x *ListMeetingsRequest) String() string {
 func (*ListMeetingsRequest) ProtoMessage() {}
 
 func (x *ListMeetingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[17]
+	mi := &file_calling_calling_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1272,7 +1272,7 @@ func (x *ListMeetingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMeetingsRequest.ProtoReflect.Descriptor instead.
 func (*ListMeetingsRequest) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{17}
+	return file_calling_calling_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListMeetingsRequest) GetPage() int32 {
@@ -1299,7 +1299,7 @@ type ListMeetingsResponse struct {
 
 func (x *ListMeetingsResponse) Reset() {
 	*x = ListMeetingsResponse{}
-	mi := &file_rtc_rtc_proto_msgTypes[18]
+	mi := &file_calling_calling_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1311,7 +1311,7 @@ func (x *ListMeetingsResponse) String() string {
 func (*ListMeetingsResponse) ProtoMessage() {}
 
 func (x *ListMeetingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rtc_rtc_proto_msgTypes[18]
+	mi := &file_calling_calling_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1324,7 +1324,7 @@ func (x *ListMeetingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMeetingsResponse.ProtoReflect.Descriptor instead.
 func (*ListMeetingsResponse) Descriptor() ([]byte, []int) {
-	return file_rtc_rtc_proto_rawDescGZIP(), []int{18}
+	return file_calling_calling_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListMeetingsResponse) GetMeetings() []*MeetingRoom {
@@ -1341,17 +1341,17 @@ func (x *ListMeetingsResponse) GetTotal() int64 {
 	return 0
 }
 
-var File_rtc_rtc_proto protoreflect.FileDescriptor
+var File_calling_calling_proto protoreflect.FileDescriptor
 
-const file_rtc_rtc_proto_rawDesc = "" +
+const file_calling_calling_proto_rawDesc = "" +
 	"\n" +
-	"\rrtc/rtc.proto\x12\vanychat.rtc\x1a\x13common/common.proto\"\xfa\x02\n" +
+	"\x15calling/calling.proto\x12\x0fanychat.calling\x1a\x13common/common.proto\"\x82\x03\n" +
 	"\vCallSession\x12\x17\n" +
 	"\acall_id\x18\x01 \x01(\tR\x06callId\x12\x1b\n" +
 	"\tcaller_id\x18\x02 \x01(\tR\bcallerId\x12\x1b\n" +
-	"\tcallee_id\x18\x03 \x01(\tR\bcalleeId\x122\n" +
-	"\tcall_type\x18\x04 \x01(\x0e2\x15.anychat.rtc.CallTypeR\bcallType\x12/\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x17.anychat.rtc.CallStatusR\x06status\x12\x1b\n" +
+	"\tcallee_id\x18\x03 \x01(\tR\bcalleeId\x126\n" +
+	"\tcall_type\x18\x04 \x01(\x0e2\x19.anychat.calling.CallTypeR\bcallType\x123\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x1b.anychat.calling.CallStatusR\x06status\x12\x1b\n" +
 	"\troom_name\x18\x06 \x01(\tR\broomName\x12\x1d\n" +
 	"\n" +
 	"started_at\x18\a \x01(\x03R\tstartedAt\x12!\n" +
@@ -1360,11 +1360,11 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"\bduration\x18\n" +
 	" \x01(\x05R\bduration\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\v \x01(\x03R\tcreatedAt\"\x83\x01\n" +
+	"created_at\x18\v \x01(\x03R\tcreatedAt\"\x87\x01\n" +
 	"\x13InitiateCallRequest\x12\x1b\n" +
 	"\tcaller_id\x18\x01 \x01(\tR\bcallerId\x12\x1b\n" +
-	"\tcallee_id\x18\x02 \x01(\tR\bcalleeId\x122\n" +
-	"\tcall_type\x18\x03 \x01(\x0e2\x15.anychat.rtc.CallTypeR\bcallType\"b\n" +
+	"\tcallee_id\x18\x02 \x01(\tR\bcalleeId\x126\n" +
+	"\tcall_type\x18\x03 \x01(\x0e2\x19.anychat.calling.CallTypeR\bcallType\"b\n" +
 	"\x14InitiateCallResponse\x12\x17\n" +
 	"\acall_id\x18\x01 \x01(\tR\x06callId\x12\x1b\n" +
 	"\troom_name\x18\x02 \x01(\tR\broomName\x12\x14\n" +
@@ -1387,10 +1387,10 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"\x13ListCallLogsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"b\n" +
-	"\x14ListCallLogsResponse\x124\n" +
-	"\bsessions\x18\x01 \x03(\v2\x18.anychat.rtc.CallSessionR\bsessions\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"\xd3\x02\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"f\n" +
+	"\x14ListCallLogsResponse\x128\n" +
+	"\bsessions\x18\x01 \x03(\v2\x1c.anychat.calling.CallSessionR\bsessions\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"\xd7\x02\n" +
 	"\vMeetingRoom\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1d\n" +
 	"\n" +
@@ -1398,8 +1398,8 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x1b\n" +
 	"\troom_name\x18\x04 \x01(\tR\broomName\x12!\n" +
 	"\fhas_password\x18\x05 \x01(\bR\vhasPassword\x12)\n" +
-	"\x10max_participants\x18\x06 \x01(\x05R\x0fmaxParticipants\x122\n" +
-	"\x06status\x18\a \x01(\x0e2\x1a.anychat.rtc.MeetingStatusR\x06status\x12\x1d\n" +
+	"\x10max_participants\x18\x06 \x01(\x05R\x0fmaxParticipants\x126\n" +
+	"\x06status\x18\a \x01(\x0e2\x1e.anychat.calling.MeetingStatusR\x06status\x12\x1d\n" +
 	"\n" +
 	"started_at\x18\b \x01(\x03R\tstartedAt\x12\x19\n" +
 	"\bended_at\x18\t \x01(\x03R\aendedAt\x12\x1d\n" +
@@ -1411,16 +1411,16 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"creator_id\x18\x01 \x01(\tR\tcreatorId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12)\n" +
-	"\x10max_participants\x18\x04 \x01(\x05R\x0fmaxParticipants\"a\n" +
-	"\x15CreateMeetingResponse\x122\n" +
-	"\ameeting\x18\x01 \x01(\v2\x18.anychat.rtc.MeetingRoomR\ameeting\x12\x14\n" +
+	"\x10max_participants\x18\x04 \x01(\x05R\x0fmaxParticipants\"e\n" +
+	"\x15CreateMeetingResponse\x126\n" +
+	"\ameeting\x18\x01 \x01(\v2\x1c.anychat.calling.MeetingRoomR\ameeting\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"b\n" +
 	"\x12JoinMeetingRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x17\n" +
 	"\aroom_id\x18\x02 \x01(\tR\x06roomId\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\"_\n" +
-	"\x13JoinMeetingResponse\x122\n" +
-	"\ameeting\x18\x01 \x01(\v2\x18.anychat.rtc.MeetingRoomR\ameeting\x12\x14\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"c\n" +
+	"\x13JoinMeetingResponse\x126\n" +
+	"\ameeting\x18\x01 \x01(\v2\x1c.anychat.calling.MeetingRoomR\ameeting\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"K\n" +
 	"\x11EndMeetingRequest\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1d\n" +
@@ -1430,9 +1430,9 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\"F\n" +
 	"\x13ListMeetingsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"b\n" +
-	"\x14ListMeetingsResponse\x124\n" +
-	"\bmeetings\x18\x01 \x03(\v2\x18.anychat.rtc.MeetingRoomR\bmeetings\x12\x14\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"f\n" +
+	"\x14ListMeetingsResponse\x128\n" +
+	"\bmeetings\x18\x01 \x03(\v2\x1c.anychat.calling.MeetingRoomR\bmeetings\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total*4\n" +
 	"\bCallType\x12\x13\n" +
 	"\x0fCALL_TYPE_AUDIO\x10\x00\x12\x13\n" +
@@ -1447,94 +1447,93 @@ const file_rtc_rtc_proto_rawDesc = "" +
 	"\x15CALL_STATUS_CANCELLED\x10\x05*D\n" +
 	"\rMeetingStatus\x12\x19\n" +
 	"\x15MEETING_STATUS_ACTIVE\x10\x00\x12\x18\n" +
-	"\x14MEETING_STATUS_ENDED\x10\x012\xdf\x06\n" +
+	"\x14MEETING_STATUS_ENDED\x10\x012\xaf\a\n" +
+	"\x0eCallingService\x12[\n" +
+	"\fInitiateCall\x12$.anychat.calling.InitiateCallRequest\x1a%.anychat.calling.InitiateCallResponse\x12O\n" +
+	"\bJoinCall\x12 .anychat.calling.JoinCallRequest\x1a!.anychat.calling.JoinCallResponse\x12G\n" +
 	"\n" +
-	"RTCService\x12S\n" +
-	"\fInitiateCall\x12 .anychat.rtc.InitiateCallRequest\x1a!.anychat.rtc.InitiateCallResponse\x12G\n" +
-	"\bJoinCall\x12\x1c.anychat.rtc.JoinCallRequest\x1a\x1d.anychat.rtc.JoinCallResponse\x12C\n" +
+	"RejectCall\x12\".anychat.calling.RejectCallRequest\x1a\x15.anychat.common.Empty\x12A\n" +
+	"\aEndCall\x12\x1f.anychat.calling.EndCallRequest\x1a\x15.anychat.common.Empty\x12V\n" +
+	"\x0eGetCallSession\x12&.anychat.calling.GetCallSessionRequest\x1a\x1c.anychat.calling.CallSession\x12[\n" +
+	"\fListCallLogs\x12$.anychat.calling.ListCallLogsRequest\x1a%.anychat.calling.ListCallLogsResponse\x12^\n" +
+	"\rCreateMeeting\x12%.anychat.calling.CreateMeetingRequest\x1a&.anychat.calling.CreateMeetingResponse\x12X\n" +
+	"\vJoinMeeting\x12#.anychat.calling.JoinMeetingRequest\x1a$.anychat.calling.JoinMeetingResponse\x12G\n" +
 	"\n" +
-	"RejectCall\x12\x1e.anychat.rtc.RejectCallRequest\x1a\x15.anychat.common.Empty\x12=\n" +
-	"\aEndCall\x12\x1b.anychat.rtc.EndCallRequest\x1a\x15.anychat.common.Empty\x12N\n" +
-	"\x0eGetCallSession\x12\".anychat.rtc.GetCallSessionRequest\x1a\x18.anychat.rtc.CallSession\x12S\n" +
-	"\fListCallLogs\x12 .anychat.rtc.ListCallLogsRequest\x1a!.anychat.rtc.ListCallLogsResponse\x12V\n" +
-	"\rCreateMeeting\x12!.anychat.rtc.CreateMeetingRequest\x1a\".anychat.rtc.CreateMeetingResponse\x12P\n" +
-	"\vJoinMeeting\x12\x1f.anychat.rtc.JoinMeetingRequest\x1a .anychat.rtc.JoinMeetingResponse\x12C\n" +
+	"EndMeeting\x12\".anychat.calling.EndMeetingRequest\x1a\x15.anychat.common.Empty\x12N\n" +
 	"\n" +
-	"EndMeeting\x12\x1e.anychat.rtc.EndMeetingRequest\x1a\x15.anychat.common.Empty\x12F\n" +
-	"\n" +
-	"GetMeeting\x12\x1e.anychat.rtc.GetMeetingRequest\x1a\x18.anychat.rtc.MeetingRoom\x12S\n" +
-	"\fListMeetings\x12 .anychat.rtc.ListMeetingsRequest\x1a!.anychat.rtc.ListMeetingsResponseB/Z-github.com/anychat/server/api/proto/rtc;rtcpbb\x06proto3"
+	"GetMeeting\x12\".anychat.calling.GetMeetingRequest\x1a\x1c.anychat.calling.MeetingRoom\x12[\n" +
+	"\fListMeetings\x12$.anychat.calling.ListMeetingsRequest\x1a%.anychat.calling.ListMeetingsResponseB7Z5github.com/anychat/server/api/proto/calling;callingpbb\x06proto3"
 
 var (
-	file_rtc_rtc_proto_rawDescOnce sync.Once
-	file_rtc_rtc_proto_rawDescData []byte
+	file_calling_calling_proto_rawDescOnce sync.Once
+	file_calling_calling_proto_rawDescData []byte
 )
 
-func file_rtc_rtc_proto_rawDescGZIP() []byte {
-	file_rtc_rtc_proto_rawDescOnce.Do(func() {
-		file_rtc_rtc_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_rtc_rtc_proto_rawDesc), len(file_rtc_rtc_proto_rawDesc)))
+func file_calling_calling_proto_rawDescGZIP() []byte {
+	file_calling_calling_proto_rawDescOnce.Do(func() {
+		file_calling_calling_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_calling_calling_proto_rawDesc), len(file_calling_calling_proto_rawDesc)))
 	})
-	return file_rtc_rtc_proto_rawDescData
+	return file_calling_calling_proto_rawDescData
 }
 
-var file_rtc_rtc_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_rtc_rtc_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
-var file_rtc_rtc_proto_goTypes = []any{
-	(CallType)(0),                 // 0: anychat.rtc.CallType
-	(CallStatus)(0),               // 1: anychat.rtc.CallStatus
-	(MeetingStatus)(0),            // 2: anychat.rtc.MeetingStatus
-	(*CallSession)(nil),           // 3: anychat.rtc.CallSession
-	(*InitiateCallRequest)(nil),   // 4: anychat.rtc.InitiateCallRequest
-	(*InitiateCallResponse)(nil),  // 5: anychat.rtc.InitiateCallResponse
-	(*JoinCallRequest)(nil),       // 6: anychat.rtc.JoinCallRequest
-	(*JoinCallResponse)(nil),      // 7: anychat.rtc.JoinCallResponse
-	(*RejectCallRequest)(nil),     // 8: anychat.rtc.RejectCallRequest
-	(*EndCallRequest)(nil),        // 9: anychat.rtc.EndCallRequest
-	(*GetCallSessionRequest)(nil), // 10: anychat.rtc.GetCallSessionRequest
-	(*ListCallLogsRequest)(nil),   // 11: anychat.rtc.ListCallLogsRequest
-	(*ListCallLogsResponse)(nil),  // 12: anychat.rtc.ListCallLogsResponse
-	(*MeetingRoom)(nil),           // 13: anychat.rtc.MeetingRoom
-	(*CreateMeetingRequest)(nil),  // 14: anychat.rtc.CreateMeetingRequest
-	(*CreateMeetingResponse)(nil), // 15: anychat.rtc.CreateMeetingResponse
-	(*JoinMeetingRequest)(nil),    // 16: anychat.rtc.JoinMeetingRequest
-	(*JoinMeetingResponse)(nil),   // 17: anychat.rtc.JoinMeetingResponse
-	(*EndMeetingRequest)(nil),     // 18: anychat.rtc.EndMeetingRequest
-	(*GetMeetingRequest)(nil),     // 19: anychat.rtc.GetMeetingRequest
-	(*ListMeetingsRequest)(nil),   // 20: anychat.rtc.ListMeetingsRequest
-	(*ListMeetingsResponse)(nil),  // 21: anychat.rtc.ListMeetingsResponse
+var file_calling_calling_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_calling_calling_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_calling_calling_proto_goTypes = []any{
+	(CallType)(0),                 // 0: anychat.calling.CallType
+	(CallStatus)(0),               // 1: anychat.calling.CallStatus
+	(MeetingStatus)(0),            // 2: anychat.calling.MeetingStatus
+	(*CallSession)(nil),           // 3: anychat.calling.CallSession
+	(*InitiateCallRequest)(nil),   // 4: anychat.calling.InitiateCallRequest
+	(*InitiateCallResponse)(nil),  // 5: anychat.calling.InitiateCallResponse
+	(*JoinCallRequest)(nil),       // 6: anychat.calling.JoinCallRequest
+	(*JoinCallResponse)(nil),      // 7: anychat.calling.JoinCallResponse
+	(*RejectCallRequest)(nil),     // 8: anychat.calling.RejectCallRequest
+	(*EndCallRequest)(nil),        // 9: anychat.calling.EndCallRequest
+	(*GetCallSessionRequest)(nil), // 10: anychat.calling.GetCallSessionRequest
+	(*ListCallLogsRequest)(nil),   // 11: anychat.calling.ListCallLogsRequest
+	(*ListCallLogsResponse)(nil),  // 12: anychat.calling.ListCallLogsResponse
+	(*MeetingRoom)(nil),           // 13: anychat.calling.MeetingRoom
+	(*CreateMeetingRequest)(nil),  // 14: anychat.calling.CreateMeetingRequest
+	(*CreateMeetingResponse)(nil), // 15: anychat.calling.CreateMeetingResponse
+	(*JoinMeetingRequest)(nil),    // 16: anychat.calling.JoinMeetingRequest
+	(*JoinMeetingResponse)(nil),   // 17: anychat.calling.JoinMeetingResponse
+	(*EndMeetingRequest)(nil),     // 18: anychat.calling.EndMeetingRequest
+	(*GetMeetingRequest)(nil),     // 19: anychat.calling.GetMeetingRequest
+	(*ListMeetingsRequest)(nil),   // 20: anychat.calling.ListMeetingsRequest
+	(*ListMeetingsResponse)(nil),  // 21: anychat.calling.ListMeetingsResponse
 	(*common.Empty)(nil),          // 22: anychat.common.Empty
 }
-var file_rtc_rtc_proto_depIdxs = []int32{
-	0,  // 0: anychat.rtc.CallSession.call_type:type_name -> anychat.rtc.CallType
-	1,  // 1: anychat.rtc.CallSession.status:type_name -> anychat.rtc.CallStatus
-	0,  // 2: anychat.rtc.InitiateCallRequest.call_type:type_name -> anychat.rtc.CallType
-	3,  // 3: anychat.rtc.ListCallLogsResponse.sessions:type_name -> anychat.rtc.CallSession
-	2,  // 4: anychat.rtc.MeetingRoom.status:type_name -> anychat.rtc.MeetingStatus
-	13, // 5: anychat.rtc.CreateMeetingResponse.meeting:type_name -> anychat.rtc.MeetingRoom
-	13, // 6: anychat.rtc.JoinMeetingResponse.meeting:type_name -> anychat.rtc.MeetingRoom
-	13, // 7: anychat.rtc.ListMeetingsResponse.meetings:type_name -> anychat.rtc.MeetingRoom
-	4,  // 8: anychat.rtc.RTCService.InitiateCall:input_type -> anychat.rtc.InitiateCallRequest
-	6,  // 9: anychat.rtc.RTCService.JoinCall:input_type -> anychat.rtc.JoinCallRequest
-	8,  // 10: anychat.rtc.RTCService.RejectCall:input_type -> anychat.rtc.RejectCallRequest
-	9,  // 11: anychat.rtc.RTCService.EndCall:input_type -> anychat.rtc.EndCallRequest
-	10, // 12: anychat.rtc.RTCService.GetCallSession:input_type -> anychat.rtc.GetCallSessionRequest
-	11, // 13: anychat.rtc.RTCService.ListCallLogs:input_type -> anychat.rtc.ListCallLogsRequest
-	14, // 14: anychat.rtc.RTCService.CreateMeeting:input_type -> anychat.rtc.CreateMeetingRequest
-	16, // 15: anychat.rtc.RTCService.JoinMeeting:input_type -> anychat.rtc.JoinMeetingRequest
-	18, // 16: anychat.rtc.RTCService.EndMeeting:input_type -> anychat.rtc.EndMeetingRequest
-	19, // 17: anychat.rtc.RTCService.GetMeeting:input_type -> anychat.rtc.GetMeetingRequest
-	20, // 18: anychat.rtc.RTCService.ListMeetings:input_type -> anychat.rtc.ListMeetingsRequest
-	5,  // 19: anychat.rtc.RTCService.InitiateCall:output_type -> anychat.rtc.InitiateCallResponse
-	7,  // 20: anychat.rtc.RTCService.JoinCall:output_type -> anychat.rtc.JoinCallResponse
-	22, // 21: anychat.rtc.RTCService.RejectCall:output_type -> anychat.common.Empty
-	22, // 22: anychat.rtc.RTCService.EndCall:output_type -> anychat.common.Empty
-	3,  // 23: anychat.rtc.RTCService.GetCallSession:output_type -> anychat.rtc.CallSession
-	12, // 24: anychat.rtc.RTCService.ListCallLogs:output_type -> anychat.rtc.ListCallLogsResponse
-	15, // 25: anychat.rtc.RTCService.CreateMeeting:output_type -> anychat.rtc.CreateMeetingResponse
-	17, // 26: anychat.rtc.RTCService.JoinMeeting:output_type -> anychat.rtc.JoinMeetingResponse
-	22, // 27: anychat.rtc.RTCService.EndMeeting:output_type -> anychat.common.Empty
-	13, // 28: anychat.rtc.RTCService.GetMeeting:output_type -> anychat.rtc.MeetingRoom
-	21, // 29: anychat.rtc.RTCService.ListMeetings:output_type -> anychat.rtc.ListMeetingsResponse
+var file_calling_calling_proto_depIdxs = []int32{
+	0,  // 0: anychat.calling.CallSession.call_type:type_name -> anychat.calling.CallType
+	1,  // 1: anychat.calling.CallSession.status:type_name -> anychat.calling.CallStatus
+	0,  // 2: anychat.calling.InitiateCallRequest.call_type:type_name -> anychat.calling.CallType
+	3,  // 3: anychat.calling.ListCallLogsResponse.sessions:type_name -> anychat.calling.CallSession
+	2,  // 4: anychat.calling.MeetingRoom.status:type_name -> anychat.calling.MeetingStatus
+	13, // 5: anychat.calling.CreateMeetingResponse.meeting:type_name -> anychat.calling.MeetingRoom
+	13, // 6: anychat.calling.JoinMeetingResponse.meeting:type_name -> anychat.calling.MeetingRoom
+	13, // 7: anychat.calling.ListMeetingsResponse.meetings:type_name -> anychat.calling.MeetingRoom
+	4,  // 8: anychat.calling.CallingService.InitiateCall:input_type -> anychat.calling.InitiateCallRequest
+	6,  // 9: anychat.calling.CallingService.JoinCall:input_type -> anychat.calling.JoinCallRequest
+	8,  // 10: anychat.calling.CallingService.RejectCall:input_type -> anychat.calling.RejectCallRequest
+	9,  // 11: anychat.calling.CallingService.EndCall:input_type -> anychat.calling.EndCallRequest
+	10, // 12: anychat.calling.CallingService.GetCallSession:input_type -> anychat.calling.GetCallSessionRequest
+	11, // 13: anychat.calling.CallingService.ListCallLogs:input_type -> anychat.calling.ListCallLogsRequest
+	14, // 14: anychat.calling.CallingService.CreateMeeting:input_type -> anychat.calling.CreateMeetingRequest
+	16, // 15: anychat.calling.CallingService.JoinMeeting:input_type -> anychat.calling.JoinMeetingRequest
+	18, // 16: anychat.calling.CallingService.EndMeeting:input_type -> anychat.calling.EndMeetingRequest
+	19, // 17: anychat.calling.CallingService.GetMeeting:input_type -> anychat.calling.GetMeetingRequest
+	20, // 18: anychat.calling.CallingService.ListMeetings:input_type -> anychat.calling.ListMeetingsRequest
+	5,  // 19: anychat.calling.CallingService.InitiateCall:output_type -> anychat.calling.InitiateCallResponse
+	7,  // 20: anychat.calling.CallingService.JoinCall:output_type -> anychat.calling.JoinCallResponse
+	22, // 21: anychat.calling.CallingService.RejectCall:output_type -> anychat.common.Empty
+	22, // 22: anychat.calling.CallingService.EndCall:output_type -> anychat.common.Empty
+	3,  // 23: anychat.calling.CallingService.GetCallSession:output_type -> anychat.calling.CallSession
+	12, // 24: anychat.calling.CallingService.ListCallLogs:output_type -> anychat.calling.ListCallLogsResponse
+	15, // 25: anychat.calling.CallingService.CreateMeeting:output_type -> anychat.calling.CreateMeetingResponse
+	17, // 26: anychat.calling.CallingService.JoinMeeting:output_type -> anychat.calling.JoinMeetingResponse
+	22, // 27: anychat.calling.CallingService.EndMeeting:output_type -> anychat.common.Empty
+	13, // 28: anychat.calling.CallingService.GetMeeting:output_type -> anychat.calling.MeetingRoom
+	21, // 29: anychat.calling.CallingService.ListMeetings:output_type -> anychat.calling.ListMeetingsResponse
 	19, // [19:30] is the sub-list for method output_type
 	8,  // [8:19] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
@@ -1542,27 +1541,27 @@ var file_rtc_rtc_proto_depIdxs = []int32{
 	0,  // [0:8] is the sub-list for field type_name
 }
 
-func init() { file_rtc_rtc_proto_init() }
-func file_rtc_rtc_proto_init() {
-	if File_rtc_rtc_proto != nil {
+func init() { file_calling_calling_proto_init() }
+func file_calling_calling_proto_init() {
+	if File_calling_calling_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rtc_rtc_proto_rawDesc), len(file_rtc_rtc_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_calling_calling_proto_rawDesc), len(file_calling_calling_proto_rawDesc)),
 			NumEnums:      3,
 			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_rtc_rtc_proto_goTypes,
-		DependencyIndexes: file_rtc_rtc_proto_depIdxs,
-		EnumInfos:         file_rtc_rtc_proto_enumTypes,
-		MessageInfos:      file_rtc_rtc_proto_msgTypes,
+		GoTypes:           file_calling_calling_proto_goTypes,
+		DependencyIndexes: file_calling_calling_proto_depIdxs,
+		EnumInfos:         file_calling_calling_proto_enumTypes,
+		MessageInfos:      file_calling_calling_proto_msgTypes,
 	}.Build()
-	File_rtc_rtc_proto = out.File
-	file_rtc_rtc_proto_goTypes = nil
-	file_rtc_rtc_proto_depIdxs = nil
+	File_calling_calling_proto = out.File
+	file_calling_calling_proto_goTypes = nil
+	file_calling_calling_proto_depIdxs = nil
 }

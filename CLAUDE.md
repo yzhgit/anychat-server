@@ -71,7 +71,7 @@ mage -l                      # List all available tasks
 7. **file-service**: File uploads/downloads via MinIO
 8. **push-service**: Offline push notifications
 9. **gateway-service**: API gateway (WebSocket connections, HTTP/gRPC routing)
-10. **rtc-service**: Audio/video calling via LiveKit
+10. **calling-service**: Audio/video calling via LiveKit
 11. **sync-service**: Multi-device synchronization
 12. **admin-service**: Admin panel backend
 

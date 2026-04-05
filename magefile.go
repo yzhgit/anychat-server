@@ -56,7 +56,7 @@ func (Build) All() error {
 		"file-service",
 		"push-service",
 		"gateway-service",
-		"rtc-service",
+		"calling-service",
 		"sync-service",
 		"admin-service",
 	}
@@ -290,10 +290,10 @@ func (Dev) Sync() error {
 	return sh.RunV("go", "run", "./cmd/sync-service")
 }
 
-// RTC runs rtc-service locally
-func (Dev) RTC() error {
-	fmt.Println("Running rtc-service...")
-	return sh.RunV("go", "run", "./cmd/rtc-service")
+// Calling runs calling-service locally
+func (Dev) Calling() error {
+	fmt.Println("Running calling-service...")
+	return sh.RunV("go", "run", "./cmd/calling-service")
 }
 
 // Admin runs admin-service locally

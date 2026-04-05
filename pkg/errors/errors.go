@@ -131,7 +131,7 @@ const (
 	CodePushConfigInvalid = 80103 // 推送配置无效
 )
 
-// RTC Service 错误码 (90xxx)
+// Calling Service 错误码 (90xxx)
 const (
 	CodeCallNotFound         = 90101 // 通话不存在
 	CodeCallAlreadyActive    = 90102 // 通话已进行中

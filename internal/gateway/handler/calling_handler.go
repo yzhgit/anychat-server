@@ -4,21 +4,21 @@ import (
 	"net/http"
 	"strconv"
 
-	rtcpb "github.com/anychat/server/api/proto/rtc"
+	callingpb "github.com/anychat/server/api/proto/calling"
 	"github.com/anychat/server/internal/gateway/client"
 	gwmiddleware "github.com/anychat/server/internal/gateway/middleware"
 	"github.com/anychat/server/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
-// RTCHandler RTC 音视频 HTTP 处理器
-type RTCHandler struct {
+// CallingHandler 音视频通话 HTTP 处理器
+type CallingHandler struct {
 	clientManager *client.Manager
 }
 
-// NewRTCHandler 创建 RTC 处理器
-func NewRTCHandler(clientManager *client.Manager) *RTCHandler {
-	return &RTCHandler{clientManager: clientManager}
+// NewCallingHandler 创建 Calling 处理器
+func NewCallingHandler(clientManager *client.Manager) *CallingHandler {
+	return &CallingHandler{clientManager: clientManager}
 }
 
 // ── 一对一通话 ────────────────────────────────────────────
@@ -31,8 +31,8 @@ type initiateCallRequest struct {
 
 // InitiateCall 发起音视频通话
 // @Summary      发起通话
-// @Description  向指定用户发起音视频通话，返回 RTC Room 名称和 JWT Token
-// @Tags         RTC
+// @Description  向指定用户发起音视频通话，返回 Calling Room 名称和 JWT Token
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -41,8 +41,8 @@ type initiateCallRequest struct {
 // @Failure      400      {object}  response.Response  "参数错误"
 // @Failure      401      {object}  response.Response  "未授权"
 // @Failure      500      {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls [post]
-func (h *RTCHandler) InitiateCall(c *gin.Context) {
+// @Router       /calling/calls [post]
+func (h *CallingHandler) InitiateCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
 	var req initiateCallRequest
@@ -54,12 +54,12 @@ func (h *RTCHandler) InitiateCall(c *gin.Context) {
 		req.CallType = "audio"
 	}
 
-	callType := rtcpb.CallType_CALL_TYPE_AUDIO
+	callType := callingpb.CallType_CALL_TYPE_AUDIO
 	if req.CallType == "video" {
-		callType = rtcpb.CallType_CALL_TYPE_VIDEO
+		callType = callingpb.CallType_CALL_TYPE_VIDEO
 	}
 
-	resp, err := h.clientManager.RTC().InitiateCall(c.Request.Context(), &rtcpb.InitiateCallRequest{
+	resp, err := h.clientManager.Calling().InitiateCall(c.Request.Context(), &callingpb.InitiateCallRequest{
 		CallerId: userID,
 		CalleeId: req.CalleeID,
 		CallType: callType,
@@ -73,8 +73,8 @@ func (h *RTCHandler) InitiateCall(c *gin.Context) {
 
 // JoinCall 接听通话（被叫方接受）
 // @Summary      接听通话
-// @Description  被叫方接受通话邀请，返回 RTC Room 名称和 JWT Token
-// @Tags         RTC
+// @Description  被叫方接受通话邀请，返回 Calling Room 名称和 JWT Token
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -84,12 +84,12 @@ func (h *RTCHandler) InitiateCall(c *gin.Context) {
 // @Failure      401     {object}  response.Response  "未授权"
 // @Failure      404     {object}  response.Response  "通话不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls/{callId}/join [post]
-func (h *RTCHandler) JoinCall(c *gin.Context) {
+// @Router       /calling/calls/{callId}/join [post]
+func (h *CallingHandler) JoinCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	callID := c.Param("callId")
 
-	resp, err := h.clientManager.RTC().JoinCall(c.Request.Context(), &rtcpb.JoinCallRequest{
+	resp, err := h.clientManager.Calling().JoinCall(c.Request.Context(), &callingpb.JoinCallRequest{
 		CallId: callID,
 		UserId: userID,
 	})
@@ -103,7 +103,7 @@ func (h *RTCHandler) JoinCall(c *gin.Context) {
 // RejectCall 拒绝通话
 // @Summary      拒绝通话
 // @Description  被叫方拒绝通话邀请
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -112,12 +112,12 @@ func (h *RTCHandler) JoinCall(c *gin.Context) {
 // @Failure      401     {object}  response.Response  "未授权"
 // @Failure      404     {object}  response.Response  "通话不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls/{callId}/reject [post]
-func (h *RTCHandler) RejectCall(c *gin.Context) {
+// @Router       /calling/calls/{callId}/reject [post]
+func (h *CallingHandler) RejectCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	callID := c.Param("callId")
 
-	_, err := h.clientManager.RTC().RejectCall(c.Request.Context(), &rtcpb.RejectCallRequest{
+	_, err := h.clientManager.Calling().RejectCall(c.Request.Context(), &callingpb.RejectCallRequest{
 		CallId: callID,
 		UserId: userID,
 	})
@@ -131,7 +131,7 @@ func (h *RTCHandler) RejectCall(c *gin.Context) {
 // EndCall 挂断通话
 // @Summary      挂断通话
 // @Description  主叫方或被叫方挂断通话
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -140,12 +140,12 @@ func (h *RTCHandler) RejectCall(c *gin.Context) {
 // @Failure      401     {object}  response.Response  "未授权"
 // @Failure      404     {object}  response.Response  "通话不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls/{callId}/end [post]
-func (h *RTCHandler) EndCall(c *gin.Context) {
+// @Router       /calling/calls/{callId}/end [post]
+func (h *CallingHandler) EndCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	callID := c.Param("callId")
 
-	_, err := h.clientManager.RTC().EndCall(c.Request.Context(), &rtcpb.EndCallRequest{
+	_, err := h.clientManager.Calling().EndCall(c.Request.Context(), &callingpb.EndCallRequest{
 		CallId: callID,
 		UserId: userID,
 	})
@@ -159,7 +159,7 @@ func (h *RTCHandler) EndCall(c *gin.Context) {
 // GetCallSession 获取通话会话详情
 // @Summary      获取通话详情
 // @Description  获取指定通话会话的详细信息
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -168,12 +168,12 @@ func (h *RTCHandler) EndCall(c *gin.Context) {
 // @Failure      401     {object}  response.Response  "未授权"
 // @Failure      404     {object}  response.Response  "通话不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls/{callId} [get]
-func (h *RTCHandler) GetCallSession(c *gin.Context) {
+// @Router       /calling/calls/{callId} [get]
+func (h *CallingHandler) GetCallSession(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	callID := c.Param("callId")
 
-	resp, err := h.clientManager.RTC().GetCallSession(c.Request.Context(), &rtcpb.GetCallSessionRequest{
+	resp, err := h.clientManager.Calling().GetCallSession(c.Request.Context(), &callingpb.GetCallSessionRequest{
 		CallId: callID,
 		UserId: userID,
 	})
@@ -187,7 +187,7 @@ func (h *RTCHandler) GetCallSession(c *gin.Context) {
 // ListCallLogs 获取通话记录
 // @Summary      通话记录
 // @Description  获取当前用户的通话历史记录
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -196,11 +196,11 @@ func (h *RTCHandler) GetCallSession(c *gin.Context) {
 // @Success      200       {object}  response.Response{data=object}  "成功"
 // @Failure      401       {object}  response.Response  "未授权"
 // @Failure      500       {object}  response.Response  "服务器错误"
-// @Router       /rtc/calls [get]
-func (h *RTCHandler) ListCallLogs(c *gin.Context) {
+// @Router       /calling/calls [get]
+func (h *CallingHandler) ListCallLogs(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
-	req := &rtcpb.ListCallLogsRequest{UserId: userID, Page: 1, PageSize: 20}
+	req := &callingpb.ListCallLogsRequest{UserId: userID, Page: 1, PageSize: 20}
 	if p := c.Query("page"); p != "" {
 		if v, err := strconv.Atoi(p); err == nil {
 			req.Page = int32(v)
@@ -212,7 +212,7 @@ func (h *RTCHandler) ListCallLogs(c *gin.Context) {
 		}
 	}
 
-	resp, err := h.clientManager.RTC().ListCallLogs(c.Request.Context(), req)
+	resp, err := h.clientManager.Calling().ListCallLogs(c.Request.Context(), req)
 	if err != nil {
 		handleGRPCError(c, err)
 		return
@@ -231,8 +231,8 @@ type createMeetingRequest struct {
 
 // CreateMeeting 创建会议室
 // @Summary      创建会议室
-// @Description  创建新的音视频会议室，返回会议信息和 RTC Token
-// @Tags         RTC
+// @Description  创建新的音视频会议室，返回会议信息和 Calling Token
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -241,8 +241,8 @@ type createMeetingRequest struct {
 // @Failure      400      {object}  response.Response  "参数错误"
 // @Failure      401      {object}  response.Response  "未授权"
 // @Failure      500      {object}  response.Response  "服务器错误"
-// @Router       /rtc/meetings [post]
-func (h *RTCHandler) CreateMeeting(c *gin.Context) {
+// @Router       /calling/meetings [post]
+func (h *CallingHandler) CreateMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
 	var req createMeetingRequest
@@ -251,7 +251,7 @@ func (h *RTCHandler) CreateMeeting(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.clientManager.RTC().CreateMeeting(c.Request.Context(), &rtcpb.CreateMeetingRequest{
+	resp, err := h.clientManager.Calling().CreateMeeting(c.Request.Context(), &callingpb.CreateMeetingRequest{
 		CreatorId:       userID,
 		Title:           req.Title,
 		Password:        req.Password,
@@ -267,7 +267,7 @@ func (h *RTCHandler) CreateMeeting(c *gin.Context) {
 // ListMeetings 列举活跃会议室
 // @Summary      会议室列表
 // @Description  获取当前活跃的会议室列表
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -276,9 +276,9 @@ func (h *RTCHandler) CreateMeeting(c *gin.Context) {
 // @Success      200       {object}  response.Response{data=object}  "成功"
 // @Failure      401       {object}  response.Response  "未授权"
 // @Failure      500       {object}  response.Response  "服务器错误"
-// @Router       /rtc/meetings [get]
-func (h *RTCHandler) ListMeetings(c *gin.Context) {
-	req := &rtcpb.ListMeetingsRequest{Page: 1, PageSize: 20}
+// @Router       /calling/meetings [get]
+func (h *CallingHandler) ListMeetings(c *gin.Context) {
+	req := &callingpb.ListMeetingsRequest{Page: 1, PageSize: 20}
 	if p := c.Query("page"); p != "" {
 		if v, err := strconv.Atoi(p); err == nil {
 			req.Page = int32(v)
@@ -290,7 +290,7 @@ func (h *RTCHandler) ListMeetings(c *gin.Context) {
 		}
 	}
 
-	resp, err := h.clientManager.RTC().ListMeetings(c.Request.Context(), req)
+	resp, err := h.clientManager.Calling().ListMeetings(c.Request.Context(), req)
 	if err != nil {
 		handleGRPCError(c, err)
 		return
@@ -301,7 +301,7 @@ func (h *RTCHandler) ListMeetings(c *gin.Context) {
 // GetMeeting 获取会议室详情
 // @Summary      获取会议室
 // @Description  获取指定会议室的详细信息
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -310,11 +310,11 @@ func (h *RTCHandler) ListMeetings(c *gin.Context) {
 // @Failure      401     {object}  response.Response  "未授权"
 // @Failure      404     {object}  response.Response  "会议室不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/meetings/{roomId} [get]
-func (h *RTCHandler) GetMeeting(c *gin.Context) {
+// @Router       /calling/meetings/{roomId} [get]
+func (h *CallingHandler) GetMeeting(c *gin.Context) {
 	roomID := c.Param("roomId")
 
-	resp, err := h.clientManager.RTC().GetMeeting(c.Request.Context(), &rtcpb.GetMeetingRequest{
+	resp, err := h.clientManager.Calling().GetMeeting(c.Request.Context(), &callingpb.GetMeetingRequest{
 		RoomId: roomID,
 	})
 	if err != nil {
@@ -331,8 +331,8 @@ type joinMeetingRequest struct {
 
 // JoinMeeting 加入会议室
 // @Summary      加入会议室
-// @Description  加入指定会议室，返回 RTC Token
-// @Tags         RTC
+// @Description  加入指定会议室，返回 Calling Token
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -344,15 +344,15 @@ type joinMeetingRequest struct {
 // @Failure      403      {object}  response.Response  "密码错误"
 // @Failure      404      {object}  response.Response  "会议室不存在"
 // @Failure      500      {object}  response.Response  "服务器错误"
-// @Router       /rtc/meetings/{roomId}/join [post]
-func (h *RTCHandler) JoinMeeting(c *gin.Context) {
+// @Router       /calling/meetings/{roomId}/join [post]
+func (h *CallingHandler) JoinMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	roomID := c.Param("roomId")
 
 	var req joinMeetingRequest
 	_ = c.ShouldBindJSON(&req)
 
-	resp, err := h.clientManager.RTC().JoinMeeting(c.Request.Context(), &rtcpb.JoinMeetingRequest{
+	resp, err := h.clientManager.Calling().JoinMeeting(c.Request.Context(), &callingpb.JoinMeetingRequest{
 		UserId:   userID,
 		RoomId:   roomID,
 		Password: req.Password,
@@ -367,7 +367,7 @@ func (h *RTCHandler) JoinMeeting(c *gin.Context) {
 // EndMeeting 结束会议室
 // @Summary      结束会议室
 // @Description  创建者结束会议室，会议室关闭后所有参与者将被移出
-// @Tags         RTC
+// @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
@@ -377,12 +377,12 @@ func (h *RTCHandler) JoinMeeting(c *gin.Context) {
 // @Failure      403     {object}  response.Response  "无权限"
 // @Failure      404     {object}  response.Response  "会议室不存在"
 // @Failure      500     {object}  response.Response  "服务器错误"
-// @Router       /rtc/meetings/{roomId}/end [post]
-func (h *RTCHandler) EndMeeting(c *gin.Context) {
+// @Router       /calling/meetings/{roomId}/end [post]
+func (h *CallingHandler) EndMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	roomID := c.Param("roomId")
 
-	_, err := h.clientManager.RTC().EndMeeting(c.Request.Context(), &rtcpb.EndMeetingRequest{
+	_, err := h.clientManager.Calling().EndMeeting(c.Request.Context(), &callingpb.EndMeetingRequest{
 		RoomId:    roomID,
 		CreatorId: userID,
 	})

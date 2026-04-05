@@ -20,19 +20,19 @@ print_success() {
 echo -e "${YELLOW}正在停止所有微服务...${NC}\n"
 
 # 停止所有微服务进程
-pkill -f "auth-service|user-service|gateway-service|friend-service|group-service|file-service|message-service|session-service|push-service|rtc-service|sync-service|admin-service" 2>/dev/null || true
+pkill -f "auth-service|user-service|gateway-service|friend-service|group-service|file-service|message-service|session-service|push-service|calling-service|sync-service|admin-service" 2>/dev/null || true
 
 # 等待进程结束
 sleep 2
 
 # 检查是否还有进程
-remaining=$(ps aux | grep -E "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|session-service|push-service|rtc-service|sync-service|admin-service" | grep -v grep || echo "")
+remaining=$(ps aux | grep -E "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|session-service|push-service|calling-service|sync-service|admin-service" | grep -v grep || echo "")
 
 if [ -z "$remaining" ]; then
     print_success "所有微服务已停止"
 else
     print_info "仍有进程运行，强制停止..."
-    pkill -9 -f "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|session-service|push-service|rtc-service|sync-service|admin-service" 2>/dev/null || true
+    pkill -9 -f "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|session-service|push-service|calling-service|sync-service|admin-service" 2>/dev/null || true
     sleep 1
     print_success "强制停止完成"
 fi
@@ -47,7 +47,7 @@ rm -f \
     /tmp/message-service.pid \
     /tmp/session-service.pid \
     /tmp/push-service.pid \
-    /tmp/rtc-service.pid \
+    /tmp/calling-service.pid \
     /tmp/sync-service.pid \
     /tmp/admin-service.pid \
     /tmp/gateway-service.pid \
