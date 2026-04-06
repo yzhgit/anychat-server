@@ -29,6 +29,10 @@ const (
 	UserService_RefreshQRCode_FullMethodName   = "/anychat.user.UserService/RefreshQRCode"
 	UserService_GetUserByQRCode_FullMethodName = "/anychat.user.UserService/GetUserByQRCode"
 	UserService_UpdatePushToken_FullMethodName = "/anychat.user.UserService/UpdatePushToken"
+	UserService_BindPhone_FullMethodName       = "/anychat.user.UserService/BindPhone"
+	UserService_ChangePhone_FullMethodName     = "/anychat.user.UserService/ChangePhone"
+	UserService_BindEmail_FullMethodName       = "/anychat.user.UserService/BindEmail"
+	UserService_ChangeEmail_FullMethodName     = "/anychat.user.UserService/ChangeEmail"
 	UserService_InitUserData_FullMethodName    = "/anychat.user.UserService/InitUserData"
 )
 
@@ -56,6 +60,14 @@ type UserServiceClient interface {
 	GetUserByQRCode(ctx context.Context, in *GetUserByQRCodeRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 	// UpdatePushToken 更新推送Token
 	UpdatePushToken(ctx context.Context, in *UpdatePushTokenRequest, opts ...grpc.CallOption) (*common.Empty, error)
+	// BindPhone 绑定手机号
+	BindPhone(ctx context.Context, in *BindPhoneRequest, opts ...grpc.CallOption) (*BindPhoneResponse, error)
+	// ChangePhone 更换手机号
+	ChangePhone(ctx context.Context, in *ChangePhoneRequest, opts ...grpc.CallOption) (*ChangePhoneResponse, error)
+	// BindEmail 绑定邮箱
+	BindEmail(ctx context.Context, in *BindEmailRequest, opts ...grpc.CallOption) (*BindEmailResponse, error)
+	// ChangeEmail 更换邮箱
+	ChangeEmail(ctx context.Context, in *ChangeEmailRequest, opts ...grpc.CallOption) (*ChangeEmailResponse, error)
 	// InitUserData 初始化用户数据（供auth-service调用）
 	InitUserData(ctx context.Context, in *InitUserDataRequest, opts ...grpc.CallOption) (*common.Empty, error)
 }
@@ -158,6 +170,46 @@ func (c *userServiceClient) UpdatePushToken(ctx context.Context, in *UpdatePushT
 	return out, nil
 }
 
+func (c *userServiceClient) BindPhone(ctx context.Context, in *BindPhoneRequest, opts ...grpc.CallOption) (*BindPhoneResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BindPhoneResponse)
+	err := c.cc.Invoke(ctx, UserService_BindPhone_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangePhone(ctx context.Context, in *ChangePhoneRequest, opts ...grpc.CallOption) (*ChangePhoneResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangePhoneResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangePhone_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) BindEmail(ctx context.Context, in *BindEmailRequest, opts ...grpc.CallOption) (*BindEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BindEmailResponse)
+	err := c.cc.Invoke(ctx, UserService_BindEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeEmail(ctx context.Context, in *ChangeEmailRequest, opts ...grpc.CallOption) (*ChangeEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeEmailResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangeEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) InitUserData(ctx context.Context, in *InitUserDataRequest, opts ...grpc.CallOption) (*common.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(common.Empty)
@@ -192,6 +244,14 @@ type UserServiceServer interface {
 	GetUserByQRCode(context.Context, *GetUserByQRCodeRequest) (*UserInfoResponse, error)
 	// UpdatePushToken 更新推送Token
 	UpdatePushToken(context.Context, *UpdatePushTokenRequest) (*common.Empty, error)
+	// BindPhone 绑定手机号
+	BindPhone(context.Context, *BindPhoneRequest) (*BindPhoneResponse, error)
+	// ChangePhone 更换手机号
+	ChangePhone(context.Context, *ChangePhoneRequest) (*ChangePhoneResponse, error)
+	// BindEmail 绑定邮箱
+	BindEmail(context.Context, *BindEmailRequest) (*BindEmailResponse, error)
+	// ChangeEmail 更换邮箱
+	ChangeEmail(context.Context, *ChangeEmailRequest) (*ChangeEmailResponse, error)
 	// InitUserData 初始化用户数据（供auth-service调用）
 	InitUserData(context.Context, *InitUserDataRequest) (*common.Empty, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -230,6 +290,18 @@ func (UnimplementedUserServiceServer) GetUserByQRCode(context.Context, *GetUserB
 }
 func (UnimplementedUserServiceServer) UpdatePushToken(context.Context, *UpdatePushTokenRequest) (*common.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdatePushToken not implemented")
+}
+func (UnimplementedUserServiceServer) BindPhone(context.Context, *BindPhoneRequest) (*BindPhoneResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BindPhone not implemented")
+}
+func (UnimplementedUserServiceServer) ChangePhone(context.Context, *ChangePhoneRequest) (*ChangePhoneResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangePhone not implemented")
+}
+func (UnimplementedUserServiceServer) BindEmail(context.Context, *BindEmailRequest) (*BindEmailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BindEmail not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeEmail(context.Context, *ChangeEmailRequest) (*ChangeEmailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangeEmail not implemented")
 }
 func (UnimplementedUserServiceServer) InitUserData(context.Context, *InitUserDataRequest) (*common.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method InitUserData not implemented")
@@ -417,6 +489,78 @@ func _UserService_UpdatePushToken_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_BindPhone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BindPhoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).BindPhone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_BindPhone_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).BindPhone(ctx, req.(*BindPhoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangePhone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePhoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangePhone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangePhone_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangePhone(ctx, req.(*ChangePhoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_BindEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BindEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).BindEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_BindEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).BindEmail(ctx, req.(*BindEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeEmail(ctx, req.(*ChangeEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_InitUserData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InitUserDataRequest)
 	if err := dec(in); err != nil {
@@ -477,6 +621,22 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdatePushToken",
 			Handler:    _UserService_UpdatePushToken_Handler,
+		},
+		{
+			MethodName: "BindPhone",
+			Handler:    _UserService_BindPhone_Handler,
+		},
+		{
+			MethodName: "ChangePhone",
+			Handler:    _UserService_ChangePhone_Handler,
+		},
+		{
+			MethodName: "BindEmail",
+			Handler:    _UserService_BindEmail_Handler,
+		},
+		{
+			MethodName: "ChangeEmail",
+			Handler:    _UserService_ChangeEmail_Handler,
 		},
 		{
 			MethodName: "InitUserData",

@@ -16,6 +16,7 @@ type UserSessionRepository interface {
 	Update(ctx context.Context, session *model.UserSession) error
 	DeleteByUserIDAndDeviceID(ctx context.Context, userID, deviceID string) error
 	DeleteByUserID(ctx context.Context, userID string) error
+	DeleteByUserIDExceptDeviceID(ctx context.Context, userID, deviceID string) error
 }
 
 // userSessionRepositoryImpl 用户会话仓库实现
@@ -86,4 +87,13 @@ func (r *userSessionRepositoryImpl) DeleteByUserID(ctx context.Context, userID s
 	return r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Delete(&model.UserSession{}).Error
+}
+
+// DeleteByUserIDExceptDeviceID 删除用户除当前设备外的所有会话
+func (r *userSessionRepositoryImpl) DeleteByUserIDExceptDeviceID(ctx context.Context, userID, deviceID string) error {
+	query := r.db.WithContext(ctx).Where("user_id = ?", userID)
+	if deviceID != "" {
+		query = query.Where("device_id != ?", deviceID)
+	}
+	return query.Delete(&model.UserSession{}).Error
 }

@@ -4,17 +4,17 @@ import "time"
 
 // UserProfileResponse 用户资料响应
 type UserProfileResponse struct {
-	UserID     string     `json:"userId"`
-	Nickname   string     `json:"nickname"`
-	Avatar     string     `json:"avatar"`
-	Signature  string     `json:"signature"`
-	Gender     int        `json:"gender"`
-	Birthday   *time.Time `json:"birthday,omitempty"`
-	Region     string     `json:"region"`
-	Phone      *string    `json:"phone,omitempty"`
-	Email      *string    `json:"email,omitempty"`
-	QRCodeURL  string     `json:"qrcodeUrl"`
-	CreatedAt  time.Time  `json:"createdAt"`
+	UserID    string     `json:"userId"`
+	Nickname  string     `json:"nickname"`
+	Avatar    string     `json:"avatar"`
+	Signature string     `json:"signature"`
+	Gender    int        `json:"gender"`
+	Birthday  *time.Time `json:"birthday,omitempty"`
+	Region    string     `json:"region"`
+	Phone     *string    `json:"phone,omitempty"`
+	Email     *string    `json:"email,omitempty"`
+	QRCodeURL string     `json:"qrcodeUrl"`
+	CreatedAt time.Time  `json:"createdAt"`
 }
 
 // UserInfoResponse 用户信息响应（查询其他用户时）
@@ -50,8 +50,8 @@ type QRCodeResponse struct {
 
 // SearchUsersResponse 搜索用户响应
 type SearchUsersResponse struct {
-	Total int64              `json:"total"`
-	Users []*UserBriefInfo   `json:"users"`
+	Total int64            `json:"total"`
+	Users []*UserBriefInfo `json:"users"`
 }
 
 // UserBriefInfo 用户简要信息
@@ -60,4 +60,28 @@ type UserBriefInfo struct {
 	Nickname  string `json:"nickname"`
 	Avatar    string `json:"avatar"`
 	Signature string `json:"signature"`
+}
+
+// BindPhoneResponse 绑定手机号响应
+type BindPhoneResponse struct {
+	PhoneNumber string `json:"phoneNumber"`
+	IsPrimary   bool   `json:"isPrimary"`
+}
+
+// ChangePhoneResponse 更换手机号响应
+type ChangePhoneResponse struct {
+	OldPhoneNumber string `json:"oldPhoneNumber"`
+	NewPhoneNumber string `json:"newPhoneNumber"`
+}
+
+// BindEmailResponse 绑定邮箱响应
+type BindEmailResponse struct {
+	Email     string `json:"email"`
+	IsPrimary bool   `json:"isPrimary"`
+}
+
+// ChangeEmailResponse 更换邮箱响应
+type ChangeEmailResponse struct {
+	OldEmail string `json:"oldEmail"`
+	NewEmail string `json:"newEmail"`
 }

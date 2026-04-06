@@ -31,6 +31,36 @@ type UpdatePushTokenRequest struct {
 	Platform  string `json:"platform" binding:"required"` // iOS/Android
 }
 
+// BindPhoneRequest 绑定手机号请求
+type BindPhoneRequest struct {
+	PhoneNumber string `json:"phoneNumber" binding:"required"`
+	VerifyCode  string `json:"verifyCode" binding:"required"`
+}
+
+// ChangePhoneRequest 更换手机号请求
+type ChangePhoneRequest struct {
+	OldPhoneNumber string  `json:"oldPhoneNumber" binding:"required"`
+	NewPhoneNumber string  `json:"newPhoneNumber" binding:"required"`
+	NewVerifyCode  string  `json:"newVerifyCode" binding:"required"`
+	OldVerifyCode  *string `json:"oldVerifyCode"`
+	DeviceID       string  `json:"-"`
+}
+
+// BindEmailRequest 绑定邮箱请求
+type BindEmailRequest struct {
+	Email      string `json:"email" binding:"required"`
+	VerifyCode string `json:"verifyCode" binding:"required"`
+}
+
+// ChangeEmailRequest 更换邮箱请求
+type ChangeEmailRequest struct {
+	OldEmail      string  `json:"oldEmail" binding:"required"`
+	NewEmail      string  `json:"newEmail" binding:"required"`
+	NewVerifyCode string  `json:"newVerifyCode" binding:"required"`
+	OldVerifyCode *string `json:"oldVerifyCode"`
+	DeviceID      string  `json:"-"`
+}
+
 // SearchUsersRequest 搜索用户请求
 type SearchUsersRequest struct {
 	Keyword  string `form:"keyword" binding:"required"`

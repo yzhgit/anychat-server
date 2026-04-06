@@ -34,14 +34,14 @@ func (s *UserServer) GetProfile(ctx context.Context, req *userpb.GetProfileReque
 	}
 
 	pbResp := &userpb.UserProfileResponse{
-		UserId:     resp.UserID,
-		Nickname:   resp.Nickname,
-		Avatar:     resp.Avatar,
-		Signature:  resp.Signature,
-		Gender:     int32(resp.Gender),
-		Region:     resp.Region,
-		QrcodeUrl:  resp.QRCodeURL,
-		CreatedAt:  timestamppb.New(resp.CreatedAt),
+		UserId:    resp.UserID,
+		Nickname:  resp.Nickname,
+		Avatar:    resp.Avatar,
+		Signature: resp.Signature,
+		Gender:    int32(resp.Gender),
+		Region:    resp.Region,
+		QrcodeUrl: resp.QRCodeURL,
+		CreatedAt: timestamppb.New(resp.CreatedAt),
 	}
 
 	if resp.Birthday != nil {
@@ -88,14 +88,14 @@ func (s *UserServer) UpdateProfile(ctx context.Context, req *userpb.UpdateProfil
 	}
 
 	pbResp := &userpb.UserProfileResponse{
-		UserId:     resp.UserID,
-		Nickname:   resp.Nickname,
-		Avatar:     resp.Avatar,
-		Signature:  resp.Signature,
-		Gender:     int32(resp.Gender),
-		Region:     resp.Region,
-		QrcodeUrl:  resp.QRCodeURL,
-		CreatedAt:  timestamppb.New(resp.CreatedAt),
+		UserId:    resp.UserID,
+		Nickname:  resp.Nickname,
+		Avatar:    resp.Avatar,
+		Signature: resp.Signature,
+		Gender:    int32(resp.Gender),
+		Region:    resp.Region,
+		QrcodeUrl: resp.QRCodeURL,
+		CreatedAt: timestamppb.New(resp.CreatedAt),
 	}
 
 	if resp.Birthday != nil {
@@ -270,6 +270,84 @@ func (s *UserServer) UpdatePushToken(ctx context.Context, req *userpb.UpdatePush
 	return &commonpb.Empty{}, nil
 }
 
+// BindPhone 绑定手机号
+func (s *UserServer) BindPhone(ctx context.Context, req *userpb.BindPhoneRequest) (*userpb.BindPhoneResponse, error) {
+	resp, err := s.userService.BindPhone(ctx, req.UserId, &dto.BindPhoneRequest{
+		PhoneNumber: req.PhoneNumber,
+		VerifyCode:  req.VerifyCode,
+	})
+	if err != nil {
+		return nil, convertError(err)
+	}
+
+	return &userpb.BindPhoneResponse{
+		PhoneNumber: resp.PhoneNumber,
+		IsPrimary:   resp.IsPrimary,
+	}, nil
+}
+
+// ChangePhone 更换手机号
+func (s *UserServer) ChangePhone(ctx context.Context, req *userpb.ChangePhoneRequest) (*userpb.ChangePhoneResponse, error) {
+	dtoReq := &dto.ChangePhoneRequest{
+		OldPhoneNumber: req.OldPhoneNumber,
+		NewPhoneNumber: req.NewPhoneNumber,
+		NewVerifyCode:  req.NewVerifyCode,
+		DeviceID:       req.DeviceId,
+	}
+	if req.OldVerifyCode != nil {
+		dtoReq.OldVerifyCode = req.OldVerifyCode
+	}
+
+	resp, err := s.userService.ChangePhone(ctx, req.UserId, dtoReq)
+	if err != nil {
+		return nil, convertError(err)
+	}
+
+	return &userpb.ChangePhoneResponse{
+		OldPhoneNumber: resp.OldPhoneNumber,
+		NewPhoneNumber: resp.NewPhoneNumber,
+	}, nil
+}
+
+// BindEmail 绑定邮箱
+func (s *UserServer) BindEmail(ctx context.Context, req *userpb.BindEmailRequest) (*userpb.BindEmailResponse, error) {
+	resp, err := s.userService.BindEmail(ctx, req.UserId, &dto.BindEmailRequest{
+		Email:      req.Email,
+		VerifyCode: req.VerifyCode,
+	})
+	if err != nil {
+		return nil, convertError(err)
+	}
+
+	return &userpb.BindEmailResponse{
+		Email:     resp.Email,
+		IsPrimary: resp.IsPrimary,
+	}, nil
+}
+
+// ChangeEmail 更换邮箱
+func (s *UserServer) ChangeEmail(ctx context.Context, req *userpb.ChangeEmailRequest) (*userpb.ChangeEmailResponse, error) {
+	dtoReq := &dto.ChangeEmailRequest{
+		OldEmail:      req.OldEmail,
+		NewEmail:      req.NewEmail,
+		NewVerifyCode: req.NewVerifyCode,
+		DeviceID:      req.DeviceId,
+	}
+	if req.OldVerifyCode != nil {
+		dtoReq.OldVerifyCode = req.OldVerifyCode
+	}
+
+	resp, err := s.userService.ChangeEmail(ctx, req.UserId, dtoReq)
+	if err != nil {
+		return nil, convertError(err)
+	}
+
+	return &userpb.ChangeEmailResponse{
+		OldEmail: resp.OldEmail,
+		NewEmail: resp.NewEmail,
+	}, nil
+}
+
 // InitUserData 初始化用户数据（供auth-service调用）
 func (s *UserServer) InitUserData(ctx context.Context, req *userpb.InitUserDataRequest) (*commonpb.Empty, error) {
 	err := s.userService.InitUserData(ctx, req.UserId, req.Nickname)
@@ -292,6 +370,22 @@ func convertError(err error) error {
 			return status.Error(codes.AlreadyExists, bizErr.Message)
 		case errors.CodeNicknameSensitive:
 			return status.Error(codes.InvalidArgument, bizErr.Message)
+		case errors.CodePhoneFormatInvalid,
+			errors.CodeEmailFormatInvalid,
+			errors.CodeOldPhoneNotMatch,
+			errors.CodeOldEmailNotMatch:
+			return status.Error(codes.InvalidArgument, bizErr.Message)
+		case errors.CodePhoneAlreadyBound, errors.CodeEmailAlreadyBound:
+			return status.Error(codes.AlreadyExists, bizErr.Message)
+		case errors.CodeUserNotFound:
+			return status.Error(codes.NotFound, bizErr.Message)
+		case errors.CodeVerifyCodeError,
+			errors.CodeVerifyCodeExpired,
+			errors.CodeVerifyCodeAlreadyUsed,
+			errors.CodeVerifyCodeNotFound:
+			return status.Error(codes.InvalidArgument, bizErr.Message)
+		case errors.CodeVerifyAttemptsExceeded:
+			return status.Error(codes.ResourceExhausted, bizErr.Message)
 		case errors.CodeQRCodeExpired, errors.CodeQRCodeInvalid:
 			return status.Error(codes.InvalidArgument, bizErr.Message)
 		default:

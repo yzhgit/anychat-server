@@ -320,9 +320,9 @@ test_refresh_qrcode() {
     fi
 }
 
-# 9. 更新推送Token
+# 10. 更新推送Token
 test_update_push_token() {
-    print_header "9. 更新推送Token"
+    print_header "10. 更新推送Token"
 
     local data=$(cat <<EOF
 {
@@ -338,6 +338,108 @@ EOF
 
     if check_response "$response"; then
         print_success "更新推送Token成功"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 10. 绑定手机号
+test_bind_phone() {
+    print_header "10. 绑定手机号"
+
+    local data=$(cat <<EOF
+{
+    "phoneNumber": "${TEST_PHONE}",
+    "verifyCode": "123456"
+}
+EOF
+)
+
+    print_info "绑定手机号: ${TEST_PHONE}"
+    local response=$(http_post "${API_BASE}/users/me/phone/bind" "$data" "$ACCESS_TOKEN")
+    print_info "响应: $response"
+
+    if check_response "$response"; then
+        print_success "绑定手机号成功"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 11. 更换手机号
+test_change_phone() {
+    print_header "11. 更换手机号"
+
+    local new_phone="139${TIMESTAMP:(-8)}"
+    local data=$(cat <<EOF
+{
+    "oldPhoneNumber": "${TEST_PHONE}",
+    "newPhoneNumber": "${new_phone}",
+    "newVerifyCode": "123456"
+}
+EOF
+)
+
+    print_info "更换手机号: ${TEST_PHONE} -> ${new_phone}"
+    local response=$(http_post "${API_BASE}/users/me/phone/change" "$data" "$ACCESS_TOKEN")
+    print_info "响应: $response"
+
+    if check_response "$response"; then
+        print_success "更换手机号成功"
+        TEST_PHONE=$new_phone
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 12. 绑定邮箱
+test_bind_email() {
+    print_header "12. 绑定邮箱"
+
+    local data=$(cat <<EOF
+{
+    "email": "${TEST_EMAIL}",
+    "verifyCode": "123456"
+}
+EOF
+)
+
+    print_info "绑定邮箱: ${TEST_EMAIL}"
+    local response=$(http_post "${API_BASE}/users/me/email/bind" "$data" "$ACCESS_TOKEN")
+    print_info "响应: $response"
+
+    if check_response "$response"; then
+        print_success "绑定邮箱成功"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 13. 更换邮箱
+test_change_email() {
+    print_header "13. 更换邮箱"
+
+    local new_email="new${TIMESTAMP}@example.com"
+    local data=$(cat <<EOF
+{
+    "oldEmail": "${TEST_EMAIL}",
+    "newEmail": "${new_email}",
+    "newVerifyCode": "123456"
+}
+EOF
+)
+
+    print_info "更换邮箱: ${TEST_EMAIL} -> ${new_email}"
+    local response=$(http_post "${API_BASE}/users/me/email/change" "$data" "$ACCESS_TOKEN")
+    print_info "响应: $response"
+
+    if check_response "$response"; then
+        print_success "更换邮箱成功"
+        TEST_EMAIL=$new_email
         return 0
     else
         return 1
@@ -383,6 +485,12 @@ main() {
     sleep 1
     test_refresh_qrcode || ((failed++))
     test_update_push_token || ((failed++))
+    sleep 1
+    test_bind_phone || ((failed++))
+    test_change_phone || ((failed++))
+    sleep 1
+    test_bind_email || ((failed++))
+    test_change_email || ((failed++))
 
     # 输出测试结果
     echo ""

@@ -15,6 +15,8 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	GetByAccount(ctx context.Context, account string) (*model.User, error)
 	Update(ctx context.Context, user *model.User) error
+	UpdatePhone(ctx context.Context, userID string, phone *string) error
+	UpdateEmail(ctx context.Context, userID string, email *string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
 	UpdateStatus(ctx context.Context, userID string, status int) error
 }
@@ -79,6 +81,22 @@ func (r *userRepositoryImpl) GetByAccount(ctx context.Context, account string) (
 // Update 更新用户
 func (r *userRepositoryImpl) Update(ctx context.Context, user *model.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
+}
+
+// UpdatePhone 更新手机号
+func (r *userRepositoryImpl) UpdatePhone(ctx context.Context, userID string, phone *string) error {
+	return r.db.WithContext(ctx).
+		Model(&model.User{}).
+		Where("id = ?", userID).
+		Update("phone", phone).Error
+}
+
+// UpdateEmail 更新邮箱
+func (r *userRepositoryImpl) UpdateEmail(ctx context.Context, userID string, email *string) error {
+	return r.db.WithContext(ctx).
+		Model(&model.User{}).
+		Where("id = ?", userID).
+		Update("email", email).Error
 }
 
 // UpdatePassword 更新密码

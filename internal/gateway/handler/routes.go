@@ -53,6 +53,10 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				// 个人资料
 				users.GET("/me", userHandler.GetProfile)
 				users.PUT("/me", userHandler.UpdateProfile)
+				users.POST("/me/phone/bind", userHandler.BindPhone)
+				users.POST("/me/phone/change", userHandler.ChangePhone)
+				users.POST("/me/email/bind", userHandler.BindEmail)
+				users.POST("/me/email/change", userHandler.ChangeEmail)
 
 				// 用户查询
 				users.GET("/:userId", userHandler.GetUserInfo)

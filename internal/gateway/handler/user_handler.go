@@ -44,8 +44,8 @@ type UserProfile struct {
 
 // UserSearchResult 用户搜索结果
 type UserSearchResult struct {
-	Total int64              `json:"total" example:"100"`
-	Users []UserSearchItem   `json:"users"`
+	Total int64            `json:"total" example:"100"`
+	Users []UserSearchItem `json:"users"`
 }
 
 // UserSearchItem 搜索结果项
@@ -88,6 +88,34 @@ type UpdatePushTokenRequest struct {
 	Platform  string `json:"platform" binding:"required" example:"ios" enums:"ios,android"`
 }
 
+// BindPhoneRequest 绑定手机号请求
+type BindPhoneRequest struct {
+	PhoneNumber string `json:"phoneNumber" binding:"required" example:"13800138000"`
+	VerifyCode  string `json:"verifyCode" binding:"required" example:"123456"`
+}
+
+// ChangePhoneRequest 更换手机号请求
+type ChangePhoneRequest struct {
+	OldPhoneNumber string  `json:"oldPhoneNumber" binding:"required" example:"13800138000"`
+	NewPhoneNumber string  `json:"newPhoneNumber" binding:"required" example:"13900139000"`
+	NewVerifyCode  string  `json:"newVerifyCode" binding:"required" example:"123456"`
+	OldVerifyCode  *string `json:"oldVerifyCode,omitempty" example:"123456"`
+}
+
+// BindEmailRequest 绑定邮箱请求
+type BindEmailRequest struct {
+	Email      string `json:"email" binding:"required" example:"user@example.com"`
+	VerifyCode string `json:"verifyCode" binding:"required" example:"123456"`
+}
+
+// ChangeEmailRequest 更换邮箱请求
+type ChangeEmailRequest struct {
+	OldEmail      string  `json:"oldEmail" binding:"required" example:"old@example.com"`
+	NewEmail      string  `json:"newEmail" binding:"required" example:"new@example.com"`
+	NewVerifyCode string  `json:"newVerifyCode" binding:"required" example:"123456"`
+	OldVerifyCode *string `json:"oldVerifyCode,omitempty" example:"123456"`
+}
+
 // NewUserHandler 创建user处理器
 func NewUserHandler(clientManager *client.Manager) *UserHandler {
 	return &UserHandler{
@@ -119,14 +147,14 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	result := gin.H{
-		"userId":     resp.UserId,
-		"nickname":   resp.Nickname,
-		"avatar":     resp.Avatar,
-		"signature":  resp.Signature,
-		"gender":     resp.Gender,
-		"region":     resp.Region,
-		"qrcodeUrl":  resp.QrcodeUrl,
-		"createdAt":  resp.CreatedAt.AsTime(),
+		"userId":    resp.UserId,
+		"nickname":  resp.Nickname,
+		"avatar":    resp.Avatar,
+		"signature": resp.Signature,
+		"gender":    resp.Gender,
+		"region":    resp.Region,
+		"qrcodeUrl": resp.QrcodeUrl,
+		"createdAt": resp.CreatedAt.AsTime(),
 	}
 
 	if resp.Birthday != nil {
@@ -186,14 +214,14 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	result := gin.H{
-		"userId":     resp.UserId,
-		"nickname":   resp.Nickname,
-		"avatar":     resp.Avatar,
-		"signature":  resp.Signature,
-		"gender":     resp.Gender,
-		"region":     resp.Region,
-		"qrcodeUrl":  resp.QrcodeUrl,
-		"createdAt":  resp.CreatedAt.AsTime(),
+		"userId":    resp.UserId,
+		"nickname":  resp.Nickname,
+		"avatar":    resp.Avatar,
+		"signature": resp.Signature,
+		"gender":    resp.Gender,
+		"region":    resp.Region,
+		"qrcodeUrl": resp.QrcodeUrl,
+		"createdAt": resp.CreatedAt.AsTime(),
 	}
 
 	if resp.Birthday != nil {
@@ -463,4 +491,172 @@ func (h *UserHandler) UpdatePushToken(c *gin.Context) {
 	}
 
 	response.Success(c, nil)
+}
+
+// BindPhone 绑定手机号
+// @Summary      绑定手机号
+// @Description  为当前登录用户绑定手机号
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      BindPhoneRequest  true  "绑定手机号信息"
+// @Success      200      {object}  response.Response{data=object}  "绑定成功"
+// @Failure      400      {object}  response.Response  "参数错误"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      409      {object}  response.Response  "手机号已被占用"
+// @Failure      500      {object}  response.Response  "服务器错误"
+// @Router       /users/me/phone/bind [post]
+func (h *UserHandler) BindPhone(c *gin.Context) {
+	var req BindPhoneRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	userID := gwmiddleware.GetUserID(c)
+	resp, err := h.clientManager.User().BindPhone(c.Request.Context(), &userpb.BindPhoneRequest{
+		UserId:      userID,
+		PhoneNumber: req.PhoneNumber,
+		VerifyCode:  req.VerifyCode,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"phoneNumber": resp.PhoneNumber,
+		"isPrimary":   resp.IsPrimary,
+	})
+}
+
+// ChangePhone 更换手机号
+// @Summary      更换手机号
+// @Description  为当前登录用户更换已绑定手机号
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      ChangePhoneRequest  true  "更换手机号信息"
+// @Success      200      {object}  response.Response{data=object}  "更换成功"
+// @Failure      400      {object}  response.Response  "参数错误"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      409      {object}  response.Response  "手机号已被占用"
+// @Failure      500      {object}  response.Response  "服务器错误"
+// @Router       /users/me/phone/change [post]
+func (h *UserHandler) ChangePhone(c *gin.Context) {
+	var req ChangePhoneRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	userID := gwmiddleware.GetUserID(c)
+	deviceID := gwmiddleware.GetDeviceID(c)
+	pbReq := &userpb.ChangePhoneRequest{
+		UserId:         userID,
+		OldPhoneNumber: req.OldPhoneNumber,
+		NewPhoneNumber: req.NewPhoneNumber,
+		NewVerifyCode:  req.NewVerifyCode,
+		DeviceId:       deviceID,
+	}
+	if req.OldVerifyCode != nil {
+		pbReq.OldVerifyCode = req.OldVerifyCode
+	}
+
+	resp, err := h.clientManager.User().ChangePhone(c.Request.Context(), pbReq)
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"oldPhoneNumber": resp.OldPhoneNumber,
+		"newPhoneNumber": resp.NewPhoneNumber,
+	})
+}
+
+// BindEmail 绑定邮箱
+// @Summary      绑定邮箱
+// @Description  为当前登录用户绑定邮箱
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      BindEmailRequest  true  "绑定邮箱信息"
+// @Success      200      {object}  response.Response{data=object}  "绑定成功"
+// @Failure      400      {object}  response.Response  "参数错误"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      409      {object}  response.Response  "邮箱已被占用"
+// @Failure      500      {object}  response.Response  "服务器错误"
+// @Router       /users/me/email/bind [post]
+func (h *UserHandler) BindEmail(c *gin.Context) {
+	var req BindEmailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	userID := gwmiddleware.GetUserID(c)
+	resp, err := h.clientManager.User().BindEmail(c.Request.Context(), &userpb.BindEmailRequest{
+		UserId:     userID,
+		Email:      req.Email,
+		VerifyCode: req.VerifyCode,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"email":     resp.Email,
+		"isPrimary": resp.IsPrimary,
+	})
+}
+
+// ChangeEmail 更换邮箱
+// @Summary      更换邮箱
+// @Description  为当前登录用户更换已绑定邮箱
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      ChangeEmailRequest  true  "更换邮箱信息"
+// @Success      200      {object}  response.Response{data=object}  "更换成功"
+// @Failure      400      {object}  response.Response  "参数错误"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      409      {object}  response.Response  "邮箱已被占用"
+// @Failure      500      {object}  response.Response  "服务器错误"
+// @Router       /users/me/email/change [post]
+func (h *UserHandler) ChangeEmail(c *gin.Context) {
+	var req ChangeEmailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	userID := gwmiddleware.GetUserID(c)
+	deviceID := gwmiddleware.GetDeviceID(c)
+	pbReq := &userpb.ChangeEmailRequest{
+		UserId:        userID,
+		OldEmail:      req.OldEmail,
+		NewEmail:      req.NewEmail,
+		NewVerifyCode: req.NewVerifyCode,
+		DeviceId:      deviceID,
+	}
+	if req.OldVerifyCode != nil {
+		pbReq.OldVerifyCode = req.OldVerifyCode
+	}
+
+	resp, err := h.clientManager.User().ChangeEmail(c.Request.Context(), pbReq)
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"oldEmail": resp.OldEmail,
+		"newEmail": resp.NewEmail,
+	})
 }

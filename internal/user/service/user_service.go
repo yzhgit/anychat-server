@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	authdto "github.com/anychat/server/internal/auth/dto"
+	authmodel "github.com/anychat/server/internal/auth/model"
+	authrepo "github.com/anychat/server/internal/auth/repository"
+	authservice "github.com/anychat/server/internal/auth/service"
 	"github.com/anychat/server/internal/user/dto"
 	"github.com/anychat/server/internal/user/model"
 	"github.com/anychat/server/internal/user/repository"
@@ -33,6 +37,12 @@ type UserService interface {
 	// 推送Token
 	UpdatePushToken(ctx context.Context, userID string, req *dto.UpdatePushTokenRequest) error
 
+	// 账号绑定
+	BindPhone(ctx context.Context, userID string, req *dto.BindPhoneRequest) (*dto.BindPhoneResponse, error)
+	ChangePhone(ctx context.Context, userID string, req *dto.ChangePhoneRequest) (*dto.ChangePhoneResponse, error)
+	BindEmail(ctx context.Context, userID string, req *dto.BindEmailRequest) (*dto.BindEmailResponse, error)
+	ChangeEmail(ctx context.Context, userID string, req *dto.ChangeEmailRequest) (*dto.ChangeEmailResponse, error)
+
 	// 初始化用户数据
 	InitUserData(ctx context.Context, userID, nickname string) error
 }
@@ -43,6 +53,9 @@ type userServiceImpl struct {
 	settingsRepo  repository.UserSettingsRepository
 	qrcodeRepo    repository.UserQRCodeRepository
 	pushTokenRepo repository.UserPushTokenRepository
+	authUserRepo  authrepo.UserRepository
+	sessionRepo   authrepo.UserSessionRepository
+	verifySvc     authservice.VerificationService
 }
 
 // NewUserService 创建用户服务
@@ -51,12 +64,18 @@ func NewUserService(
 	settingsRepo repository.UserSettingsRepository,
 	qrcodeRepo repository.UserQRCodeRepository,
 	pushTokenRepo repository.UserPushTokenRepository,
+	authUserRepo authrepo.UserRepository,
+	sessionRepo authrepo.UserSessionRepository,
+	verifySvc authservice.VerificationService,
 ) UserService {
 	return &userServiceImpl{
 		profileRepo:   profileRepo,
 		settingsRepo:  settingsRepo,
 		qrcodeRepo:    qrcodeRepo,
 		pushTokenRepo: pushTokenRepo,
+		authUserRepo:  authUserRepo,
+		sessionRepo:   sessionRepo,
+		verifySvc:     verifySvc,
 	}
 }
 
@@ -109,7 +128,7 @@ func (s *userServiceImpl) GetProfile(ctx context.Context, userID string) (*dto.U
 		return nil, err
 	}
 
-	return &dto.UserProfileResponse{
+	resp := &dto.UserProfileResponse{
 		UserID:    profile.UserID,
 		Nickname:  profile.Nickname,
 		Avatar:    profile.Avatar,
@@ -119,7 +138,21 @@ func (s *userServiceImpl) GetProfile(ctx context.Context, userID string) (*dto.U
 		Region:    profile.Region,
 		QRCodeURL: profile.QRCodeURL,
 		CreatedAt: profile.CreatedAt,
-	}, nil
+	}
+
+	if s.authUserRepo != nil {
+		user, err := s.authUserRepo.GetByID(ctx, userID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return nil, errors.NewBusiness(errors.CodeUserNotFound, "")
+			}
+			return nil, err
+		}
+		resp.Phone = user.Phone
+		resp.Email = user.Email
+	}
+
+	return resp, nil
 }
 
 // UpdateProfile 更新个人资料
@@ -405,4 +438,245 @@ func (s *userServiceImpl) UpdatePushToken(ctx context.Context, userID string, re
 	}
 
 	return s.pushTokenRepo.CreateOrUpdate(ctx, token)
+}
+
+// BindPhone 绑定手机号
+func (s *userServiceImpl) BindPhone(ctx context.Context, userID string, req *dto.BindPhoneRequest) (*dto.BindPhoneResponse, error) {
+	if !validator.ValidatePhone(req.PhoneNumber) {
+		return nil, errors.NewBusiness(errors.CodePhoneFormatInvalid, "")
+	}
+
+	user, err := s.requireAuthUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Phone != nil {
+		if *user.Phone == req.PhoneNumber {
+			return &dto.BindPhoneResponse{
+				PhoneNumber: maskPhone(req.PhoneNumber),
+				IsPrimary:   true,
+			}, nil
+		}
+		return nil, errors.NewBusiness(errors.CodeParamError, "已绑定手机号，请使用更换手机号接口")
+	}
+
+	if err := s.ensurePhoneAvailable(ctx, req.PhoneNumber, userID); err != nil {
+		return nil, err
+	}
+	if err := s.verifyCode(ctx, req.PhoneNumber, authmodel.TargetTypeSMS, authmodel.PurposeBindPhone, req.VerifyCode); err != nil {
+		return nil, err
+	}
+	if err := s.authUserRepo.UpdatePhone(ctx, userID, &req.PhoneNumber); err != nil {
+		return nil, err
+	}
+
+	return &dto.BindPhoneResponse{
+		PhoneNumber: maskPhone(req.PhoneNumber),
+		IsPrimary:   true,
+	}, nil
+}
+
+// ChangePhone 更换手机号
+func (s *userServiceImpl) ChangePhone(ctx context.Context, userID string, req *dto.ChangePhoneRequest) (*dto.ChangePhoneResponse, error) {
+	if !validator.ValidatePhone(req.NewPhoneNumber) {
+		return nil, errors.NewBusiness(errors.CodePhoneFormatInvalid, "")
+	}
+
+	user, err := s.requireAuthUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user.Phone == nil || *user.Phone != req.OldPhoneNumber {
+		return nil, errors.NewBusiness(errors.CodeOldPhoneNotMatch, "")
+	}
+	if req.NewPhoneNumber == req.OldPhoneNumber {
+		return nil, errors.NewBusiness(errors.CodeParamError, "新手机号不能与旧手机号相同")
+	}
+
+	if req.OldVerifyCode != nil && *req.OldVerifyCode != "" {
+		if err := s.verifyCode(ctx, req.OldPhoneNumber, authmodel.TargetTypeSMS, authmodel.PurposeChangePhone, *req.OldVerifyCode); err != nil {
+			return nil, err
+		}
+	}
+	if err := s.ensurePhoneAvailable(ctx, req.NewPhoneNumber, userID); err != nil {
+		return nil, err
+	}
+	if err := s.verifyCode(ctx, req.NewPhoneNumber, authmodel.TargetTypeSMS, authmodel.PurposeChangePhone, req.NewVerifyCode); err != nil {
+		return nil, err
+	}
+	if err := s.authUserRepo.UpdatePhone(ctx, userID, &req.NewPhoneNumber); err != nil {
+		return nil, err
+	}
+	if err := s.invalidateSessionsAfterContactChange(ctx, userID, req.DeviceID); err != nil {
+		return nil, err
+	}
+
+	return &dto.ChangePhoneResponse{
+		OldPhoneNumber: maskPhone(req.OldPhoneNumber),
+		NewPhoneNumber: req.NewPhoneNumber,
+	}, nil
+}
+
+// BindEmail 绑定邮箱
+func (s *userServiceImpl) BindEmail(ctx context.Context, userID string, req *dto.BindEmailRequest) (*dto.BindEmailResponse, error) {
+	if !validator.ValidateEmail(req.Email) {
+		return nil, errors.NewBusiness(errors.CodeEmailFormatInvalid, "")
+	}
+
+	user, err := s.requireAuthUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Email != nil {
+		if *user.Email == req.Email {
+			return &dto.BindEmailResponse{
+				Email:     maskEmail(req.Email),
+				IsPrimary: true,
+			}, nil
+		}
+		return nil, errors.NewBusiness(errors.CodeParamError, "已绑定邮箱，请使用更换邮箱接口")
+	}
+
+	if err := s.ensureEmailAvailable(ctx, req.Email, userID); err != nil {
+		return nil, err
+	}
+	if err := s.verifyCode(ctx, req.Email, authmodel.TargetTypeEmail, authmodel.PurposeBindEmail, req.VerifyCode); err != nil {
+		return nil, err
+	}
+	if err := s.authUserRepo.UpdateEmail(ctx, userID, &req.Email); err != nil {
+		return nil, err
+	}
+
+	return &dto.BindEmailResponse{
+		Email:     maskEmail(req.Email),
+		IsPrimary: true,
+	}, nil
+}
+
+// ChangeEmail 更换邮箱
+func (s *userServiceImpl) ChangeEmail(ctx context.Context, userID string, req *dto.ChangeEmailRequest) (*dto.ChangeEmailResponse, error) {
+	if !validator.ValidateEmail(req.NewEmail) {
+		return nil, errors.NewBusiness(errors.CodeEmailFormatInvalid, "")
+	}
+
+	user, err := s.requireAuthUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user.Email == nil || *user.Email != req.OldEmail {
+		return nil, errors.NewBusiness(errors.CodeOldEmailNotMatch, "")
+	}
+	if req.NewEmail == req.OldEmail {
+		return nil, errors.NewBusiness(errors.CodeParamError, "新邮箱不能与旧邮箱相同")
+	}
+
+	if req.OldVerifyCode != nil && *req.OldVerifyCode != "" {
+		if err := s.verifyCode(ctx, req.OldEmail, authmodel.TargetTypeEmail, authmodel.PurposeChangeEmail, *req.OldVerifyCode); err != nil {
+			return nil, err
+		}
+	}
+	if err := s.ensureEmailAvailable(ctx, req.NewEmail, userID); err != nil {
+		return nil, err
+	}
+	if err := s.verifyCode(ctx, req.NewEmail, authmodel.TargetTypeEmail, authmodel.PurposeChangeEmail, req.NewVerifyCode); err != nil {
+		return nil, err
+	}
+	if err := s.authUserRepo.UpdateEmail(ctx, userID, &req.NewEmail); err != nil {
+		return nil, err
+	}
+	if err := s.invalidateSessionsAfterContactChange(ctx, userID, req.DeviceID); err != nil {
+		return nil, err
+	}
+
+	return &dto.ChangeEmailResponse{
+		OldEmail: maskEmail(req.OldEmail),
+		NewEmail: req.NewEmail,
+	}, nil
+}
+
+func (s *userServiceImpl) requireAuthUser(ctx context.Context, userID string) (*authmodel.User, error) {
+	if s.authUserRepo == nil {
+		return nil, errors.NewBusiness(errors.CodeInternalError, "账号模块未初始化")
+	}
+
+	user, err := s.authUserRepo.GetByID(ctx, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeUserNotFound, "")
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *userServiceImpl) ensurePhoneAvailable(ctx context.Context, phone, excludeUserID string) error {
+	user, err := s.authUserRepo.GetByPhone(ctx, phone)
+	if err == nil && user.ID != excludeUserID {
+		return errors.NewBusiness(errors.CodePhoneAlreadyBound, "")
+	}
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+	return nil
+}
+
+func (s *userServiceImpl) ensureEmailAvailable(ctx context.Context, email, excludeUserID string) error {
+	user, err := s.authUserRepo.GetByEmail(ctx, email)
+	if err == nil && user.ID != excludeUserID {
+		return errors.NewBusiness(errors.CodeEmailAlreadyBound, "")
+	}
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+	return nil
+}
+
+func (s *userServiceImpl) verifyCode(ctx context.Context, target, targetType, purpose, code string) error {
+	if s.verifySvc == nil {
+		return errors.NewBusiness(errors.CodeInternalError, "验证码模块未初始化")
+	}
+
+	_, err := s.verifySvc.VerifyCode(ctx, &authdto.VerifyCodeRequest{
+		Target:     target,
+		TargetType: targetType,
+		Purpose:    purpose,
+		Code:       code,
+	})
+	return err
+}
+
+func (s *userServiceImpl) invalidateSessionsAfterContactChange(ctx context.Context, userID, deviceID string) error {
+	if s.sessionRepo == nil {
+		return errors.NewBusiness(errors.CodeInternalError, "会话模块未初始化")
+	}
+	return s.sessionRepo.DeleteByUserIDExceptDeviceID(ctx, userID, deviceID)
+}
+
+func maskPhone(phone string) string {
+	if len(phone) < 7 {
+		return "***"
+	}
+	return phone[:3] + "****" + phone[len(phone)-4:]
+}
+
+func maskEmail(email string) string {
+	at := 0
+	for i := 0; i < len(email); i++ {
+		if email[i] == '@' {
+			at = i
+			break
+		}
+	}
+	if at <= 0 || at == len(email)-1 {
+		return "***"
+	}
+
+	name := email[:at]
+	domain := email[at+1:]
+	if len(name) <= 2 {
+		return "***@" + domain
+	}
+	return name[:2] + "***@" + domain
 }

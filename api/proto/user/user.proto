@@ -36,6 +36,18 @@ service UserService {
   // UpdatePushToken 更新推送Token
   rpc UpdatePushToken(UpdatePushTokenRequest) returns (common.Empty);
 
+  // BindPhone 绑定手机号
+  rpc BindPhone(BindPhoneRequest) returns (BindPhoneResponse);
+
+  // ChangePhone 更换手机号
+  rpc ChangePhone(ChangePhoneRequest) returns (ChangePhoneResponse);
+
+  // BindEmail 绑定邮箱
+  rpc BindEmail(BindEmailRequest) returns (BindEmailResponse);
+
+  // ChangeEmail 更换邮箱
+  rpc ChangeEmail(ChangeEmailRequest) returns (ChangeEmailResponse);
+
   // InitUserData 初始化用户数据（供auth-service调用）
   rpc InitUserData(InitUserDataRequest) returns (common.Empty);
 }
@@ -163,6 +175,56 @@ message UpdatePushTokenRequest {
   string device_id = 2;
   string push_token = 3;
   string platform = 4;  // iOS/Android
+}
+
+message BindPhoneRequest {
+  string user_id = 1;
+  string phone_number = 2;
+  string verify_code = 3;
+}
+
+message BindPhoneResponse {
+  string phone_number = 1;
+  bool is_primary = 2;
+}
+
+message ChangePhoneRequest {
+  string user_id = 1;
+  string old_phone_number = 2;
+  string new_phone_number = 3;
+  string new_verify_code = 4;
+  optional string old_verify_code = 5;
+  string device_id = 6;
+}
+
+message ChangePhoneResponse {
+  string old_phone_number = 1;
+  string new_phone_number = 2;
+}
+
+message BindEmailRequest {
+  string user_id = 1;
+  string email = 2;
+  string verify_code = 3;
+}
+
+message BindEmailResponse {
+  string email = 1;
+  bool is_primary = 2;
+}
+
+message ChangeEmailRequest {
+  string user_id = 1;
+  string old_email = 2;
+  string new_email = 3;
+  string new_verify_code = 4;
+  optional string old_verify_code = 5;
+  string device_id = 6;
+}
+
+message ChangeEmailResponse {
+  string old_email = 1;
+  string new_email = 2;
 }
 
 // InitUserDataRequest 初始化用户数据请求

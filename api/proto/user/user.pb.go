@@ -1098,6 +1098,502 @@ func (x *UpdatePushTokenRequest) GetPlatform() string {
 	return ""
 }
 
+type BindPhoneRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	PhoneNumber   string                 `protobuf:"bytes,2,opt,name=phone_number,json=phoneNumber,proto3" json:"phone_number,omitempty"`
+	VerifyCode    string                 `protobuf:"bytes,3,opt,name=verify_code,json=verifyCode,proto3" json:"verify_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BindPhoneRequest) Reset() {
+	*x = BindPhoneRequest{}
+	mi := &file_user_user_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BindPhoneRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BindPhoneRequest) ProtoMessage() {}
+
+func (x *BindPhoneRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BindPhoneRequest.ProtoReflect.Descriptor instead.
+func (*BindPhoneRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *BindPhoneRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *BindPhoneRequest) GetPhoneNumber() string {
+	if x != nil {
+		return x.PhoneNumber
+	}
+	return ""
+}
+
+func (x *BindPhoneRequest) GetVerifyCode() string {
+	if x != nil {
+		return x.VerifyCode
+	}
+	return ""
+}
+
+type BindPhoneResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PhoneNumber   string                 `protobuf:"bytes,1,opt,name=phone_number,json=phoneNumber,proto3" json:"phone_number,omitempty"`
+	IsPrimary     bool                   `protobuf:"varint,2,opt,name=is_primary,json=isPrimary,proto3" json:"is_primary,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BindPhoneResponse) Reset() {
+	*x = BindPhoneResponse{}
+	mi := &file_user_user_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BindPhoneResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BindPhoneResponse) ProtoMessage() {}
+
+func (x *BindPhoneResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BindPhoneResponse.ProtoReflect.Descriptor instead.
+func (*BindPhoneResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *BindPhoneResponse) GetPhoneNumber() string {
+	if x != nil {
+		return x.PhoneNumber
+	}
+	return ""
+}
+
+func (x *BindPhoneResponse) GetIsPrimary() bool {
+	if x != nil {
+		return x.IsPrimary
+	}
+	return false
+}
+
+type ChangePhoneRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OldPhoneNumber string                 `protobuf:"bytes,2,opt,name=old_phone_number,json=oldPhoneNumber,proto3" json:"old_phone_number,omitempty"`
+	NewPhoneNumber string                 `protobuf:"bytes,3,opt,name=new_phone_number,json=newPhoneNumber,proto3" json:"new_phone_number,omitempty"`
+	NewVerifyCode  string                 `protobuf:"bytes,4,opt,name=new_verify_code,json=newVerifyCode,proto3" json:"new_verify_code,omitempty"`
+	OldVerifyCode  *string                `protobuf:"bytes,5,opt,name=old_verify_code,json=oldVerifyCode,proto3,oneof" json:"old_verify_code,omitempty"`
+	DeviceId       string                 `protobuf:"bytes,6,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ChangePhoneRequest) Reset() {
+	*x = ChangePhoneRequest{}
+	mi := &file_user_user_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePhoneRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePhoneRequest) ProtoMessage() {}
+
+func (x *ChangePhoneRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePhoneRequest.ProtoReflect.Descriptor instead.
+func (*ChangePhoneRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ChangePhoneRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ChangePhoneRequest) GetOldPhoneNumber() string {
+	if x != nil {
+		return x.OldPhoneNumber
+	}
+	return ""
+}
+
+func (x *ChangePhoneRequest) GetNewPhoneNumber() string {
+	if x != nil {
+		return x.NewPhoneNumber
+	}
+	return ""
+}
+
+func (x *ChangePhoneRequest) GetNewVerifyCode() string {
+	if x != nil {
+		return x.NewVerifyCode
+	}
+	return ""
+}
+
+func (x *ChangePhoneRequest) GetOldVerifyCode() string {
+	if x != nil && x.OldVerifyCode != nil {
+		return *x.OldVerifyCode
+	}
+	return ""
+}
+
+func (x *ChangePhoneRequest) GetDeviceId() string {
+	if x != nil {
+		return x.DeviceId
+	}
+	return ""
+}
+
+type ChangePhoneResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	OldPhoneNumber string                 `protobuf:"bytes,1,opt,name=old_phone_number,json=oldPhoneNumber,proto3" json:"old_phone_number,omitempty"`
+	NewPhoneNumber string                 `protobuf:"bytes,2,opt,name=new_phone_number,json=newPhoneNumber,proto3" json:"new_phone_number,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ChangePhoneResponse) Reset() {
+	*x = ChangePhoneResponse{}
+	mi := &file_user_user_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePhoneResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePhoneResponse) ProtoMessage() {}
+
+func (x *ChangePhoneResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePhoneResponse.ProtoReflect.Descriptor instead.
+func (*ChangePhoneResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ChangePhoneResponse) GetOldPhoneNumber() string {
+	if x != nil {
+		return x.OldPhoneNumber
+	}
+	return ""
+}
+
+func (x *ChangePhoneResponse) GetNewPhoneNumber() string {
+	if x != nil {
+		return x.NewPhoneNumber
+	}
+	return ""
+}
+
+type BindEmailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	VerifyCode    string                 `protobuf:"bytes,3,opt,name=verify_code,json=verifyCode,proto3" json:"verify_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BindEmailRequest) Reset() {
+	*x = BindEmailRequest{}
+	mi := &file_user_user_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BindEmailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BindEmailRequest) ProtoMessage() {}
+
+func (x *BindEmailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BindEmailRequest.ProtoReflect.Descriptor instead.
+func (*BindEmailRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *BindEmailRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *BindEmailRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *BindEmailRequest) GetVerifyCode() string {
+	if x != nil {
+		return x.VerifyCode
+	}
+	return ""
+}
+
+type BindEmailResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	IsPrimary     bool                   `protobuf:"varint,2,opt,name=is_primary,json=isPrimary,proto3" json:"is_primary,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BindEmailResponse) Reset() {
+	*x = BindEmailResponse{}
+	mi := &file_user_user_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BindEmailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BindEmailResponse) ProtoMessage() {}
+
+func (x *BindEmailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BindEmailResponse.ProtoReflect.Descriptor instead.
+func (*BindEmailResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *BindEmailResponse) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *BindEmailResponse) GetIsPrimary() bool {
+	if x != nil {
+		return x.IsPrimary
+	}
+	return false
+}
+
+type ChangeEmailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OldEmail      string                 `protobuf:"bytes,2,opt,name=old_email,json=oldEmail,proto3" json:"old_email,omitempty"`
+	NewEmail      string                 `protobuf:"bytes,3,opt,name=new_email,json=newEmail,proto3" json:"new_email,omitempty"`
+	NewVerifyCode string                 `protobuf:"bytes,4,opt,name=new_verify_code,json=newVerifyCode,proto3" json:"new_verify_code,omitempty"`
+	OldVerifyCode *string                `protobuf:"bytes,5,opt,name=old_verify_code,json=oldVerifyCode,proto3,oneof" json:"old_verify_code,omitempty"`
+	DeviceId      string                 `protobuf:"bytes,6,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeEmailRequest) Reset() {
+	*x = ChangeEmailRequest{}
+	mi := &file_user_user_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeEmailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeEmailRequest) ProtoMessage() {}
+
+func (x *ChangeEmailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeEmailRequest.ProtoReflect.Descriptor instead.
+func (*ChangeEmailRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ChangeEmailRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ChangeEmailRequest) GetOldEmail() string {
+	if x != nil {
+		return x.OldEmail
+	}
+	return ""
+}
+
+func (x *ChangeEmailRequest) GetNewEmail() string {
+	if x != nil {
+		return x.NewEmail
+	}
+	return ""
+}
+
+func (x *ChangeEmailRequest) GetNewVerifyCode() string {
+	if x != nil {
+		return x.NewVerifyCode
+	}
+	return ""
+}
+
+func (x *ChangeEmailRequest) GetOldVerifyCode() string {
+	if x != nil && x.OldVerifyCode != nil {
+		return *x.OldVerifyCode
+	}
+	return ""
+}
+
+func (x *ChangeEmailRequest) GetDeviceId() string {
+	if x != nil {
+		return x.DeviceId
+	}
+	return ""
+}
+
+type ChangeEmailResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OldEmail      string                 `protobuf:"bytes,1,opt,name=old_email,json=oldEmail,proto3" json:"old_email,omitempty"`
+	NewEmail      string                 `protobuf:"bytes,2,opt,name=new_email,json=newEmail,proto3" json:"new_email,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeEmailResponse) Reset() {
+	*x = ChangeEmailResponse{}
+	mi := &file_user_user_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeEmailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeEmailResponse) ProtoMessage() {}
+
+func (x *ChangeEmailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeEmailResponse.ProtoReflect.Descriptor instead.
+func (*ChangeEmailResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ChangeEmailResponse) GetOldEmail() string {
+	if x != nil {
+		return x.OldEmail
+	}
+	return ""
+}
+
+func (x *ChangeEmailResponse) GetNewEmail() string {
+	if x != nil {
+		return x.NewEmail
+	}
+	return ""
+}
+
 // InitUserDataRequest 初始化用户数据请求
 type InitUserDataRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1109,7 +1605,7 @@ type InitUserDataRequest struct {
 
 func (x *InitUserDataRequest) Reset() {
 	*x = InitUserDataRequest{}
-	mi := &file_user_user_proto_msgTypes[15]
+	mi := &file_user_user_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1121,7 +1617,7 @@ func (x *InitUserDataRequest) String() string {
 func (*InitUserDataRequest) ProtoMessage() {}
 
 func (x *InitUserDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[15]
+	mi := &file_user_user_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1134,7 +1630,7 @@ func (x *InitUserDataRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitUserDataRequest.ProtoReflect.Descriptor instead.
 func (*InitUserDataRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{15}
+	return file_user_user_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *InitUserDataRequest) GetUserId() string {
@@ -1261,10 +1757,50 @@ const file_user_user_proto_rawDesc = "" +
 	"\tdevice_id\x18\x02 \x01(\tR\bdeviceId\x12\x1d\n" +
 	"\n" +
 	"push_token\x18\x03 \x01(\tR\tpushToken\x12\x1a\n" +
-	"\bplatform\x18\x04 \x01(\tR\bplatform\"J\n" +
+	"\bplatform\x18\x04 \x01(\tR\bplatform\"o\n" +
+	"\x10BindPhoneRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
+	"\fphone_number\x18\x02 \x01(\tR\vphoneNumber\x12\x1f\n" +
+	"\vverify_code\x18\x03 \x01(\tR\n" +
+	"verifyCode\"U\n" +
+	"\x11BindPhoneResponse\x12!\n" +
+	"\fphone_number\x18\x01 \x01(\tR\vphoneNumber\x12\x1d\n" +
+	"\n" +
+	"is_primary\x18\x02 \x01(\bR\tisPrimary\"\x87\x02\n" +
+	"\x12ChangePhoneRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12(\n" +
+	"\x10old_phone_number\x18\x02 \x01(\tR\x0eoldPhoneNumber\x12(\n" +
+	"\x10new_phone_number\x18\x03 \x01(\tR\x0enewPhoneNumber\x12&\n" +
+	"\x0fnew_verify_code\x18\x04 \x01(\tR\rnewVerifyCode\x12+\n" +
+	"\x0fold_verify_code\x18\x05 \x01(\tH\x00R\roldVerifyCode\x88\x01\x01\x12\x1b\n" +
+	"\tdevice_id\x18\x06 \x01(\tR\bdeviceIdB\x12\n" +
+	"\x10_old_verify_code\"i\n" +
+	"\x13ChangePhoneResponse\x12(\n" +
+	"\x10old_phone_number\x18\x01 \x01(\tR\x0eoldPhoneNumber\x12(\n" +
+	"\x10new_phone_number\x18\x02 \x01(\tR\x0enewPhoneNumber\"b\n" +
+	"\x10BindEmailRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1f\n" +
+	"\vverify_code\x18\x03 \x01(\tR\n" +
+	"verifyCode\"H\n" +
+	"\x11BindEmailResponse\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1d\n" +
+	"\n" +
+	"is_primary\x18\x02 \x01(\bR\tisPrimary\"\xed\x01\n" +
+	"\x12ChangeEmailRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1b\n" +
+	"\told_email\x18\x02 \x01(\tR\boldEmail\x12\x1b\n" +
+	"\tnew_email\x18\x03 \x01(\tR\bnewEmail\x12&\n" +
+	"\x0fnew_verify_code\x18\x04 \x01(\tR\rnewVerifyCode\x12+\n" +
+	"\x0fold_verify_code\x18\x05 \x01(\tH\x00R\roldVerifyCode\x88\x01\x01\x12\x1b\n" +
+	"\tdevice_id\x18\x06 \x01(\tR\bdeviceIdB\x12\n" +
+	"\x10_old_verify_code\"O\n" +
+	"\x13ChangeEmailResponse\x12\x1b\n" +
+	"\told_email\x18\x01 \x01(\tR\boldEmail\x12\x1b\n" +
+	"\tnew_email\x18\x02 \x01(\tR\bnewEmail\"J\n" +
 	"\x13InitUserDataRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
-	"\bnickname\x18\x02 \x01(\tR\bnickname2\xd2\x06\n" +
+	"\bnickname\x18\x02 \x01(\tR\bnickname2\x96\t\n" +
 	"\vUserService\x12P\n" +
 	"\n" +
 	"GetProfile\x12\x1f.anychat.user.GetProfileRequest\x1a!.anychat.user.UserProfileResponse\x12V\n" +
@@ -1275,7 +1811,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\x0eUpdateSettings\x12#.anychat.user.UpdateSettingsRequest\x1a\".anychat.user.UserSettingsResponse\x12Q\n" +
 	"\rRefreshQRCode\x12\".anychat.user.RefreshQRCodeRequest\x1a\x1c.anychat.user.QRCodeResponse\x12W\n" +
 	"\x0fGetUserByQRCode\x12$.anychat.user.GetUserByQRCodeRequest\x1a\x1e.anychat.user.UserInfoResponse\x12N\n" +
-	"\x0fUpdatePushToken\x12$.anychat.user.UpdatePushTokenRequest\x1a\x15.anychat.common.Empty\x12H\n" +
+	"\x0fUpdatePushToken\x12$.anychat.user.UpdatePushTokenRequest\x1a\x15.anychat.common.Empty\x12L\n" +
+	"\tBindPhone\x12\x1e.anychat.user.BindPhoneRequest\x1a\x1f.anychat.user.BindPhoneResponse\x12R\n" +
+	"\vChangePhone\x12 .anychat.user.ChangePhoneRequest\x1a!.anychat.user.ChangePhoneResponse\x12L\n" +
+	"\tBindEmail\x12\x1e.anychat.user.BindEmailRequest\x1a\x1f.anychat.user.BindEmailResponse\x12R\n" +
+	"\vChangeEmail\x12 .anychat.user.ChangeEmailRequest\x1a!.anychat.user.ChangeEmailResponse\x12H\n" +
 	"\fInitUserData\x12!.anychat.user.InitUserDataRequest\x1a\x15.anychat.common.EmptyB1Z/github.com/anychat/server/api/proto/user;userpbb\x06proto3"
 
 var (
@@ -1290,7 +1830,7 @@ func file_user_user_proto_rawDescGZIP() []byte {
 	return file_user_user_proto_rawDescData
 }
 
-var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_user_user_proto_goTypes = []any{
 	(*GetProfileRequest)(nil),      // 0: anychat.user.GetProfileRequest
 	(*UpdateProfileRequest)(nil),   // 1: anychat.user.UpdateProfileRequest
@@ -1307,16 +1847,24 @@ var file_user_user_proto_goTypes = []any{
 	(*QRCodeResponse)(nil),         // 12: anychat.user.QRCodeResponse
 	(*GetUserByQRCodeRequest)(nil), // 13: anychat.user.GetUserByQRCodeRequest
 	(*UpdatePushTokenRequest)(nil), // 14: anychat.user.UpdatePushTokenRequest
-	(*InitUserDataRequest)(nil),    // 15: anychat.user.InitUserDataRequest
-	(*timestamp.Timestamp)(nil),    // 16: google.protobuf.Timestamp
-	(*common.Empty)(nil),           // 17: anychat.common.Empty
+	(*BindPhoneRequest)(nil),       // 15: anychat.user.BindPhoneRequest
+	(*BindPhoneResponse)(nil),      // 16: anychat.user.BindPhoneResponse
+	(*ChangePhoneRequest)(nil),     // 17: anychat.user.ChangePhoneRequest
+	(*ChangePhoneResponse)(nil),    // 18: anychat.user.ChangePhoneResponse
+	(*BindEmailRequest)(nil),       // 19: anychat.user.BindEmailRequest
+	(*BindEmailResponse)(nil),      // 20: anychat.user.BindEmailResponse
+	(*ChangeEmailRequest)(nil),     // 21: anychat.user.ChangeEmailRequest
+	(*ChangeEmailResponse)(nil),    // 22: anychat.user.ChangeEmailResponse
+	(*InitUserDataRequest)(nil),    // 23: anychat.user.InitUserDataRequest
+	(*timestamp.Timestamp)(nil),    // 24: google.protobuf.Timestamp
+	(*common.Empty)(nil),           // 25: anychat.common.Empty
 }
 var file_user_user_proto_depIdxs = []int32{
-	16, // 0: anychat.user.UpdateProfileRequest.birthday:type_name -> google.protobuf.Timestamp
-	16, // 1: anychat.user.UserProfileResponse.birthday:type_name -> google.protobuf.Timestamp
-	16, // 2: anychat.user.UserProfileResponse.created_at:type_name -> google.protobuf.Timestamp
+	24, // 0: anychat.user.UpdateProfileRequest.birthday:type_name -> google.protobuf.Timestamp
+	24, // 1: anychat.user.UserProfileResponse.birthday:type_name -> google.protobuf.Timestamp
+	24, // 2: anychat.user.UserProfileResponse.created_at:type_name -> google.protobuf.Timestamp
 	7,  // 3: anychat.user.SearchUsersResponse.users:type_name -> anychat.user.UserBriefInfo
-	16, // 4: anychat.user.QRCodeResponse.expires_at:type_name -> google.protobuf.Timestamp
+	24, // 4: anychat.user.QRCodeResponse.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 5: anychat.user.UserService.GetProfile:input_type -> anychat.user.GetProfileRequest
 	1,  // 6: anychat.user.UserService.UpdateProfile:input_type -> anychat.user.UpdateProfileRequest
 	3,  // 7: anychat.user.UserService.GetUserInfo:input_type -> anychat.user.GetUserInfoRequest
@@ -1326,19 +1874,27 @@ var file_user_user_proto_depIdxs = []int32{
 	11, // 11: anychat.user.UserService.RefreshQRCode:input_type -> anychat.user.RefreshQRCodeRequest
 	13, // 12: anychat.user.UserService.GetUserByQRCode:input_type -> anychat.user.GetUserByQRCodeRequest
 	14, // 13: anychat.user.UserService.UpdatePushToken:input_type -> anychat.user.UpdatePushTokenRequest
-	15, // 14: anychat.user.UserService.InitUserData:input_type -> anychat.user.InitUserDataRequest
-	2,  // 15: anychat.user.UserService.GetProfile:output_type -> anychat.user.UserProfileResponse
-	2,  // 16: anychat.user.UserService.UpdateProfile:output_type -> anychat.user.UserProfileResponse
-	4,  // 17: anychat.user.UserService.GetUserInfo:output_type -> anychat.user.UserInfoResponse
-	6,  // 18: anychat.user.UserService.SearchUsers:output_type -> anychat.user.SearchUsersResponse
-	10, // 19: anychat.user.UserService.GetSettings:output_type -> anychat.user.UserSettingsResponse
-	10, // 20: anychat.user.UserService.UpdateSettings:output_type -> anychat.user.UserSettingsResponse
-	12, // 21: anychat.user.UserService.RefreshQRCode:output_type -> anychat.user.QRCodeResponse
-	4,  // 22: anychat.user.UserService.GetUserByQRCode:output_type -> anychat.user.UserInfoResponse
-	17, // 23: anychat.user.UserService.UpdatePushToken:output_type -> anychat.common.Empty
-	17, // 24: anychat.user.UserService.InitUserData:output_type -> anychat.common.Empty
-	15, // [15:25] is the sub-list for method output_type
-	5,  // [5:15] is the sub-list for method input_type
+	15, // 14: anychat.user.UserService.BindPhone:input_type -> anychat.user.BindPhoneRequest
+	17, // 15: anychat.user.UserService.ChangePhone:input_type -> anychat.user.ChangePhoneRequest
+	19, // 16: anychat.user.UserService.BindEmail:input_type -> anychat.user.BindEmailRequest
+	21, // 17: anychat.user.UserService.ChangeEmail:input_type -> anychat.user.ChangeEmailRequest
+	23, // 18: anychat.user.UserService.InitUserData:input_type -> anychat.user.InitUserDataRequest
+	2,  // 19: anychat.user.UserService.GetProfile:output_type -> anychat.user.UserProfileResponse
+	2,  // 20: anychat.user.UserService.UpdateProfile:output_type -> anychat.user.UserProfileResponse
+	4,  // 21: anychat.user.UserService.GetUserInfo:output_type -> anychat.user.UserInfoResponse
+	6,  // 22: anychat.user.UserService.SearchUsers:output_type -> anychat.user.SearchUsersResponse
+	10, // 23: anychat.user.UserService.GetSettings:output_type -> anychat.user.UserSettingsResponse
+	10, // 24: anychat.user.UserService.UpdateSettings:output_type -> anychat.user.UserSettingsResponse
+	12, // 25: anychat.user.UserService.RefreshQRCode:output_type -> anychat.user.QRCodeResponse
+	4,  // 26: anychat.user.UserService.GetUserByQRCode:output_type -> anychat.user.UserInfoResponse
+	25, // 27: anychat.user.UserService.UpdatePushToken:output_type -> anychat.common.Empty
+	16, // 28: anychat.user.UserService.BindPhone:output_type -> anychat.user.BindPhoneResponse
+	18, // 29: anychat.user.UserService.ChangePhone:output_type -> anychat.user.ChangePhoneResponse
+	20, // 30: anychat.user.UserService.BindEmail:output_type -> anychat.user.BindEmailResponse
+	22, // 31: anychat.user.UserService.ChangeEmail:output_type -> anychat.user.ChangeEmailResponse
+	25, // 32: anychat.user.UserService.InitUserData:output_type -> anychat.common.Empty
+	19, // [19:33] is the sub-list for method output_type
+	5,  // [5:19] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -1352,13 +1908,15 @@ func file_user_user_proto_init() {
 	file_user_user_proto_msgTypes[1].OneofWrappers = []any{}
 	file_user_user_proto_msgTypes[2].OneofWrappers = []any{}
 	file_user_user_proto_msgTypes[9].OneofWrappers = []any{}
+	file_user_user_proto_msgTypes[17].OneofWrappers = []any{}
+	file_user_user_proto_msgTypes[21].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_user_proto_rawDesc), len(file_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
