@@ -90,6 +90,7 @@ func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*auth
 		DeviceType:    req.DeviceType,
 		DeviceID:      req.DeviceId,
 		ClientVersion: req.ClientVersion,
+		IpAddress:     req.IpAddress,
 	}
 
 	// 调用service层

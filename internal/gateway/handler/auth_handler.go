@@ -42,6 +42,7 @@ type LoginRequest struct {
 	DeviceType    string `json:"deviceType" binding:"required" example:"ios" enums:"ios,android,web"`
 	DeviceID      string `json:"deviceId" binding:"required" example:"device-uuid-123"`
 	ClientVersion string `json:"clientVersion" binding:"required" example:"1.0.0"`
+	IpAddress     string `json:"ipAddress"`
 }
 
 // RefreshTokenRequest 刷新令牌请求
@@ -201,6 +202,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		DeviceType:    req.DeviceType,
 		DeviceId:      req.DeviceID,
 		ClientVersion: req.ClientVersion,
+		IpAddress:     c.ClientIP(),
 	})
 
 	if err != nil {

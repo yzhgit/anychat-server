@@ -249,9 +249,10 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			device = &model.UserDevice{
-				UserID:     user.ID,
-				DeviceID:   req.DeviceID,
-				DeviceType: req.DeviceType,
+				UserID:      user.ID,
+				DeviceID:    req.DeviceID,
+				DeviceType:  req.DeviceType,
+				LastLoginIP: req.IpAddress,
 			}
 			now := time.Now()
 			device.LastLoginAt = &now
@@ -262,7 +263,7 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 			return nil, err
 		}
 	} else {
-		if err := s.deviceRepo.UpdateLastLogin(ctx, user.ID, req.DeviceID, ""); err != nil {
+		if err := s.deviceRepo.UpdateLastLogin(ctx, user.ID, req.DeviceID, req.IpAddress); err != nil {
 			return nil, err
 		}
 	}

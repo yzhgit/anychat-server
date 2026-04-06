@@ -43,6 +43,8 @@ message LoginRequest {
     string password = 2;      // 密码
     string device_id = 3;     // 设备ID
     string device_type = 4;   // 设备类型 (ios/android/web/pc)
+    string client_version = 5; // 客户端版本号
+    string ip_address = 6;    // 客户端IP地址
 }
 ```
 

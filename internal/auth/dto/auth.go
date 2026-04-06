@@ -42,6 +42,7 @@ type LoginRequest struct {
 	DeviceType    string `json:"deviceType" binding:"required"`
 	DeviceID      string `json:"deviceId" binding:"required"`
 	ClientVersion string `json:"clientVersion" binding:"required"`
+	IpAddress     string `json:"ipAddress"`
 }
 
 // LoginResponse 登录响应

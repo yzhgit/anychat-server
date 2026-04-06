@@ -75,6 +75,7 @@ message LoginRequest {
   string device_type = 3;
   string device_id = 4;
   string client_version = 5;  // 客户端版本号，用于客户端升级判断
+  string ip_address = 6;     // 客户端IP地址
 }
 
 // LoginResponse 登录响应
