@@ -15,11 +15,16 @@
 
 ```go
 type UserDevice struct {
-    ID          string    // 主键
-    UserID      string    // 用户ID
-    DeviceID    string    // 设备唯一标识( UUID )
-    DeviceType  string    // 设备类型: ios/android/web/pc/h5
-    LastLoginAt *time.Time// 最后登录时间
+    ID          int64      // 主键ID
+    UserID      string     // 用户ID
+    DeviceID    string     // 设备唯一标识
+    DeviceType  string     // 设备类型: ios/android/web/pc/h5
+    DeviceName  string     // 设备名称
+    DeviceModel string     // 设备型号
+    OSVersion   string     // 操作系统版本
+    AppVersion  string     // App版本
+    LastLoginAt *time.Time // 最后登录时间
+    LastLoginIP string     // 最后登录IP
     CreatedAt   time.Time
     UpdatedAt   time.Time
 }
