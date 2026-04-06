@@ -41,13 +41,18 @@ type Session struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant SessionService
+    participant MessageService
     participant DB
 
-    Client->>SessionService: GetSessions(userID, limit)
+    Client->>Gateway: GET /session/list<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SessionService: gRPC GetSessions(userId, limit, updatedBefore)
     SessionService->>DB: 查询会话列表(按置顶+更新时间排序)
-    DB-->>SessionService: 会话列表
-    SessionService-->>Client: 返回会话
+    SessionService->>MessageService: 获取最后消息详情
+    SessionService-->>Gateway: 返回会话列表
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 会话置顶
@@ -55,14 +60,59 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant SessionService
     participant DB
+    participant NATS
 
-    Client->>SessionService: SetPinned(userID, sessionID, pinned)
+    Client->>Gateway: PUT /session/pin<br/>Header: Authorization: Bearer {token}<br/>Body: {session_id, pinned: true/false}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SessionService: gRPC SetPinned(userId, sessionId, pinned)
     SessionService->>DB: 更新置顶状态
     DB-->>SessionService: 成功
-    SessionService->>SessionService: 发布置顶变更通知
-    SessionService-->>Client: 成功
+    SessionService->>NATS: 发布置顶变更事件
+    SessionService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 会话免打扰
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant SessionService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: PUT /session/mute<br/>Header: Authorization: Bearer {token}<br/>Body: {session_id, muted: true/false}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SessionService: gRPC SetMuted(userId, sessionId, muted)
+    SessionService->>DB: 更新免打扰状态
+    DB-->>SessionService: 成功
+    SessionService->>NATS: 发布免打扰变更事件
+    SessionService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.4 删除会话
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant SessionService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: DELETE /session/{sessionId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SessionService: gRPC DeleteSession(userId, sessionId)
+    SessionService->>DB: 删除会话
+    DB-->>SessionService: 成功
+    SessionService->>NATS: 发布会话删除事件
+    SessionService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

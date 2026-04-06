@@ -15,23 +15,29 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant AuthService
-    participant VerifyService
+    participant Redis
     participant DB
+    participant NATS
 
-    Client->>UserService: 更换手机号(oldPhoneNumber, newPhoneNumber, newVerifyCode)
+    Client->>Gateway: POST /user/phone/change<br/>Header: Authorization: Bearer {token}<br/>Body: {old_phone_number, new_phone_number, new_verify_code, old_verify_code}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC ChangePhone(userId, oldPhoneNumber, newPhoneNumber, newVerifyCode, oldVerifyCode)
     UserService->>UserService: 验证旧手机号是否匹配
     UserService->>UserService: 检查新手机号格式
-    UserService->>UserService: 检查新手机号是否已被占用
+    UserService->>DB: 检查新手机号是否已被占用
     UserService->>AuthService: 验证新手机号验证码(newPhoneNumber, verifyCode, change_phone)
-    AuthService->>VerifyService: VerifyCode
-    VerifyService-->>AuthService: 验证成功
+    AuthService->>Redis: 验证验证码
+    Redis-->>AuthService: 验证成功
     AuthService-->>UserService: 验证成功
     UserService->>DB: 更新用户手机号
-    UserService->>SessionService: 使旧手机号相关会话失效
-    DB-->>UserService: 成功
-    UserService-->>Client: 更换成功
+    UserService->>NATS: 发布手机号更换事件
+    NATS-->>AuthService: 触发强制下线
+    AuthService-->>UserService: 发布强制下线通知
+    UserService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. 验证规则

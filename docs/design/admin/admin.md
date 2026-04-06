@@ -77,3 +77,60 @@ type SystemConfig struct {
     UpdatedAt time.Time
 }
 ```
+
+## 5. 业务流程
+
+### 5.1 管理员登录
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Gateway
+    participant AdminService
+    participant DB
+
+    Admin->>Gateway: POST /admin/login<br/>Body: {username, password}
+    Gateway->>AdminService: gRPC Login(username, password, ip)
+    AdminService->>DB: 查询管理员
+    AdminService->>AdminService: 验证密码
+    AdminService->>AdminService: 生成JWT Token
+    AdminService->>DB: 更新最后登录时间
+    AdminService-->>Gateway: Token + 管理员信息
+    Gateway-->>Admin: 登录成功
+```
+
+### 5.2 用户管理
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Gateway
+    participant AdminService
+    participant DB
+
+    Admin->>Gateway: GET /admin/users?keyword=xxx<br/>Header: Authorization: Bearer {token}
+    Gateway->>AdminService: gRPC SearchUsers(keyword, page, pageSize)
+    AdminService->>DB: 搜索用户
+    AdminService-->>Gateway: 用户列表
+    Gateway-->>Admin: 200 OK
+```
+
+### 5.3 禁用/启用用户
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Gateway
+    participant AdminService
+    participant AuthService
+    participant DB
+    participant NATS
+
+    Admin->>Gateway: PUT /admin/user/{userId}/status<br/>Header: Authorization: Bearer {token}<br/>Body: {status: disabled}
+    Gateway->>AdminService: gRPC UpdateUserStatus(userId, status)
+    AdminService->>AuthService: 禁用用户
+    AuthService->>DB: 更新用户状态
+    AuthService->>NATS: 发布强制下线通知
+    AdminService-->>Gateway: 成功
+    Gateway-->>Admin: 200 OK
+```

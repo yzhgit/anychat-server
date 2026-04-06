@@ -31,21 +31,63 @@ type GroupSetting struct {
 
 ## 4. 业务流程
 
+### 4.1 获取群设置
+
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
     participant DB
 
-    Client->>GroupService: GetGroupSettings(groupID)
+    Client->>Gateway: GET /group/{groupId}/settings<br/>Header: Authorization: Bearer {token}
+    Gateway->>GroupService: gRPC GetGroupSettings(groupId)
+    GroupService->>DB: 查询群设置
     DB-->>GroupService: 设置
-    GroupService-->>Client: 返回设置
+    GroupService-->>Gateway: 返回设置
+    Gateway-->>Client: 200 OK
+```
 
-    Client->>GroupService: UpdateGroupSettings(userID, groupID, settings)
-    GroupService->>GroupService: 验证权限(群主)
+### 4.2 更新群设置
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant GroupService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: PUT /group/{groupId}/settings<br/>Header: Authorization: Bearer {token}<br/>Body: {join_auth_type, invite_auth_type, ...}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC UpdateGroupSettings(userId, groupId, settings)
+    GroupService->>GroupService: 验证权限(仅群主)
     GroupService->>DB: 更新设置
     DB-->>GroupService: 成功
-    GroupService-->>Client: 更新成功
+    GroupService->>NATS: 发布群设置变更事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 全体禁言
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant GroupService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: PUT /group/{groupId}/mute<br/>Header: Authorization: Bearer {token}<br/>Body: {mute_all_enabled: true/false}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC SetGroupMute(userId, groupId, muteAllEnabled)
+    GroupService->>GroupService: 验证权限(群主/管理员)
+    GroupService->>DB: 更新全体禁言状态
+    DB-->>GroupService: 成功
+    GroupService->>NATS: 发布禁言通知
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

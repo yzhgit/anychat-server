@@ -18,19 +18,25 @@ sequenceDiagram
     participant Client
     participant Gateway
     participant AuthService
+    participant Redis
     participant DB
+    participant NATS
 
-    Client->>Gateway: POST /auth/login
-    Gateway->>AuthService: gRPC Login
+    Client->>Gateway: POST /auth/login<br/>Body: {account, password, device_id, device_type, client_version, ip_address}
+    Gateway->>AuthService: gRPC Login(account, password, device_id, device_type, client_version, ip_address)
     AuthService->>AuthService: 验证设备类型
     AuthService->>DB: 查询用户(手机号/邮箱/账号)
     DB-->>AuthService: 用户信息
     AuthService->>AuthService: 验证密码(bcrypt)
+    AuthService->>AuthService: 检查用户状态
+    AuthService->>AuthService: 同类型设备登录，强制下线旧设备
     AuthService->>DB: 更新/创建设备记录
-    AuthService->>AuthService: 生成JWT Token
+    DB-->>AuthService: 成功
+    AuthService->>AuthService: 生成JWT Token(AccessToken + RefreshToken)
     AuthService->>DB: 更新/创建会话
+    DB-->>AuthService: 成功
     AuthService-->>Gateway: 返回UserID + Tokens + 用户信息
-    Gateway-->>Client: 登录成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. API设计
@@ -39,12 +45,12 @@ sequenceDiagram
 
 ```protobuf
 message LoginRequest {
-    string account = 1;       // 账号(手机号/邮箱/用户名)
-    string password = 2;      // 密码
-    string device_id = 3;     // 设备ID
-    string device_type = 4;   // 设备类型 (ios/android/web/pc)
-    string client_version = 5; // 客户端版本号
-    string ip_address = 6;    // 客户端IP地址
+    string account = 1;          // 账号(手机号/邮箱/用户名)
+    string password = 2;        // 密码
+    string device_type = 3;     // 设备类型 (iOS/Android/Web)
+    string device_id = 4;       // 设备ID
+    string client_version = 5;  // 客户端版本号，用于客户端升级判断
+    string ip_address = 6;      // 客户端IP地址
 }
 ```
 
@@ -55,14 +61,8 @@ message LoginResponse {
     string user_id = 1;
     string access_token = 2;
     string refresh_token = 3;
-    int32 expires_in = 4;      // 7200秒(2小时)
-    UserInfo user = 5;
-}
-
-message UserInfo {
-    string user_id = 1;
-    string phone = 2;
-    string email = 3;
+    int64 expires_in = 4;        // 7200秒(2小时)
+    common.UserInfo user = 5;
 }
 ```
 
@@ -80,8 +80,10 @@ message UserInfo {
 登录时自动记录设备信息：
 - 首次登录：创建设备记录
 - 重复登录：更新最后登录时间
+- 同类型设备登录：强制下线旧设备（通过NATS推送通知）
 
 ## 6. 依赖服务
 
 - **PostgreSQL**: 用户、设备、会话持久化
 - **Redis**: Token缓存（可选）
+- **NATS**: 强制下线通知推送

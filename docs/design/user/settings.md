@@ -29,21 +29,40 @@ type UserSettings struct {
 
 ## 4. 业务流程
 
+### 4.1 获取用户设置
+
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant DB
 
-    Client->>UserService: GetSettings(userID)
+    Client->>Gateway: GET /user/settings<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC GetSettings(userId)
     UserService->>DB: 查询设置
     DB-->>UserService: 设置
-    UserService-->>Client: 返回设置
+    UserService-->>Gateway: 返回设置
+    Gateway-->>Client: 200 OK
+```
 
-    Client->>UserService: UpdateSettings(userID, settings)
+### 4.2 更新用户设置
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant UserService
+    participant DB
+
+    Client->>Gateway: PUT /user/settings<br/>Header: Authorization: Bearer {token}<br/>Body: {notification_enabled, sound_enabled, ...}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC UpdateSettings(userId, settings)
     UserService->>DB: 更新设置
     DB-->>UserService: 成功
-    UserService-->>Client: 返回新设置
+    UserService-->>Gateway: 返回新设置
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

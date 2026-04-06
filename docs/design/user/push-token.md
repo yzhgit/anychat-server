@@ -39,10 +39,14 @@ type UserPushToken struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant DB
+    participant PushService
 
-    Client->>UserService: UpdatePushToken(userID, token, platform, deviceID)
+    Client->>Gateway: POST /user/push-token<br/>Header: Authorization: Bearer {token}<br/>Body: {push_token, platform, device_id, device_type}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC UpdatePushToken(userId, token, platform, deviceId)
     UserService->>DB: 查询是否存在
     alt 存在
         DB-->>UserService: 记录
@@ -51,17 +55,20 @@ sequenceDiagram
         DB-->>UserService: NotFound
         UserService->>DB: 创建新记录
     end
-    UserService-->>Client: 成功
+    UserService->>PushService: 更新设备推送状态
+    UserService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 6. API设计
 
 ```protobuf
 message UpdatePushTokenRequest {
-    string token = 1;
-    string platform = 2;
-    string device_id = 3;
-    string device_type = 4;
+    string user_id = 1;
+    string token = 2;
+    string platform = 3;
+    string device_id = 4;
+    string device_type = 5;
 }
 ```
 

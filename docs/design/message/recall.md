@@ -16,16 +16,21 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant MessageService
     participant DB
+    participant NATS
 
-    Client->>MessageService: RecallMessage(messageID, userID)
+    Client->>Gateway: POST /message/recall<br/>Header: Authorization: Bearer {token}<br/>Body: {message_id}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>MessageService: gRPC RecallMessage(messageId, userId)
     MessageService->>DB: 查询消息
     MessageService->>MessageService: 检查时间(2分钟内)
     MessageService->>MessageService: 检查发送者是否为用户
     MessageService->>DB: 更新消息为撤回状态
-    MessageService->>MessageService: 发布撤回通知
-    MessageService-->>Client: 撤回成功
+    MessageService->>NATS: 发布消息撤回事件
+    MessageService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 3.2 删除消息
@@ -33,14 +38,18 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant MessageService
     participant DB
 
-    Client->>MessageService: DeleteMessage(messageID, userID)
+    Client->>Gateway: DELETE /message/{messageId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>MessageService: gRPC DeleteMessage(messageId, userId)
     MessageService->>DB: 查询消息
     MessageService->>MessageService: 检查发送者是否为用户
     MessageService->>DB: 标记消息为已删除(仅自己可见)
-    MessageService-->>Client: 删除成功
+    MessageService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. API设计

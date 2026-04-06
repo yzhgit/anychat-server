@@ -21,27 +21,63 @@ sequenceDiagram
     participant Client
     participant Gateway
     participant AuthService
+    participant Redis
+    participant NATS
 
-    Client->>Gateway: WebSocket握手
-    Gateway->>Client: 101 Switching Protocols
-    Client->>Gateway: Auth(token)
-    Gateway->>AuthService: 验证Token
-    AuthService-->>Gateway: 用户信息
-    Gateway->>Gateway: 建立连接映射
-    Gateway-->>Client: 连接成功
+    Client->>Gateway: WebSocket握手 /ws?token=xxx
+    Gateway->>Gateway: 101 Switching Protocols
+    Client->>Gateway: Auth消息 {token, device_id, platform}
+    Gateway->>AuthService: gRPC ValidateToken(token)
+    AuthService-->>Gateway: userId, deviceId, deviceType
+    Gateway->>Redis: 记录用户在线状态
+    Gateway->>NATS: 订阅用户通知主题
+    Gateway->>Client: 认证成功 {user_id, server_time}
 ```
 
-### 3.2 消息推送
+### 3.2 心跳保活
 
 ```mermaid
 sequenceDiagram
+    participant Client
+    participant Gateway
+    participant Redis
+
+    Client->>Gateway: ping {timestamp}
+    Gateway->>Gateway: 更新心跳时间
+    Gateway->>Redis: 更新在线状态TTL
+    Gateway->>Client: pong {server_time}
+```
+
+### 3.3 消息推送
+
+```mermaid
+sequenceDiagram
+    participant MessageService
     participant NATS
     participant Gateway
+    participant Redis
     participant Client
 
-    Service->>NATS: 发布消息
+    MessageService->>NATS: 发布消息事件
     NATS->>Gateway: 订阅消息
+    Gateway->>Gateway: 查找用户连接
+    Gateway->>Redis: 查询在线状态
     Gateway->>Client: WebSocket推送
+```
+
+### 3.4 连接断开
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant Redis
+    participant NATS
+
+    Client->>Gateway: 关闭连接
+    Gateway->>Redis: 删除在线状态
+    Gateway->>NATS: 取消订阅
+    Gateway->>Gateway: 清理连接资源
 ```
 
 ## 4. 连接管理

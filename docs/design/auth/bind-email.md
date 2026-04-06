@@ -14,21 +14,27 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant AuthService
-    participant VerifyService
+    participant Redis
     participant DB
+    participant NATS
 
-    Client->>UserService: 绑定邮箱(email, verifyCode)
+    Client->>Gateway: POST /user/email/bind<br/>Header: Authorization: Bearer {token}<br/>Body: {email, verify_code}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC BindEmail(userId, email, verifyCode)
     UserService->>UserService: 检查邮箱格式
-    UserService->>UserService: 验证用户是否已绑定该邮箱
+    UserService->>DB: 检查邮箱是否已被占用
     UserService->>AuthService: 验证验证码(email, verifyCode, bind_email)
-    AuthService->>VerifyService: VerifyCode
-    VerifyService-->>AuthService: 验证成功
+    AuthService->>Redis: 验证验证码
+    Redis-->>AuthService: 验证成功
     AuthService-->>UserService: 验证成功
     UserService->>DB: 更新用户邮箱
     DB-->>UserService: 成功
-    UserService-->>Client: 绑定成功
+    UserService->>NATS: 发布邮箱绑定成功事件
+    UserService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. 验证规则

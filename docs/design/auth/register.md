@@ -71,8 +71,9 @@ sequenceDiagram
     participant Redis
     participant DB
     participant UserService
+    participant NATS
 
-    Client->>Gateway: POST /auth/register
+    Client->>Gateway: POST /auth/register<br/>Body: {phone_number/email, password, verify_code, device_id, device_type, nickname}
     Gateway->>AuthService: gRPC Register
     AuthService->>AuthService: 验证参数(手机号/邮箱/密码)
     AuthService->>DB: 检查用户是否存在
@@ -83,10 +84,13 @@ sequenceDiagram
     AuthService->>DB: 创建用户记录
     DB-->>AuthService: 成功
     AuthService->>DB: 创建设备记录
-    AuthService->>AuthService: 生成JWT Token
+    DB-->>AuthService: 成功
+    AuthService->>AuthService: 生成JWT Token(AccessToken + RefreshToken)
     AuthService->>DB: 保存会话
     DB-->>AuthService: 成功
-    AuthService->>UserService: 初始化用户数据
+    AuthService->>UserService: 初始化用户数据(nickname)
+    AuthService->>AuthService: 发布用户注册成功通知
+    AuthService->>NATS: 发布事件
     AuthService-->>Gateway: 返回UserID + Tokens
     Gateway-->>Client: 注册成功
 ```

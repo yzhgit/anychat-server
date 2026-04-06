@@ -36,13 +36,22 @@ type Claims struct {
 
 ```mermaid
 sequenceDiagram
+    participant Client
+    participant Gateway
     participant AuthService
     participant JWTManager
+    participant DB
 
+    Client->>Gateway: POST /auth/login<br/>Body: {account, password, device_id, device_type}
+    Gateway->>AuthService: gRPC Login
     AuthService->>JWTManager: GenerateAccessToken(userID, deviceID, deviceType)
-    JWTManager->>JWTManager: 生成JWT签名
+    JWTManager->>JWTManager: 生成JWT签名(RS256)
     JWTManager-->>AuthService: token字符串
-    AuthService-->>Client: 返回token
+    AuthService->>JWTManager: GenerateRefreshToken(userID, deviceID, deviceType)
+    JWTManager-->>AuthService: refreshToken字符串
+    AuthService->>DB: 保存会话
+    AuthService-->>Gateway: 返回Token
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. Token 刷新
@@ -52,15 +61,39 @@ sequenceDiagram
     participant Client
     participant Gateway
     participant AuthService
+    participant JWTManager
+    participant DB
 
-    Client->>Gateway: POST /auth/refresh
-    Gateway->>AuthService: gRPC RefreshToken
-    AuthService->>AuthService: 验证RefreshToken
-    AuthService->>AuthService: 检查过期时间
-    AuthService->>AuthService: 生成新AccessToken + RefreshToken
+    Client->>Gateway: POST /auth/refresh<br/>Body: {refresh_token}
+    Gateway->>AuthService: gRPC RefreshToken(refreshToken)
+    AuthService->>JWTManager: 验证RefreshToken
+    JWTManager-->>AuthService: claims
+    AuthService->>DB: 查询会话
+    DB-->>AuthService: 会话信息
+    AuthService->>AuthService: 检查RefreshToken过期
+    AuthService->>JWTManager: 生成新AccessToken + RefreshToken
     AuthService->>DB: 更新会话
+    DB-->>AuthService: 成功
     AuthService-->>Gateway: 返回新Tokens
-    Gateway-->>Client: 刷新成功
+    Gateway-->>Client: 200 OK
+```
+
+## 6. Token 验证
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant AuthService
+    participant JWTManager
+
+    Client->>Gateway: GET /api/user/profile<br/>Header: Authorization: Bearer {access_token}
+    Gateway->>AuthService: gRPC ValidateToken(accessToken)
+    AuthService->>JWTManager: 验证AccessToken
+    JWTManager-->>AuthService: claims
+    AuthService-->>Gateway: userId, deviceId, deviceType
+    Gateway->>Gateway: 从JWT解析userId，放置到请求上下文
+    Gateway-->>Client: 200 OK
 ```
 
 ## 6. 错误码

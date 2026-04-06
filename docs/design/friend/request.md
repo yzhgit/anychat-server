@@ -43,16 +43,21 @@ const (
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FriendService
     participant DB
+    participant NATS
 
-    Client->>FriendService: SendFriendRequest(fromUserID, toUserID, message)
+    Client->>Gateway: POST /friend/request<br/>Header: Authorization: Bearer {token}<br/>Body: {to_user_id, message}
+    Gateway->>Gateway: 从JWT解析fromUserId
+    Gateway->>FriendService: gRPC SendFriendRequest(fromUserId, toUserId, message)
     FriendService->>FriendService: 检查是否已经是好友
     FriendService->>FriendService: 检查是否在黑名单
     FriendService->>DB: 创建申请记录
     DB-->>FriendService: 成功
-    FriendService->>FriendService: 发送通知
-    FriendService-->>Client: 发送成功
+    FriendService->>NATS: 发布好友申请通知
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 处理好友申请
@@ -60,18 +65,42 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FriendService
     participant DB
+    participant NATS
 
-    Client->>FriendService: HandleFriendRequest(userID, requestID, accept/reject)
+    Client->>Gateway: PUT /friend/request/{requestId}<br/>Header: Authorization: Bearer {token}<br/>Body: {accept: true/false}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC HandleFriendRequest(userId, requestId, accept)
     FriendService->>DB: 查询申请记录
     alt 同意
         FriendService->>DB: 创建好友关系(双向)
         FriendService->>DB: 更新申请状态为已同意
+        FriendService->>NATS: 发布好友添加成功事件
     else 拒绝
         FriendService->>DB: 更新申请状态为已拒绝
     end
-    FriendService-->>Client: 处理成功
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 获取好友申请列表
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant FriendService
+    participant DB
+
+    Client->>Gateway: GET /friend/request?type=received<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC GetFriendRequests(userId, requestType)
+    FriendService->>DB: 查询申请列表
+    DB-->>FriendService: 申请列表
+    FriendService-->>Gateway: 返回申请列表
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

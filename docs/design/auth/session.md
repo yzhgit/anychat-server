@@ -33,16 +33,23 @@ type UserSession struct {
 
 ```mermaid
 sequenceDiagram
+    participant Client
+    participant Gateway
     participant AuthService
-    participant SessionRepo
     participant JWTManager
+    participant DB
 
+    Client->>Gateway: POST /auth/login<br/>Body: {account, password, device_id, device_type}
+    Gateway->>AuthService: gRPC Login
+    AuthService->>AuthService: 验证用户密码
     AuthService->>JWTManager: 生成AccessToken
     JWTManager-->>AuthService: token
     AuthService->>JWTManager: 生成RefreshToken
     JWTManager-->>AuthService: refreshToken
-    AuthService->>SessionRepo: 创建会话
-    SessionRepo-->>AuthService: 成功
+    AuthService->>DB: 创建会话
+    DB-->>AuthService: 成功
+    AuthService-->>Gateway: 返回Token
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 Token 刷新
@@ -50,19 +57,23 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant AuthService
-    participant SessionRepo
     participant JWTManager
+    participant DB
 
-    Client->>AuthService: RefreshToken(refreshToken)
+    Client->>Gateway: POST /auth/refresh<br/>Body: {refresh_token}
+    Gateway->>AuthService: gRPC RefreshToken(refreshToken)
     AuthService->>JWTManager: 验证RefreshToken
     JWTManager-->>AuthService: claims
-    AuthService->>SessionRepo: 查询会话
-    SessionRepo-->>AuthService: 会话信息
+    AuthService->>DB: 查询会话
+    DB-->>AuthService: 会话信息
     AuthService->>AuthService: 检查RefreshToken过期
     AuthService->>JWTManager: 生成新Token
-    AuthService->>SessionRepo: 更新会话
-    AuthService-->>Client: 新Token
+    AuthService->>DB: 更新会话
+    DB-->>AuthService: 成功
+    AuthService-->>Gateway: 返回新Token
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.3 登出删除会话
@@ -70,13 +81,19 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant AuthService
-    participant SessionRepo
+    participant DB
+    participant Redis
 
-    Client->>AuthService: Logout(userID, deviceID)
-    AuthService->>SessionRepo: 删除会话
-    SessionRepo-->>AuthService: 成功
-    AuthService-->>Client: 登出成功
+    Client->>Gateway: POST /auth/logout<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId和deviceId
+    Gateway->>AuthService: gRPC Logout(userId, deviceId)
+    AuthService->>DB: 删除会话
+    AuthService->>Redis: 清除Token缓存
+    DB-->>AuthService: 成功
+    AuthService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. 过期检查

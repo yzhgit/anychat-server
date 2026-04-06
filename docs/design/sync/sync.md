@@ -22,23 +22,56 @@
 
 ## 4. 业务流程
 
+### 4.1 增量同步
+
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant SyncService
     participant FriendService
     participant GroupService
     participant SessionService
     participant MessageService
+    participant UserService
+    participant DB
 
-    Client->>SyncService: Sync(lastSyncTime)
+    Client->>Gateway: GET /sync?lastSyncTime=xxx<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SyncService: gRPC Sync(userId, lastSyncTime)
+    SyncService->>UserService: 获取用户资料变更
     SyncService->>FriendService: 获取增量好友数据
-    FriendService-->>SyncService: 好友数据
     SyncService->>GroupService: 获取增量群组数据
-    GroupService-->>SyncService: 群组数据
     SyncService->>SessionService: 获取增量会话数据
-    SessionService-->>SyncService: 会话数据
-    SyncService-->>Client: 返回所有增量数据
+    SyncService-->>Gateway: 返回所有增量数据
+    Gateway-->>Client: 200 OK
+```
+
+### 4.2 全量同步
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant SyncService
+    participant FriendService
+    participant GroupService
+    participant SessionService
+    participant MessageService
+    participant UserService
+    participant DB
+
+    Client->>Gateway: GET /sync/all<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>SyncService: gRPC FullSync(userId)
+    par 并行获取
+        SyncService->>UserService: 获取用户资料
+        SyncService->>FriendService: 获取全部好友
+        SyncService->>GroupService: 获取全部群组
+        SyncService->>SessionService: 获取全部会话
+    end
+    SyncService-->>Gateway: 返回全量数据
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

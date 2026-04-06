@@ -20,15 +20,22 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
+    participant MessageService
     participant DB
+    participant NATS
 
-    Client->>GroupService: InviteMembers(userID, groupID, memberIDs)
+    Client->>Gateway: POST /group/{groupId}/members/invite<br/>Header: Authorization: Bearer {token}<br/>Body: {member_ids}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC InviteMembers(userId, groupId, memberIds)
     GroupService->>GroupService: 验证权限(群主/管理员)
     GroupService->>DB: 查询已存在成员
     GroupService->>DB: 创建新成员记录
-    GroupService->>GroupService: 发送入群邀请通知
-    GroupService-->>Client: 邀请成功
+    GroupService->>MessageService: 发送入群系统消息
+    GroupService->>NATS: 发布成员邀请事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 3.2 移除成员
@@ -36,14 +43,21 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
+    participant MessageService
     participant DB
+    participant NATS
 
-    Client->>GroupService: RemoveMember(userID, groupID, targetUserID)
+    Client->>Gateway: DELETE /group/{groupId}/members/{targetUserId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC RemoveMember(userId, groupId, targetUserId)
     GroupService->>GroupService: 验证权限(群主/管理员)
     GroupService->>DB: 删除成员记录
-    GroupService->>GroupService: 发送被移除通知
-    GroupService-->>Client: 移除成功
+    GroupService->>MessageService: 发送被移除系统消息
+    GroupService->>NATS: 发布成员移除事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 3.3 退出群组
@@ -51,14 +65,41 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
+    participant MessageService
     participant DB
+    participant NATS
 
-    Client->>GroupService: QuitGroup(userID, groupID)
+    Client->>Gateway: DELETE /group/{groupId}/members/me<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC QuitGroup(userId, groupId)
     GroupService->>GroupService: 检查是否为群主(群主不能退出)
     GroupService->>DB: 删除成员记录
-    GroupService->>GroupService: 发送退群通知
-    GroupService-->>Client: 退出成功
+    GroupService->>MessageService: 发送退群系统消息
+    GroupService->>NATS: 发布退群事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 3.4 设置/取消管理员
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant GroupService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: PUT /group/{groupId}/members/{targetUserId}/role<br/>Header: Authorization: Bearer {token}<br/>Body: {role: 0/1}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC UpdateMemberRole(userId, groupId, targetUserId, role)
+    GroupService->>GroupService: 验证权限(仅群主)
+    GroupService->>DB: 更新成员角色
+    GroupService->>NATS: 发布角色变更事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. API设计

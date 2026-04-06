@@ -30,17 +30,42 @@ type UserQRCode struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant FileService
+    participant DB
 
-    Client->>UserService: RefreshQRCode(userID)
+    Client->>Gateway: POST /user/qrcode/refresh<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC RefreshQRCode(userId)
     UserService->>UserService: 生成二维码内容(userID + timestamp)
     UserService->>FileService: 生成二维码图片
     FileService-->>UserService: 图片URL
     UserService->>DB: 保存/更新二维码记录
     UserService->>DB: 更新用户资料的QRCodeURL
     DB-->>UserService: 成功
-    UserService-->>Client: 返回二维码URL
+    UserService-->>Gateway: 返回二维码URL
+    Gateway-->>Client: 200 OK
+```
+
+### 4.2 扫码解析
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant UserService
+    participant DB
+
+    Client->>Gateway: GET /user/qrcode/parse<br/>Header: Authorization: Bearer {token}<br/>Body: {code}
+    Gateway->>UserService: gRPC GetUserByQRCode(code)
+    UserService->>DB: 查询二维码记录
+    DB-->>UserService: 二维码信息
+    UserService->>UserService: 检查是否过期
+    UserService->>DB: 查询用户资料
+    DB-->>UserService: 用户信息
+    UserService-->>Gateway: 返回用户信息
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 扫码解析

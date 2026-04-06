@@ -17,33 +17,76 @@ Calling Service 基于 LiveKit 实现一对一音视频通话功能。
 
 ```mermaid
 sequenceDiagram
-    participant Caller
+    participant Client
+    participant Gateway
     participant CallingService
     participant LiveKit
-    participant Callee
+    participant NATS
 
-    Caller->>CallingService: InitiateCall(callerID, calleeID, callType)
-    CallingService->>CallingService: 生成CallID
+    Client->>Gateway: POST /call/initiate<br/>Header: Authorization: Bearer {token}<br/>Body: {callee_id, call_type}
+    Gateway->>Gateway: 从JWT解析callerId
+    Gateway->>CallingService: gRPC InitiateCall(callerId, calleeId, callType)
+    CallingService->>CallingService: 生成CallID(UUID)
     CallingService->>LiveKit: 创建Room
     LiveKit-->>CallingService: Room创建成功
     CallingService->>CallingService: 生成Token
-    CallingService->>CallingService: 发布通话邀请通知
-    CallingService-->>Caller: CallID + Token
+    CallingService->>NATS: 发布通话邀请通知
+    CallingService-->>Gateway: 返回CallID + Token
+    Gateway-->>Client: 200 OK
 ```
 
 ### 3.2 接听通话
 
 ```mermaid
 sequenceDiagram
-    participant Callee
+    participant Client
+    participant Gateway
     participant CallingService
     participant LiveKit
+    participant NATS
 
-    Callee->>CallingService: JoinCall(callID, userID)
+    Client->>Gateway: POST /call/join<br/>Header: Authorization: Bearer {token}<br/>Body: {call_id}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>CallingService: gRPC JoinCall(callId, userId)
     CallingService->>LiveKit: 生成JoinToken
     LiveKit-->>CallingService: Token
-    CallingService->>CallingService: 发布通话开始通知
-    CallingService-->>Callee: Token + Room信息
+    CallingService->>NATS: 发布通话开始通知
+    CallingService-->>Gateway: 返回Token + Room信息
+    Gateway-->>Client: 200 OK
+```
+
+### 3.3 结束通话
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant CallingService
+    participant LiveKit
+    participant NATS
+
+    Client->>Gateway: POST /call/end<br/>Header: Authorization: Bearer {token}<br/>Body: {call_id}
+    Gateway->>CallingService: gRPC EndCall(callId)
+    CallingService->>LiveKit: 关闭Room
+    CallingService->>NATS: 发布通话结束通知
+    CallingService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 3.4 拒绝通话
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant CallingService
+    participant NATS
+
+    Client->>Gateway: POST /call/reject<br/>Header: Authorization: Bearer {token}<br/>Body: {call_id}
+    Gateway->>CallingService: gRPC RejectCall(callId)
+    CallingService->>NATS: 发布通话拒绝通知
+    CallingService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. API设计

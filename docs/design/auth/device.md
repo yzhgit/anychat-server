@@ -44,10 +44,14 @@ type UserDevice struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant AuthService
+    participant Redis
     participant DB
 
-    Client->>AuthService: 登录请求(deviceID, deviceType)
+    Client->>Gateway: POST /auth/login<br/>Body: {account, password, device_id, device_type}
+    Gateway->>AuthService: gRPC Login
+    AuthService->>AuthService: 验证用户密码
     AuthService->>DB: 查询设备记录
     alt 设备不存在
         DB-->>AuthService: NotFound
@@ -56,25 +60,26 @@ sequenceDiagram
         DB-->>AuthService: 设备信息
         AuthService->>DB: 更新最后登录时间
     end
-    AuthService-->>Client: 登录成功
+    AuthService-->>Gateway: 登录成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 5.2 设备列表查询
 
-```protobuf
-message GetUserDevicesRequest {
-    string user_id = 1;
-}
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant AuthService
+    participant DB
 
-message GetUserDevicesResponse {
-    repeated DeviceInfo devices = 1;
-}
-
-message DeviceInfo {
-    string device_id = 1;
-    string device_type = 2;
-    google.protobuf.Timestamp last_login_at = 3;
-}
+    Client->>Gateway: GET /auth/devices<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>AuthService: gRPC GetUserDevices(userId)
+    AuthService->>DB: 查询用户设备列表
+    DB-->>AuthService: 设备列表
+    AuthService-->>Gateway: 返回设备列表
+    Gateway-->>Client: 200 OK
 ```
 
 ## 6. 多设备登录策略

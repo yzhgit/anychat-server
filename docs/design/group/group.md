@@ -62,16 +62,24 @@ const (
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
+    participant MessageService
     participant DB
+    participant NATS
 
-    Client->>GroupService: CreateGroup(ownerID, name, memberIDs)
-    GroupService->>GroupService: 生成群ID
+    Client->>Gateway: POST /group/create<br/>Header: Authorization: Bearer {token}<br/>Body: {name, avatar, member_ids}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC CreateGroup(userId, name, avatar, memberIds)
+    GroupService->>GroupService: 生成群ID(UUID)
     GroupService->>DB: 创建群记录
     GroupService->>DB: 创建群成员记录(群主+初始成员)
     GroupService->>DB: 创建群设置
     DB-->>GroupService: 成功
-    GroupService-->>Client: 返回群信息
+    GroupService->>MessageService: 发送入群系统消息
+    GroupService->>NATS: 发布群创建事件
+    GroupService-->>Gateway: 返回群信息
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 解散群组
@@ -79,16 +87,57 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant GroupService
+    participant MessageService
     participant DB
+    participant NATS
 
-    Client->>GroupService: DissolveGroup(userID, groupID)
+    Client->>Gateway: DELETE /group/{groupId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC DissolveGroup(userId, groupId)
     GroupService->>GroupService: 验证是否为群主
     GroupService->>DB: 删除群成员
     GroupService->>DB: 删除群设置
     GroupService->>DB: 删除群记录
-    GroupService->>GroupService: 发送解散通知
-    GroupService-->>Client: 解散成功
+    GroupService->>MessageService: 发送解散系统消息
+    GroupService->>NATS: 发布群解散事件
+    GroupService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 获取群信息
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant GroupService
+    participant DB
+
+    Client->>Gateway: GET /group/{groupId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>GroupService: gRPC GetGroupInfo(groupId)
+    GroupService->>DB: 查询群信息
+    GroupService->>DB: 查询群成员列表
+    GroupService-->>Gateway: 返回群信息和成员列表
+    Gateway-->>Client: 200 OK
+```
+
+### 4.4 获取用户群组列表
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant GroupService
+    participant DB
+
+    Client->>Gateway: GET /group/list<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>GroupService: gRPC GetUserGroups(userId, lastUpdateTime)
+    GroupService->>DB: 查询用户所在群组
+    GroupService-->>Gateway: 返回群组列表和同步时间
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

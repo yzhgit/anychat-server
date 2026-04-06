@@ -14,21 +14,27 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant UserService
     participant AuthService
-    participant VerifyService
+    participant Redis
     participant DB
+    participant NATS
 
-    Client->>UserService: 绑定手机号(phoneNumber, verifyCode)
+    Client->>Gateway: POST /user/phone/bind<br/>Header: Authorization: Bearer {token}<br/>Body: {phone_number, verify_code}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>UserService: gRPC BindPhone(userId, phoneNumber, verifyCode)
     UserService->>UserService: 检查手机号格式
-    UserService->>UserService: 验证用户是否已绑定该手机号
+    UserService->>DB: 检查手机号是否已被占用
     UserService->>AuthService: 验证验证码(phoneNumber, verifyCode, bind_phone)
-    AuthService->>VerifyService: VerifyCode
-    VerifyService-->>AuthService: 验证成功
+    AuthService->>Redis: 验证验证码
+    Redis-->>AuthService: 验证成功
     AuthService-->>UserService: 验证成功
     UserService->>DB: 更新用户手机号
     DB-->>UserService: 成功
-    UserService-->>Client: 绑定成功
+    UserService->>NATS: 发布手机号绑定成功事件
+    UserService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. 验证规则

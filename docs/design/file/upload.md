@@ -20,24 +20,29 @@
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FileService
     participant MinIO
     participant DB
 
-    Client->>FileService: GenerateUploadToken(userID, fileType, fileName)
-    FileService->>FileService: 生成FileID
+    Client->>Gateway: POST /file/upload/token<br/>Header: Authorization: Bearer {token}<br/>Body: {file_type, file_name, file_size}
+    Gateway->>FileService: gRPC GenerateUploadToken(userId, fileType, fileName, fileSize)
+    FileService->>FileService: 生成FileID(UUID)
     FileService->>MinIO: 生成上传凭证(Presigned URL)
     MinIO-->>FileService: 上传URL
-    FileService->>DB: 创建文件记录(初始状态)
-    FileService-->>Client: 返回UploadURL + FileID
+    FileService->>DB: 创建文件记录(初始状态pending)
+    FileService-->>Gateway: 返回fileId + uploadUrl + fileUrl
+    Gateway-->>Client: 200 OK
 
-    Client->>MinIO: 上传文件(直接PUT)
+    Client->>MinIO: 上传文件(直接PUT到Presigned URL)
     MinIO-->>Client: 上传成功
 
-    Client->>FileService: CompleteUpload(fileID, userID)
-    FileService->>FileService: 检查上传结果
+    Client->>Gateway: POST /file/upload/complete<br/>Header: Authorization: Bearer {token}<br/>Body: {file_id}
+    Gateway->>FileService: gRPC CompleteUpload(fileId, userId)
+    FileService->>MinIO: 验证文件存在
     FileService->>DB: 更新文件状态为已完成
-    FileService-->>Client: 返回文件信息
+    FileService-->>Gateway: 返回文件信息
+    Gateway-->>Client: 200 OK
 ```
 
 ### 3.2 文件下载
@@ -45,13 +50,35 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FileService
     participant MinIO
 
-    Client->>FileService: GenerateDownloadURL(fileID, userID)
+    Client->>Gateway: GET /file/download/{fileId}?expires=60<br/>Header: Authorization: Bearer {token}
+    Gateway->>FileService: gRPC GenerateDownloadURL(fileId, userId, expiresMinutes)
     FileService->>MinIO: 生成下载链接(Presigned URL)
     MinIO-->>FileService: 下载URL
-    FileService-->>Client: 返回下载URL
+    FileService-->>Gateway: 返回downloadUrl
+    Gateway-->>Client: 200 OK(redirect或直接返回URL)
+```
+
+### 3.3 删除文件
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant FileService
+    participant MinIO
+    participant DB
+
+    Client->>Gateway: DELETE /file/{fileId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>FileService: gRPC DeleteFile(fileId, userId)
+    FileService->>DB: 检查文件归属
+    FileService->>MinIO: 删除对象
+    FileService->>DB: 删除文件记录
+    FileService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 4. API设计

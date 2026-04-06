@@ -30,14 +30,20 @@ type Blacklist struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FriendService
     participant DB
+    participant NATS
 
-    Client->>FriendService: AddToBlacklist(userID, blockedID)
+    Client->>Gateway: POST /friend/blacklist<br/>Header: Authorization: Bearer {token}<br/>Body: {blocked_user_id}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC AddToBlacklist(userId, blockedUserId)
     FriendService->>DB: 检查是否已是好友(若是则删除)
     FriendService->>DB: 创建黑名单记录
     DB-->>FriendService: 成功
-    FriendService-->>Client: 添加成功
+    FriendService->>NATS: 发布黑名单变更事件
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 移出黑名单
@@ -45,13 +51,38 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FriendService
     participant DB
+    participant NATS
 
-    Client->>FriendService: RemoveFromBlacklist(userID, blockedID)
+    Client->>Gateway: DELETE /friend/blacklist/{blockedUserId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC RemoveFromBlacklist(userId, blockedUserId)
     FriendService->>DB: 删除黑名单记录
     DB-->>FriendService: 成功
-    FriendService-->>Client: 移除成功
+    FriendService->>NATS: 发布黑名单变更事件
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 获取黑名单列表
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant FriendService
+    participant UserService
+    participant DB
+
+    Client->>Gateway: GET /friend/blacklist<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC GetBlacklist(userId)
+    FriendService->>DB: 查询黑名单列表
+    FriendService->>UserService: 批量获取用户信息
+    FriendService-->>Gateway: 返回黑名单用户列表
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

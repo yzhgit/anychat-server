@@ -32,14 +32,19 @@ type ReadReceipt struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant MessageService
     participant DB
+    participant NATS
 
-    Client->>MessageService: MarkAsRead(conversationID, userID, readSeq)
+    Client->>Gateway: POST /message/read<br/>Header: Authorization: Bearer {token}<br/>Body: {conversation_id, read_seq}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>MessageService: gRPC MarkAsRead(conversationId, userId, readSeq)
     MessageService->>DB: 查询/创建已读记录
     MessageService->>DB: 更新已读序列号
-    MessageService->>MessageService: 发布已读通知
-    MessageService-->>Client: 成功
+    MessageService->>NATS: 发布已读通知
+    MessageService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 获取未读数
@@ -47,14 +52,34 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant MessageService
     participant DB
 
-    Client->>MessageService: GetUnreadCount(conversationID, userID)
+    Client->>Gateway: GET /message/unread/{conversationId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>MessageService: gRPC GetUnreadCount(conversationId, userId, lastReadSeq)
     MessageService->>DB: 获取用户已读序列号
     MessageService->>DB: 获取会话最新序列号
     MessageService->>MessageService: 计算未读数
-    MessageService-->>Client: 返回未读数
+    MessageService-->>Gateway: 返回未读数
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 获取已读回执列表（群聊）
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant MessageService
+    participant DB
+
+    Client->>Gateway: GET /message/receipts/{messageId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>MessageService: gRPC GetReadReceipts(messageId)
+    MessageService->>DB: 查询已读回执列表
+    MessageService-->>Gateway: 返回已读用户列表
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

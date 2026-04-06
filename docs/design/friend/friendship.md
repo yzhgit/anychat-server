@@ -34,14 +34,19 @@ type Friendship struct {
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
     participant FriendService
+    participant UserService
     participant DB
 
-    Client->>FriendService: GetFriendList(userID, lastUpdateTime)
+    Client->>Gateway: GET /friend/list?lastUpdateTime=xxx<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC GetFriendList(userId, lastUpdateTime)
     FriendService->>DB: 查询好友列表
     DB-->>FriendService: 好友列表
-    FriendService->>FriendService: 查询用户信息
-    FriendService-->>Client: 返回好友列表
+    FriendService->>UserService: 批量获取用户信息
+    FriendService-->>Gateway: 返回好友列表和同步时间
+    Gateway-->>Client: 200 OK
 ```
 
 ### 4.2 删除好友
@@ -49,14 +54,37 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Gateway
+    participant FriendService
+    participant DB
+    participant NATS
+
+    Client->>Gateway: DELETE /friend/{friendId}<br/>Header: Authorization: Bearer {token}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC DeleteFriend(userId, friendId)
+    FriendService->>DB: 删除好友关系(双向)
+    DB-->>FriendService: 成功
+    FriendService->>NATS: 发布好友删除事件
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+### 4.3 设置好友备注
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
     participant FriendService
     participant DB
 
-    Client->>FriendService: DeleteFriend(userID, friendID)
-    FriendService->>DB: 删除好友关系(双向)
+    Client->>Gateway: PUT /friend/remark<br/>Header: Authorization: Bearer {token}<br/>Body: {friend_id, remark}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>FriendService: gRPC UpdateRemark(userId, friendId, remark)
+    FriendService->>DB: 更新好友备注
     DB-->>FriendService: 成功
-    FriendService->>FriendService: 发布好友删除通知
-    FriendService-->>Client: 删除成功
+    FriendService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
 ```
 
 ## 5. API设计

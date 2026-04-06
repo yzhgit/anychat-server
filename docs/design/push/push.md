@@ -22,22 +22,66 @@
 
 ## 4. 业务流程
 
+### 4.1 NATS 事件推送
+
 ```mermaid
 sequenceDiagram
+    participant MessageService
     participant NATS
     participant PushService
-    participant PushProvider
     participant UserService
+    participant DB
+    participant PushProvider
 
-    NATS->>PushService: 通知事件
+    MessageService->>NATS: 发布消息事件<br/>(notification.message.new.{userId})
+    NATS->>PushService: 订阅消息事件
     PushService->>PushService: 解析通知类型
     PushService->>UserService: 查询用户推送Token
     UserService-->>PushService: Token列表
     PushService->>PushService: 构建推送内容
     PushService->>PushProvider: 发送推送
     PushProvider-->>PushService: 推送结果
-    PushService->>PushService: 记录推送日志
+    PushService->>DB: 记录推送日志
     PushService-->>NATS: 处理完成
+```
+
+### 4.2 好友请求推送
+
+```mermaid
+sequenceDiagram
+    participant FriendService
+    participant NATS
+    participant PushService
+    participant UserService
+    participant PushProvider
+
+    FriendService->>NATS: 发布好友申请通知<br/>(notification.friend.request.{userId})
+    NATS->>PushService: 订阅通知事件
+    PushService->>UserService: 查询用户推送Token
+    UserService-->>PushService: Token列表
+    PushService->>PushService: 构建推送内容
+    PushService->>PushProvider: 发送推送
+    PushProvider-->>PushService: 推送结果
+    PushService->>DB: 记录推送日志
+```
+
+### 4.3 通话邀请推送
+
+```mermaid
+sequenceDiagram
+    participant CallingService
+    participant NATS
+    participant PushService
+    participant UserService
+    participant PushProvider
+
+    CallingService->>NATS: 发布通话邀请通知<br/>(notification.livekit.call_invite.{userId})
+    NATS->>PushService: 订阅通知事件
+    PushService->>UserService: 查询用户推送Token
+    UserService-->>PushService: Token列表
+    PushService->>PushService: 构建推送内容(含callId)
+    PushService->>PushProvider: 发送推送
+    PushProvider-->>PushService: 推送结果
 ```
 
 ## 5. API设计

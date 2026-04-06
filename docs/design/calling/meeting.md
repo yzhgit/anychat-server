@@ -11,7 +11,67 @@
 - [x] 结束会议
 - [x] 会议列表查询
 
-## 3. API设计
+## 3. 业务流程
+
+### 3.1 创建会议
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant CallingService
+    participant LiveKit
+    participant NATS
+
+    Client->>Gateway: POST /meeting/create<br/>Header: Authorization: Bearer {token}<br/>Body: {title, password, max_participants}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>CallingService: gRPC CreateMeeting(userId, title, password, maxParticipants)
+    CallingService->>CallingService: 生成RoomID
+    CallingService->>LiveKit: 创建Room
+    LiveKit-->>CallingService: Room创建成功
+    CallingService->>CallingService: 生成Token
+    CallingService->>NATS: 发布会议创建事件
+    CallingService-->>Gateway: 返回roomId + roomName + token
+    Gateway-->>Client: 200 OK
+```
+
+### 3.2 加入会议
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant CallingService
+    participant LiveKit
+
+    Client->>Gateway: POST /meeting/join<br/>Header: Authorization: Bearer {token}<br/>Body: {room_id, password}
+    Gateway->>Gateway: 从JWT解析userId
+    Gateway->>CallingService: gRPC JoinMeeting(userId, roomId, password)
+    CallingService->>LiveKit: 生成JoinToken
+    LiveKit-->>CallingService: Token
+    CallingService-->>Gateway: 返回Token + roomName
+    Gateway-->>Client: 200 OK
+```
+
+### 3.3 结束会议
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant CallingService
+    participant LiveKit
+    participant NATS
+
+    Client->>Gateway: POST /meeting/end<br/>Header: Authorization: Bearer {token}<br/>Body: {room_id}
+    Gateway->>CallingService: gRPC EndMeeting(roomId)
+    CallingService->>LiveKit: 关闭Room
+    CallingService->>NATS: 发布会议结束事件
+    CallingService-->>Gateway: 成功
+    Gateway-->>Client: 200 OK
+```
+
+## 4. API设计
 
 ### 3.1 创建会议
 
