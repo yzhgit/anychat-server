@@ -12,6 +12,7 @@ import (
 	sessionpb "github.com/anychat/server/api/proto/session"
 	syncpb "github.com/anychat/server/api/proto/sync"
 	userpb "github.com/anychat/server/api/proto/user"
+	versionpb "github.com/anychat/server/api/proto/version"
 	"github.com/anychat/server/pkg/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -29,6 +30,7 @@ type Manager struct {
 	sessionConn   *grpc.ClientConn
 	syncConn      *grpc.ClientConn
 	callingConn   *grpc.ClientConn
+	versionConn   *grpc.ClientConn
 	authClient    authpb.AuthServiceClient
 	userClient    userpb.UserServiceClient
 	friendClient  friendpb.FriendServiceClient
@@ -38,10 +40,11 @@ type Manager struct {
 	sessionClient sessionpb.SessionServiceClient
 	syncClient    syncpb.SyncServiceClient
 	callingClient callingpb.CallingServiceClient
+	versionClient versionpb.VersionServiceClient
 }
 
 // NewManager 创建gRPC客户端管理器
-func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr, sessionAddr, syncAddr, callingAddr string) (*Manager, error) {
+func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr, sessionAddr, syncAddr, callingAddr, versionAddr string) (*Manager, error) {
 	// 连接auth-service
 	authConn, err := grpc.NewClient(
 		authAddr,
@@ -168,6 +171,25 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to calling-service", zap.String("addr", callingAddr))
 
+	// 连接version-service
+	versionConn, err := grpc.NewClient(
+		versionAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		authConn.Close()
+		userConn.Close()
+		friendConn.Close()
+		groupConn.Close()
+		fileConn.Close()
+		messageConn.Close()
+		sessionConn.Close()
+		syncConn.Close()
+		callingConn.Close()
+		return nil, fmt.Errorf("failed to connect to version-service: %w", err)
+	}
+	logger.Info("Connected to version-service", zap.String("addr", versionAddr))
+
 	return &Manager{
 		authConn:      authConn,
 		userConn:      userConn,
@@ -178,6 +200,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 		sessionConn:   sessionConn,
 		syncConn:      syncConn,
 		callingConn:   callingConn,
+		versionConn:   versionConn,
 		authClient:    authpb.NewAuthServiceClient(authConn),
 		userClient:    userpb.NewUserServiceClient(userConn),
 		friendClient:  friendpb.NewFriendServiceClient(friendConn),
@@ -187,6 +210,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 		sessionClient: sessionpb.NewSessionServiceClient(sessionConn),
 		syncClient:    syncpb.NewSyncServiceClient(syncConn),
 		callingClient: callingpb.NewCallingServiceClient(callingConn),
+		versionClient: versionpb.NewVersionServiceClient(versionConn),
 	}, nil
 }
 
@@ -233,6 +257,11 @@ func (m *Manager) Sync() syncpb.SyncServiceClient {
 // Calling 获取音视频通话服务客户端
 func (m *Manager) Calling() callingpb.CallingServiceClient {
 	return m.callingClient
+}
+
+// Version 获取version服务客户端
+func (m *Manager) Version() versionpb.VersionServiceClient {
+	return m.versionClient
 }
 
 // Close 关闭所有连接
@@ -290,6 +319,12 @@ func (m *Manager) Close() error {
 	if m.callingConn != nil {
 		if err := m.callingConn.Close(); err != nil {
 			errs = append(errs, fmt.Errorf("failed to close calling connection: %w", err))
+		}
+	}
+
+	if m.versionConn != nil {
+		if err := m.versionConn.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("failed to close version connection: %w", err))
 		}
 	}
 

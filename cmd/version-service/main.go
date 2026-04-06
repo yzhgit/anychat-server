@@ -1,0 +1,217 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	versionpb "github.com/anychat/server/api/proto/version"
+	versiongrpc "github.com/anychat/server/internal/version/grpc"
+	"github.com/anychat/server/internal/version/repository"
+	"github.com/anychat/server/internal/version/service"
+	"github.com/anychat/server/pkg/config"
+	"github.com/anychat/server/pkg/database"
+	grpcpkg "github.com/anychat/server/pkg/grpc"
+	"github.com/anychat/server/pkg/logger"
+	pkgredis "github.com/anychat/server/pkg/redis"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
+)
+
+const (
+	serviceName = "version-service"
+	version     = "v1.0.0"
+)
+
+func main() {
+	fmt.Printf("Starting %s %s...\n", serviceName, version)
+
+	if err := loadConfig(); err != nil {
+		panic(fmt.Sprintf("Failed to load config: %v", err))
+	}
+
+	if err := initLogger(); err != nil {
+		panic(fmt.Sprintf("Failed to init logger: %v", err))
+	}
+	defer logger.Sync()
+
+	logger.Info("Starting version-service", zap.String("version", version))
+
+	db, err := initDatabase()
+	if err != nil {
+		logger.Fatal("Failed to connect database", zap.Error(err))
+	}
+	logger.Info("Database connected successfully")
+
+	redisClient, err := initRedis()
+	if err != nil {
+		logger.Fatal("Failed to connect redis", zap.Error(err))
+	}
+	defer redisClient.Close()
+	logger.Info("Redis connected successfully")
+
+	versionRepo := repository.NewVersionRepository(db)
+
+	versionService := service.NewVersionService(versionRepo, redisClient)
+
+	grpcServer := initGRPCServer(versionService)
+
+	go func() {
+		grpcPort := viper.GetInt("server.grpc_port")
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+		if err != nil {
+			logger.Fatal("Failed to listen gRPC", zap.Error(err))
+		}
+		logger.Info("gRPC server listening", zap.Int("port", grpcPort))
+		if err := grpcServer.Serve(lis); err != nil {
+			logger.Fatal("gRPC server failed", zap.Error(err))
+		}
+	}()
+
+	httpServer := initHTTPServer()
+
+	go func() {
+		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))
+		logger.Info("HTTP server listening (health check only)", zap.String("addr", addr))
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("HTTP server failed", zap.Error(err))
+		}
+	}()
+
+	logger.Info("Version service started successfully")
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Info("Shutting down gracefully...")
+
+	grpcServer.GracefulStop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(ctx); err != nil {
+		logger.Error("HTTP server shutdown error", zap.Error(err))
+	}
+
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.Close()
+	}
+
+	logger.Info("Service stopped!")
+}
+
+func loadConfig() error {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./configs")
+	viper.AddConfigPath(".")
+
+	viper.SetDefault("server.http_port", 8012)
+	viper.SetDefault("server.grpc_port", 9012)
+	viper.SetDefault("database.postgres.host", "localhost")
+	viper.SetDefault("database.postgres.port", 5432)
+	viper.SetDefault("database.postgres.user", "anychat")
+	viper.SetDefault("database.postgres.password", "anychat123")
+	viper.SetDefault("database.postgres.database", "anychat")
+	viper.SetDefault("database.redis.host", "localhost")
+	viper.SetDefault("database.redis.port", 6379)
+	viper.SetDefault("database.redis.password", "")
+	viper.SetDefault("database.redis.db", 0)
+	viper.SetDefault("database.redis.pool_size", 10)
+	viper.SetDefault("log.level", "info")
+	viper.SetDefault("log.output", "stdout")
+	viper.SetDefault("server.mode", "development")
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return err
+		}
+		fmt.Println("Config file not found, using defaults")
+	}
+	config.ExpandEnvInConfig()
+
+	return nil
+}
+
+func initLogger() error {
+	return logger.Init(&logger.Config{
+		Level:    viper.GetString("log.level"),
+		Output:   viper.GetString("log.output"),
+		FilePath: viper.GetString("log.file_path"),
+	})
+}
+
+func initDatabase() (*gorm.DB, error) {
+	logLevel := gormLogger.Silent
+	if viper.GetString("log.level") == "debug" {
+		logLevel = gormLogger.Info
+	}
+
+	return database.NewPostgresDB(&database.Config{
+		Host:            viper.GetString("database.postgres.host"),
+		Port:            viper.GetInt("database.postgres.port"),
+		User:            viper.GetString("database.postgres.user"),
+		Password:        viper.GetString("database.postgres.password"),
+		DBName:          viper.GetString("database.postgres.database"),
+		MaxOpenConns:    viper.GetInt("database.postgres.max_open_conns"),
+		MaxIdleConns:    viper.GetInt("database.postgres.max_idle_conns"),
+		ConnMaxLifetime: viper.GetInt("database.postgres.conn_max_lifetime"),
+		LogLevel:        logLevel,
+	})
+}
+
+func initRedis() (*pkgredis.Client, error) {
+	return pkgredis.NewClient(&pkgredis.Config{
+		Host:     viper.GetString("database.redis.host"),
+		Port:     viper.GetInt("database.redis.port"),
+		Password: viper.GetString("database.redis.password"),
+		DB:       viper.GetInt("database.redis.db"),
+		PoolSize: viper.GetInt("database.redis.pool_size"),
+	})
+}
+
+func initGRPCServer(versionService service.VersionService) *grpc.Server {
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			grpcpkg.RecoveryInterceptor(),
+			grpcpkg.LoggingInterceptor(),
+		),
+	)
+
+	versionpb.RegisterVersionServiceServer(grpcServer, versiongrpc.NewVersionServer(versionService))
+
+	return grpcServer
+}
+
+func initHTTPServer() *http.Server {
+	if viper.GetString("server.mode") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.New()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"service": serviceName,
+			"version": version,
+		})
+	})
+
+	return &http.Server{
+		Addr:    fmt.Sprintf(":%d", viper.GetInt("server.http_port")),
+		Handler: r,
+	}
+}

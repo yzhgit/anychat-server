@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package anychat.version;
+
+import "common/common.proto";
+
+option go_package = "github.com/anychat/server/api/proto/version;versionpb";
+
+// VersionService 版本服务
+service VersionService {
+  // CheckVersion 检测版本更新
+  rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse);
+  
+  // GetLatestVersion 获取最新版本
+  rpc GetLatestVersion(GetLatestVersionRequest) returns (GetLatestVersionResponse);
+  
+  // ListVersions 获取版本列表
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  
+  // CreateVersion 创建版本（管理后台）
+  rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
+  
+  // GetVersion 获取版本详情
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse);
+  
+  // DeleteVersion 删除版本
+  rpc DeleteVersion(DeleteVersionRequest) returns (common.Empty);
+  
+  // ReportVersion 上报版本（客户端启动时）
+  rpc ReportVersion(ReportVersionRequest) returns (common.Empty);
+}
+
+// CheckVersionRequest 版本检测请求
+message CheckVersionRequest {
+  string platform = 1;   // 平台: ios/android/pc/web/h5
+  string version = 2;    // 当前版本号，如 1.0.0
+  int32 build_number = 3; // 构建号（iOS/Android）
+}
+
+// CheckVersionResponse 版本检测响应
+message CheckVersionResponse {
+  bool has_update = 1;
+  string latest_version = 2;
+  int32 latest_build_number = 3;
+  bool force_update = 4;
+  string min_version = 5;
+  int32 min_build_number = 6;
+  UpdateInfo update_info = 7;
+}
+
+// UpdateInfo 更新信息
+message UpdateInfo {
+  string title = 1;
+  string content = 2;
+  string download_url = 3;
+  int64 file_size = 4;
+  string file_hash = 5;
+}
+
+// GetLatestVersionRequest 获取最新版本请求
+message GetLatestVersionRequest {
+  string platform = 1;
+  string release_type = 2; // stable/beta/alpha
+}
+
+// GetLatestVersionResponse 获取最新版本响应
+message GetLatestVersionResponse {
+  VersionInfo version = 1;
+}
+
+// VersionInfo 版本信息
+message VersionInfo {
+  int64 id = 1;
+  string platform = 2;
+  string version = 3;
+  int32 build_number = 4;
+  int32 version_code = 5;
+  string min_version = 6;
+  int32 min_build_number = 7;
+  bool force_update = 8;
+  string release_type = 9;
+  string title = 10;
+  string content = 11;
+  string download_url = 12;
+  int64 file_size = 13;
+  string file_hash = 14;
+  string published_at = 15;
+}
+
+// ListVersionsRequest 获取版本列表请求
+message ListVersionsRequest {
+  string platform = 1;
+  string release_type = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ListVersionsResponse 获取版本列表响应
+message ListVersionsResponse {
+  int32 total = 1;
+  repeated VersionInfo versions = 2;
+}
+
+// CreateVersionRequest 创建版本请求
+message CreateVersionRequest {
+  string platform = 1;
+  string version = 2;
+  int32 build_number = 3;
+  int32 version_code = 4;
+  string min_version = 5;
+  int32 min_build_number = 6;
+  bool force_update = 7;
+  string release_type = 8;
+  string title = 9;
+  string content = 10;
+  string download_url = 11;
+  int64 file_size = 12;
+  string file_hash = 13;
+}
+
+// CreateVersionResponse 创建版本响应
+message CreateVersionResponse {
+  int64 id = 1;
+  string platform = 2;
+  string version = 3;
+}
+
+// GetVersionRequest 获取版本详情请求
+message GetVersionRequest {
+  int64 id = 1;
+}
+
+// GetVersionResponse 获取版本详情响应
+message GetVersionResponse {
+  VersionInfo version = 1;
+}
+
+// DeleteVersionRequest 删除版本请求
+message DeleteVersionRequest {
+  int64 id = 1;
+}
+
+// ReportVersionRequest 上报版本请求
+message ReportVersionRequest {
+  string platform = 1;
+  string version = 2;
+  int32 build_number = 3;
+  string device_id = 4;
+  string os_version = 5;
+  string sdk_version = 6;
+}

@@ -59,6 +59,7 @@ func (Build) All() error {
 		"calling-service",
 		"sync-service",
 		"admin-service",
+		"version-service",
 	}
 
 	for _, service := range services {
@@ -300,6 +301,12 @@ func (Dev) Calling() error {
 func (Dev) Admin() error {
 	fmt.Println("Running admin-service...")
 	return sh.RunV("go", "run", "./cmd/admin-service")
+}
+
+// Version runs version-service locally
+func (Dev) Version() error {
+	fmt.Println("Running version-service...")
+	return sh.RunV("go", "run", "./cmd/version-service")
 }
 
 // Deps installs dependencies

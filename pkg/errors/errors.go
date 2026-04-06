@@ -130,6 +130,15 @@ const (
 	CodeSyncMessagesFailed = 11102 // 消息补齐失败
 )
 
+// Version Service 错误码 (82xxx)
+const (
+	CodeVersionFormatError   = 82001 // 版本号格式错误
+	CodeVersionAlreadyExists = 82002 // 该版本已存在
+	CodeVersionNotFound      = 82003 // 版本不存在
+	CodeDownloadUrlInvalid   = 82004 // 下载链接无效
+	CodePlatformNotSupported = 82005 // 平台不支持
+)
+
 // Push Service 错误码 (80xxx)
 const (
 	CodePushFailed        = 80101 // 推送失败
@@ -276,6 +285,12 @@ var errorMessages = map[int]string{
 	CodeVerifyCodeAlreadyUsed:  "验证码已验证，请重新获取",
 	CodeVerifyCodeNotFound:     "验证码不存在",
 	CodeVerifyAttemptsExceeded: "验证次数过多，请重新获取验证码",
+
+	CodeVersionFormatError:   "版本号格式错误",
+	CodeVersionAlreadyExists: "该版本已存在",
+	CodeVersionNotFound:      "版本不存在",
+	CodeDownloadUrlInvalid:   "下载链接无效",
+	CodePlatformNotSupported: "平台不支持",
 }
 
 // GetMessage 获取错误消息

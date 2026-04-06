@@ -190,6 +190,13 @@ start_admin_service() {
     start_service "admin-service"   "dev:admin"   9011
 }
 
+# 启动版本服务
+start_version_service() {
+    print_header "启动版本服务"
+
+    start_service "version-service" "dev:version" 9012
+}
+
 # 启动网关服务（最后，依赖所有后端服务）
 start_gateway() {
     print_header "启动网关服务"
@@ -220,6 +227,9 @@ show_status() {
     echo -e "\n${YELLOW}管理服务:${NC}"
     echo "  admin-service:    http://localhost:8011  logs/admin-service.log"
     echo "                    grpc://localhost:9011"
+
+    echo -e "\n${YELLOW}版本服务:${NC}"
+    echo "  version-service: grpc://localhost:9012  logs/version-service.log"
 
     echo -e "\n${YELLOW}网关服务:${NC}"
     echo "  gateway-service:  http://localhost:8080  logs/gateway-service.log"
@@ -253,6 +263,8 @@ main() {
     start_auxiliary_services
     sleep 1
     start_admin_service
+    sleep 1
+    start_version_service
     sleep 1
     start_gateway
 

@@ -22,6 +22,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 	sessionHandler := NewSessionHandler(clientManager)
 	syncHandler := NewSyncHandler(clientManager)
 	callingHandler := NewCallingHandler(clientManager)
+	versionHandler := NewVersionHandler(clientManager)
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
@@ -45,6 +46,20 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			{
 				authGroup.POST("/logout", authHandler.Logout)
 				authGroup.POST("/password/change", authHandler.ChangePassword)
+			}
+
+			// Version 路由（客户端版本检测 - 公开）
+			versions := v1.Group("/versions")
+			{
+				versions.GET("/check", versionHandler.CheckVersion)
+				versions.GET("/latest", versionHandler.GetLatestVersion)
+				versions.GET("/list", versionHandler.ListVersions)
+			}
+
+			// 需要认证的Version路由
+			authorizedVersions := authorized.Group("/versions")
+			{
+				authorizedVersions.POST("/report", versionHandler.ReportVersion)
 			}
 
 			// User路由
