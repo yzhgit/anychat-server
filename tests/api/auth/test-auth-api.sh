@@ -400,6 +400,7 @@ test_change_password() {
     local new_password="NewPass@123456"
     local data=$(cat <<EOF
 {
+    "deviceId": "${TEST_DEVICE_ID}",
     "oldPassword": "${TEST_PASSWORD}",
     "newPassword": "${new_password}"
 }

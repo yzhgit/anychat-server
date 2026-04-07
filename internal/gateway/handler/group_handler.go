@@ -735,7 +735,7 @@ func (h *GroupHandler) SetGroupMute(c *gin.Context) {
 	_, err := h.clientManager.Group().SetGroupMute(c.Request.Context(), &grouppb.SetGroupMuteRequest{
 		UserId:  userID,
 		GroupId: groupID,
-		Enabled: req.Enabled,
+		Enabled: *req.Enabled,
 	})
 	if err != nil {
 		handleGRPCError(c, err)

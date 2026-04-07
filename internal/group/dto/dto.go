@@ -66,7 +66,7 @@ type PinGroupMessageRequest struct {
 
 // SetGroupMuteRequest 设置全体禁言请求
 type SetGroupMuteRequest struct {
-	Enabled bool `json:"enabled" binding:"required" example:"true"`
+	Enabled *bool `json:"enabled" binding:"required" example:"true"`
 }
 
 // MuteMemberRequest 禁言成员请求

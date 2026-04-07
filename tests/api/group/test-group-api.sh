@@ -111,6 +111,37 @@ http_delete() {
         -H "Authorization: Bearer ${token}"
 }
 
+# 从群会话中查找一个真实存在的消息ID（用于置顶测试）
+resolve_group_message_id_for_pin() {
+    local retries=5
+    local i
+
+    for i in $(seq 1 $retries); do
+        local sync_data="{\"conversationSeqs\":[{\"conversationId\":\"${GROUP_ID}\",\"conversationType\":\"group\",\"lastSeq\":0}],\"limitPerConversation\":20}"
+        local sync_resp=$(http_post "${API_BASE}/sync/messages" "$sync_data" "$USER1_TOKEN")
+        local sync_code=$(echo "$sync_resp" | jq -r '.code // empty')
+
+        if [ "$sync_code" = "0" ]; then
+            local message_id=$(echo "$sync_resp" | jq -r --arg gid "$GROUP_ID" '
+                .data.conversations[]?
+                | select((.conversationId // .conversation_id) == $gid and (.conversationType // .conversation_type) == "group")
+                | .messages[]?
+                | (.messageId // .message_id)
+                | select(. != null and . != "")
+            ' | head -n 1)
+
+            if [ -n "$message_id" ] && [ "$message_id" != "null" ]; then
+                echo "$message_id"
+                return 0
+            fi
+        fi
+
+        sleep 1
+    done
+
+    return 1
+}
+
 # 检查 JSON 响应状态
 check_response() {
     local response=$1
@@ -453,6 +484,13 @@ test_pin_unpin_message() {
         print_error "跳过测试 - 群组ID为空"
         return 1
     fi
+
+    TEST_PIN_MESSAGE_ID=$(resolve_group_message_id_for_pin)
+    if [ -z "$TEST_PIN_MESSAGE_ID" ] || [ "$TEST_PIN_MESSAGE_ID" = "null" ]; then
+        print_error "置顶消息失败 - 未找到可置顶的群消息ID"
+        return 1
+    fi
+    print_info "用于置顶的消息ID: ${TEST_PIN_MESSAGE_ID}"
 
     local pin_data="{\"messageId\":\"${TEST_PIN_MESSAGE_ID}\"}"
     local pin_resp=$(http_post "${API_BASE}/groups/${GROUP_ID}/pin" "$pin_data" "$USER1_TOKEN")
