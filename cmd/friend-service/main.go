@@ -11,10 +11,12 @@ import (
 	"time"
 
 	friendpb "github.com/anychat/server/api/proto/friend"
+	sessionpb "github.com/anychat/server/api/proto/session"
 	userpb "github.com/anychat/server/api/proto/user"
 	friendgrpc "github.com/anychat/server/internal/friend/grpc"
 	"github.com/anychat/server/internal/friend/repository"
 	"github.com/anychat/server/internal/friend/service"
+	"github.com/anychat/server/pkg/config"
 	"github.com/anychat/server/pkg/database"
 	grpcpkg "github.com/anychat/server/pkg/grpc"
 	"github.com/anychat/server/pkg/logger"
@@ -27,7 +29,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/anychat/server/pkg/config"
 )
 
 const (
@@ -65,6 +66,13 @@ func main() {
 	}
 	logger.Info("Connected to user-service")
 
+	// 连接到session-service
+	sessionClient, err := connectSessionService()
+	if err != nil {
+		logger.Fatal("Failed to connect to session-service", zap.Error(err))
+	}
+	logger.Info("Connected to session-service")
+
 	// 连接NATS
 	nc, err := connectNATS()
 	if err != nil {
@@ -81,7 +89,7 @@ func main() {
 	blacklistRepo := repository.NewBlacklistRepository(db)
 
 	// 初始化服务
-	friendService := service.NewFriendService(friendshipRepo, requestRepo, blacklistRepo, userClient, notificationPub, db)
+	friendService := service.NewFriendService(friendshipRepo, requestRepo, blacklistRepo, userClient, sessionClient, notificationPub, db)
 
 	// 初始化gRPC服务器
 	grpcServer := initGRPCServer(friendService)
@@ -225,7 +233,6 @@ func connectNATS() (*nats.Conn, error) {
 	return nc, err
 }
 
-
 // connectUserService 连接到user-service
 func connectUserService() (userpb.UserServiceClient, error) {
 	addr := viper.GetString("services.user.grpc_addr")
@@ -238,6 +245,20 @@ func connectUserService() (userpb.UserServiceClient, error) {
 	}
 
 	return userpb.NewUserServiceClient(conn), nil
+}
+
+// connectSessionService 连接到session-service
+func connectSessionService() (sessionpb.SessionServiceClient, error) {
+	addr := viper.GetString("services.session.grpc_addr")
+	conn, err := grpc.NewClient(
+		addr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to session service: %w", err)
+	}
+
+	return sessionpb.NewSessionServiceClient(conn), nil
 }
 
 // initGRPCServer 初始化gRPC服务器

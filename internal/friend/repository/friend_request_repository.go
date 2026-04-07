@@ -11,6 +11,7 @@ import (
 type FriendRequestRepository interface {
 	Create(ctx context.Context, request *model.FriendRequest) error
 	GetByID(ctx context.Context, id int64) (*model.FriendRequest, error)
+	GetByUserIDs(ctx context.Context, fromUserID, toUserID string) (*model.FriendRequest, error)
 	GetPendingRequest(ctx context.Context, fromUserID, toUserID string) (*model.FriendRequest, error)
 	GetReceivedRequests(ctx context.Context, userID string) ([]*model.FriendRequest, error)
 	GetSentRequests(ctx context.Context, userID string) ([]*model.FriendRequest, error)
@@ -38,6 +39,19 @@ func (r *friendRequestRepositoryImpl) Create(ctx context.Context, request *model
 func (r *friendRequestRepositoryImpl) GetByID(ctx context.Context, id int64) (*model.FriendRequest, error) {
 	var request model.FriendRequest
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&request).Error
+	if err != nil {
+		return nil, err
+	}
+	return &request, nil
+}
+
+// GetByUserIDs 根据用户ID获取最新的好友申请记录
+func (r *friendRequestRepositoryImpl) GetByUserIDs(ctx context.Context, fromUserID, toUserID string) (*model.FriendRequest, error) {
+	var request model.FriendRequest
+	err := r.db.WithContext(ctx).
+		Where("from_user_id = ? AND to_user_id = ?", fromUserID, toUserID).
+		Order("created_at DESC").
+		First(&request).Error
 	if err != nil {
 		return nil, err
 	}

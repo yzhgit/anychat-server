@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	sessionpb "github.com/anychat/server/api/proto/session"
+	userpb "github.com/anychat/server/api/proto/user"
 	"github.com/anychat/server/internal/friend/dto"
 	"github.com/anychat/server/internal/friend/model"
 	"github.com/anychat/server/internal/friend/repository"
 	"github.com/anychat/server/pkg/errors"
 	"github.com/anychat/server/pkg/logger"
 	"github.com/anychat/server/pkg/notification"
-	userpb "github.com/anychat/server/api/proto/user"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -38,6 +39,7 @@ type friendServiceImpl struct {
 	requestRepo     FriendRequestRepo
 	blacklistRepo   BlacklistRepo
 	userClient      userpb.UserServiceClient
+	sessionClient   sessionpb.SessionServiceClient
 	notificationPub notification.Publisher
 	db              *gorm.DB
 }
@@ -63,6 +65,7 @@ func NewFriendService(
 	requestRepo repository.FriendRequestRepository,
 	blacklistRepo repository.BlacklistRepository,
 	userClient userpb.UserServiceClient,
+	sessionClient sessionpb.SessionServiceClient,
 	notificationPub notification.Publisher,
 	db *gorm.DB,
 ) FriendService {
@@ -71,6 +74,7 @@ func NewFriendService(
 		requestRepo:     requestRepo,
 		blacklistRepo:   blacklistRepo,
 		userClient:      userClient,
+		sessionClient:   sessionClient,
 		notificationPub: notificationPub,
 		db:              db,
 	}
@@ -152,29 +156,100 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 		return nil, errors.NewBusiness(errors.CodeRequestExists, "")
 	}
 
-	// 创建好友申请
-	friendRequest := &model.FriendRequest{
-		FromUserID: fromUserID,
-		ToUserID:   req.UserID,
-		Message:    req.Message,
-		Source:     req.Source,
-		Status:     model.FriendRequestStatusPending,
+	// 获取对方设置，检查是否需要验证
+	settingsResp, err := s.userClient.GetSettings(ctx, &userpb.GetSettingsRequest{UserId: req.UserID})
+	if err != nil {
+		logger.Error("Failed to get user settings", zap.Error(err))
+		return nil, err
 	}
+	friendVerifyRequired := settingsResp.FriendVerifyRequired
 
-	if err := s.requestRepo.Create(ctx, friendRequest); err != nil {
-		logger.Error("Failed to create friend request", zap.Error(err))
+	// 使用事务处理申请创建和可能的自动接受
+	var autoAccepted bool
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		now := time.Now()
+
+		// 创建好友申请
+		status := model.FriendRequestStatusPending
+		if !friendVerifyRequired {
+			status = model.FriendRequestStatusAccepted
+		}
+
+		friendRequest := &model.FriendRequest{
+			FromUserID: fromUserID,
+			ToUserID:   req.UserID,
+			Message:    req.Message,
+			Source:     req.Source,
+			Status:     status,
+		}
+
+		requestRepoTx := s.requestRepo.WithTx(tx)
+		if err := requestRepoTx.Create(ctx, friendRequest); err != nil {
+			logger.Error("Failed to create friend request", zap.Error(err))
+			return err
+		}
+
+		// 如果对方不需要验证，自动接受
+		if !friendVerifyRequired {
+			autoAccepted = true
+
+			// 创建双向好友关系
+			friendships := []*model.Friendship{
+				{
+					UserID:    fromUserID,
+					FriendID:  req.UserID,
+					Status:    model.FriendshipStatusNormal,
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
+				{
+					UserID:    req.UserID,
+					FriendID:  fromUserID,
+					Status:    model.FriendshipStatusNormal,
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
+			}
+
+			friendshipRepoTx := s.friendshipRepo.WithTx(tx)
+			if err := friendshipRepoTx.CreateBatch(ctx, friendships); err != nil {
+				logger.Error("Failed to create friendship", zap.Error(err))
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
-	// 发布好友请求通知
-	s.publishFriendRequestNotification(friendRequest)
+	// 获取刚创建的申请ID
+	createdReq, err := s.requestRepo.GetByUserIDs(ctx, fromUserID, req.UserID)
+	if err != nil {
+		logger.Error("Failed to get created friend request", zap.Error(err))
+		return nil, err
+	}
+	requestID := createdReq.ID
 
-	// TODO: 检查对方设置是否需要验证，如果不需要则自动接受
-	// 这里暂时所有申请都需要手动接受
+	// 根据是否自动接受，发送不同通知
+	if autoAccepted {
+		// 创建会话（双方）
+		s.createFriendSession(ctx, fromUserID, req.UserID)
+		s.createFriendSession(ctx, req.UserID, fromUserID)
+
+		// 通知双方
+		s.publishFriendAddedNotification(fromUserID, req.UserID)
+		s.publishFriendAddedNotification(req.UserID, fromUserID)
+	} else {
+		// 发布好友请求通知
+		s.publishFriendRequestNotification(createdReq)
+	}
 
 	return &dto.SendFriendRequestResponse{
-		RequestID:    friendRequest.ID,
-		AutoAccepted: false,
+		RequestID:    requestID,
+		AutoAccepted: autoAccepted,
 	}, nil
 }
 
@@ -617,6 +692,50 @@ func (s *friendServiceImpl) publishBlacklistChangedNotification(userID, targetUs
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
 		logger.Error("Failed to publish blacklist changed notification",
 			zap.String("userId", userID),
+			zap.Error(err))
+	}
+}
+
+// createFriendSession 创建好友会话
+func (s *friendServiceImpl) createFriendSession(ctx context.Context, userID, friendID string) {
+	if s.sessionClient == nil {
+		return
+	}
+
+	_, err := s.sessionClient.CreateOrUpdateSession(ctx, &sessionpb.CreateOrUpdateSessionRequest{
+		UserId:      userID,
+		SessionType: "single",
+		TargetId:    friendID,
+	})
+	if err != nil {
+		logger.Error("Failed to create friend session",
+			zap.String("userId", userID),
+			zap.String("friendId", friendID),
+			zap.Error(err))
+	}
+}
+
+// publishFriendAddedNotification 发布好友添加通知（自动通过）
+func (s *friendServiceImpl) publishFriendAddedNotification(userID, addedByUserID string) {
+	if s.notificationPub == nil {
+		return
+	}
+
+	payload := map[string]interface{}{
+		"added_by_user_id": addedByUserID,
+		"created_at":       time.Now().Unix(),
+	}
+
+	notif := notification.NewNotification(
+		notification.TypeFriendAdded,
+		userID,
+		notification.PriorityNormal,
+	).WithPayload(payload)
+
+	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
+		logger.Error("Failed to publish friend added notification",
+			zap.String("userId", userID),
+			zap.String("addedByUserId", addedByUserID),
 			zap.Error(err))
 	}
 }

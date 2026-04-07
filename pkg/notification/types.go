@@ -4,22 +4,23 @@ package notification
 
 // Friend Service 通知类型
 const (
-	TypeFriendRequest        = "friend.request"         // 好友请求
-	TypeFriendRequestHandled = "friend.request_handled" // 好友请求处理结果
-	TypeFriendDeleted        = "friend.deleted"         // 好友删除
-	TypeFriendRemarkUpdated  = "friend.remark_updated"  // 好友备注更新
+	TypeFriendRequest        = "friend.request"           // 好友请求
+	TypeFriendRequestHandled = "friend.request_handled"   // 好友请求处理结果
+	TypeFriendAdded          = "friend.added"             // 自动添加为好友（无需验证）
+	TypeFriendDeleted        = "friend.deleted"           // 好友删除
+	TypeFriendRemarkUpdated  = "friend.remark_updated"    // 好友备注更新
 	TypeBlacklistChanged     = "friend.blacklist_changed" // 黑名单变更
 )
 
 // Group Service 通知类型
 const (
-	TypeGroupInvited       = "group.invited"        // 群组邀请
-	TypeGroupMemberJoined  = "group.member_joined"  // 成员加入
-	TypeGroupMemberLeft    = "group.member_left"    // 成员退出
-	TypeGroupInfoUpdated   = "group.info_updated"   // 群组信息更新
-	TypeGroupRoleChanged   = "group.role_changed"   // 角色变更
-	TypeGroupMuted         = "group.muted"          // 群组禁言
-	TypeGroupDisbanded     = "group.disbanded"      // 群组解散
+	TypeGroupInvited      = "group.invited"       // 群组邀请
+	TypeGroupMemberJoined = "group.member_joined" // 成员加入
+	TypeGroupMemberLeft   = "group.member_left"   // 成员退出
+	TypeGroupInfoUpdated  = "group.info_updated"  // 群组信息更新
+	TypeGroupRoleChanged  = "group.role_changed"  // 角色变更
+	TypeGroupMuted        = "group.muted"         // 群组禁言
+	TypeGroupDisbanded    = "group.disbanded"     // 群组解散
 )
 
 // Message Service 通知类型
