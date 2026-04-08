@@ -27,6 +27,7 @@ type MessageService interface {
 	RecallMessage(ctx context.Context, messageID, userID string) error
 	DeleteMessage(ctx context.Context, messageID, userID string) error
 	MarkAsRead(ctx context.Context, userID string, req *messagepb.MarkAsReadRequest) error
+	MarkMessagesRead(ctx context.Context, userID string, req *messagepb.MarkMessagesReadRequest) (*messagepb.MarkMessagesReadResponse, error)
 	AckReadTriggers(ctx context.Context, userID string, req *messagepb.AckReadTriggersRequest) (*messagepb.AckReadTriggersResponse, error)
 	GetUnreadCount(ctx context.Context, conversationID, userID string, lastReadSeq *int64) (*messagepb.GetUnreadCountResponse, error)
 	GetReadReceipts(ctx context.Context, conversationID, userID string) (*messagepb.GetReadReceiptsResponse, error)
@@ -400,18 +401,31 @@ func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req 
 		return errors.NewBusiness(errors.CodeParamError, "conversation_type must be single or group")
 	}
 
+	effectiveReadSeq := req.LastReadSeq
+	lastReadMessageID := req.LastReadMessageId
+
+	existingReceipt, err := s.readReceiptRepo.GetByConversationAndUser(ctx, req.ConversationId, userID)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		logger.Error("Failed to get existing read receipt", zap.Error(err))
+		return errors.NewBusiness(errors.CodeInternalError, "Failed to get read receipt")
+	}
+	if existingReceipt != nil && existingReceipt.LastReadSeq > effectiveReadSeq {
+		effectiveReadSeq = existingReceipt.LastReadSeq
+		lastReadMessageID = existingReceipt.LastReadMessageID
+	}
+
 	// 创建或更新已读回执
 	receipt := &model.MessageReadReceipt{
 		ConversationID:   req.ConversationId,
 		ConversationType: conversation.ConversationType,
 		TargetID:         conversation.TargetId,
 		UserID:           userID,
-		LastReadSeq:      req.LastReadSeq,
+		LastReadSeq:      effectiveReadSeq,
 		ReadAt:           time.Now(),
 	}
 
-	if req.LastReadMessageId != nil {
-		receipt.LastReadMessageID = req.LastReadMessageId
+	if lastReadMessageID != nil {
+		receipt.LastReadMessageID = lastReadMessageID
 	}
 
 	if err := s.readReceiptRepo.Upsert(ctx, receipt); err != nil {
@@ -427,6 +441,109 @@ func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req 
 	}
 
 	return nil
+}
+
+// MarkMessagesRead 批量按消息ID标记已读
+func (s *messageServiceImpl) MarkMessagesRead(ctx context.Context, userID string, req *messagepb.MarkMessagesReadRequest) (*messagepb.MarkMessagesReadResponse, error) {
+	if userID == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "user_id is required")
+	}
+	if req.ConversationId == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id is required")
+	}
+	if len(req.MessageIds) == 0 {
+		return &messagepb.MarkMessagesReadResponse{}, nil
+	}
+	if err := s.ensureConversationAccessible(ctx, userID, req.ConversationId); err != nil {
+		return nil, err
+	}
+
+	messageSet := make(map[string]struct{}, len(req.MessageIds))
+	messageIDs := make([]string, 0, len(req.MessageIds))
+	for _, id := range req.MessageIds {
+		if id == "" {
+			continue
+		}
+		if _, exists := messageSet[id]; exists {
+			continue
+		}
+		messageSet[id] = struct{}{}
+		messageIDs = append(messageIDs, id)
+	}
+	if len(messageIDs) == 0 {
+		return &messagepb.MarkMessagesReadResponse{}, nil
+	}
+
+	var messages []*model.Message
+	if err := s.db.WithContext(ctx).
+		Model(&model.Message{}).
+		Select("message_id", "sequence", "conversation_id", "status").
+		Where("conversation_id = ? AND message_id IN ? AND status = ?", req.ConversationId, messageIDs, model.MessageStatusNormal).
+		Find(&messages).Error; err != nil {
+		logger.Error("Failed to load messages for MarkMessagesRead", zap.Error(err))
+		return nil, errors.NewBusiness(errors.CodeInternalError, "failed to mark messages as read")
+	}
+
+	maxSeq := int64(0)
+	var maxSeqMessageID *string
+	acceptedSet := make(map[string]struct{}, len(messages))
+	for _, msg := range messages {
+		acceptedSet[msg.MessageID] = struct{}{}
+		if msg.Sequence >= maxSeq {
+			maxSeq = msg.Sequence
+			id := msg.MessageID
+			maxSeqMessageID = &id
+		}
+	}
+
+	acceptedIDs := make([]string, 0, len(acceptedSet))
+	ignoredIDs := make([]string, 0, len(messageIDs))
+	for _, id := range messageIDs {
+		if _, ok := acceptedSet[id]; ok {
+			acceptedIDs = append(acceptedIDs, id)
+		} else {
+			ignoredIDs = append(ignoredIDs, id)
+		}
+	}
+
+	if len(acceptedIDs) == 0 {
+		return &messagepb.MarkMessagesReadResponse{
+			AcceptedIds:         acceptedIDs,
+			IgnoredIds:          ignoredIDs,
+			AdvancedLastReadSeq: 0,
+		}, nil
+	}
+
+	currentSeq := int64(0)
+	receipt, err := s.readReceiptRepo.GetByConversationAndUser(ctx, req.ConversationId, userID)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		logger.Error("Failed to get read receipt before MarkMessagesRead", zap.Error(err))
+		return nil, errors.NewBusiness(errors.CodeInternalError, "failed to mark messages as read")
+	}
+	if receipt != nil {
+		currentSeq = receipt.LastReadSeq
+	}
+
+	advancedSeq := currentSeq
+	if maxSeq > currentSeq {
+		advancedSeq = maxSeq
+		markReq := &messagepb.MarkAsReadRequest{
+			ConversationId: req.ConversationId,
+			LastReadSeq:    maxSeq,
+		}
+		if maxSeqMessageID != nil {
+			markReq.LastReadMessageId = maxSeqMessageID
+		}
+		if err := s.MarkAsRead(ctx, userID, markReq); err != nil {
+			return nil, err
+		}
+	}
+
+	return &messagepb.MarkMessagesReadResponse{
+		AcceptedIds:         acceptedIDs,
+		IgnoredIds:          ignoredIDs,
+		AdvancedLastReadSeq: advancedSeq,
+	}, nil
 }
 
 // AckReadTriggers 批量上报阅后即焚阅读触发

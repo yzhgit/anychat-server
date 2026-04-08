@@ -5,10 +5,12 @@ import (
 	"strconv"
 
 	conversationpb "github.com/anychat/server/api/proto/conversation"
+	messagepb "github.com/anychat/server/api/proto/message"
 	"github.com/anychat/server/internal/gateway/client"
 	gwmiddleware "github.com/anychat/server/internal/gateway/middleware"
 	"github.com/anychat/server/pkg/response"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/metadata"
 )
 
 // ConversationHandler conversation HTTP处理器
@@ -19,6 +21,18 @@ type ConversationHandler struct {
 // NewConversationHandler 创建conversation处理器
 func NewConversationHandler(clientManager *client.Manager) *ConversationHandler {
 	return &ConversationHandler{clientManager: clientManager}
+}
+
+func (h *ConversationHandler) ensureConversationAccessible(c *gin.Context, userID, conversationID string) bool {
+	_, err := h.clientManager.Conversation().GetConversation(c.Request.Context(), &conversationpb.GetConversationRequest{
+		UserId:         userID,
+		ConversationId: conversationID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return false
+	}
+	return true
 }
 
 // GetConversations 获取会话列表
@@ -197,7 +211,7 @@ func (h *ConversationHandler) SetMuted(c *gin.Context) {
 
 // MarkRead 标记会话已读（清除未读数）
 // @Summary      标记会话已读
-// @Description  清除指定会话的未读消息数
+// @Description  清除指定会话未读数，并同步推进消息已读游标到当前最新序列
 // @Tags         会话
 // @Accept       json
 // @Produce      json
@@ -206,12 +220,34 @@ func (h *ConversationHandler) SetMuted(c *gin.Context) {
 // @Success      200  {object}  response.Response  "成功"
 // @Failure      401  {object}  response.Response  "未授权"
 // @Failure      500  {object}  response.Response  "服务器错误"
-// @Router       /conversations/{conversationId}/read [post]
+// @Router       /conversations/{conversationId}/read-all [post]
 func (h *ConversationHandler) MarkRead(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	conversationID := c.Param("conversationId")
 
-	_, err := h.clientManager.Conversation().ClearUnread(c.Request.Context(), &conversationpb.ClearUnreadRequest{
+	if !h.ensureConversationAccessible(c, userID, conversationID) {
+		return
+	}
+
+	seqResp, err := h.clientManager.Message().GetConversationSequence(c.Request.Context(), &messagepb.GetConversationSequenceRequest{
+		ConversationId: conversationID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	_, err = h.clientManager.Message().MarkAsRead(ctx, &messagepb.MarkAsReadRequest{
+		ConversationId: conversationID,
+		LastReadSeq:    seqResp.CurrentSeq,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	_, err = h.clientManager.Conversation().ClearUnread(c.Request.Context(), &conversationpb.ClearUnreadRequest{
 		UserId:         userID,
 		ConversationId: conversationID,
 	})
@@ -220,6 +256,173 @@ func (h *ConversationHandler) MarkRead(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+type markMessagesReadRequest struct {
+	MessageIDs     []string `json:"message_ids" binding:"required,min=1"`
+	ClientReadAt   *int64   `json:"client_read_at,omitempty"`
+	IdempotencyKey *string  `json:"idempotency_key,omitempty"`
+}
+
+// MarkMessagesRead 批量按消息ID标记已读
+// @Summary      按消息ID标记已读
+// @Description  用于滚动列表等场景，批量上报可见消息ID并推进会话已读游标
+// @Tags         会话
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId  path  string                   true  "会话ID"
+// @Param        request         body  markMessagesReadRequest  true  "消息已读列表"
+// @Success      200  {object}  response.Response{data=object}  "成功"
+// @Failure      400  {object}  response.Response  "参数错误"
+// @Failure      401  {object}  response.Response  "未授权"
+// @Failure      500  {object}  response.Response  "服务器错误"
+// @Router       /conversations/{conversationId}/messages/read [post]
+func (h *ConversationHandler) MarkMessagesRead(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+
+	var req markMessagesReadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	grpcReq := &messagepb.MarkMessagesReadRequest{
+		ConversationId: conversationID,
+		MessageIds:     req.MessageIDs,
+	}
+	if req.ClientReadAt != nil {
+		grpcReq.ClientReadAt = req.ClientReadAt
+	}
+	if req.IdempotencyKey != nil && *req.IdempotencyKey != "" {
+		grpcReq.IdempotencyKey = req.IdempotencyKey
+	}
+
+	resp, err := h.clientManager.Message().MarkMessagesRead(ctx, grpcReq)
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetMessageUnreadCount 获取会话未读数
+// @Summary      获取会话未读数
+// @Description  查询当前用户在指定会话的未读消息数
+// @Tags         会话
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId  path      string  true   "会话ID"
+// @Param        last_read_seq   query     int64   false  "可选，客户端已读序列号"
+// @Success      200             {object}  response.Response{data=object}  "成功"
+// @Failure      400             {object}  response.Response  "参数错误"
+// @Failure      401             {object}  response.Response  "未授权"
+// @Failure      500             {object}  response.Response  "服务器错误"
+// @Router       /conversations/{conversationId}/messages/unread-count [get]
+func (h *ConversationHandler) GetMessageUnreadCount(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+
+	req := &messagepb.GetUnreadCountRequest{
+		ConversationId: conversationID,
+	}
+	if lastReadSeqStr := c.Query("last_read_seq"); lastReadSeqStr != "" {
+		lastReadSeq, err := strconv.ParseInt(lastReadSeqStr, 10, 64)
+		if err != nil {
+			response.ParamError(c, "last_read_seq must be an integer")
+			return
+		}
+		req.LastReadSeq = &lastReadSeq
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetUnreadCount(ctx, req)
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetMessageReadReceipts 获取会话消息已读回执
+// @Summary      获取消息已读回执
+// @Description  返回会话中成员的最后已读序列
+// @Tags         会话
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId  path      string  true  "会话ID"
+// @Success      200             {object}  response.Response{data=object}  "成功"
+// @Failure      400             {object}  response.Response  "参数错误"
+// @Failure      401             {object}  response.Response  "未授权"
+// @Failure      500             {object}  response.Response  "服务器错误"
+// @Router       /conversations/{conversationId}/messages/read-receipts [get]
+func (h *ConversationHandler) GetMessageReadReceipts(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetReadReceipts(ctx, &messagepb.GetReadReceiptsRequest{
+		ConversationId: conversationID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetMessageSequence 获取会话消息序列号
+// @Summary      获取会话消息序列号
+// @Description  获取会话中当前最新消息序列号
+// @Tags         会话
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId  path      string  true  "会话ID"
+// @Success      200             {object}  response.Response{data=object}  "成功"
+// @Failure      400             {object}  response.Response  "参数错误"
+// @Failure      401             {object}  response.Response  "未授权"
+// @Failure      500             {object}  response.Response  "服务器错误"
+// @Router       /conversations/{conversationId}/messages/sequence [get]
+func (h *ConversationHandler) GetMessageSequence(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+	if !h.ensureConversationAccessible(c, userID, conversationID) {
+		return
+	}
+
+	resp, err := h.clientManager.Message().GetConversationSequence(c.Request.Context(), &messagepb.GetConversationSequenceRequest{
+		ConversationId: conversationID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }
 
 // GetTotalUnread 获取总未读数

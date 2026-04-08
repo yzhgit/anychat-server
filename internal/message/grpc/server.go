@@ -186,6 +186,33 @@ func (s *Server) MarkAsRead(ctx context.Context, req *messagepb.MarkAsReadReques
 	return &commonpb.Empty{}, nil
 }
 
+// MarkMessagesRead 批量按消息ID标记已读
+func (s *Server) MarkMessagesRead(ctx context.Context, req *messagepb.MarkMessagesReadRequest) (*messagepb.MarkMessagesReadResponse, error) {
+	operatorUserID := getOperatorUserID(ctx)
+	logger.Info("MarkMessagesRead called",
+		zap.String("conversationId", req.ConversationId),
+		zap.String("userId", operatorUserID),
+		zap.Int("messageCount", len(req.MessageIds)))
+
+	if req.ConversationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
+	}
+	if operatorUserID == "" {
+		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
+	}
+	if len(req.MessageIds) == 0 {
+		return &messagepb.MarkMessagesReadResponse{}, nil
+	}
+
+	resp, err := s.messageService.MarkMessagesRead(ctx, operatorUserID, req)
+	if err != nil {
+		logger.Error("Failed to mark messages as read", zap.Error(err))
+		return nil, toStatusError(err)
+	}
+
+	return resp, nil
+}
+
 // AckReadTriggers 阅后即焚阅读触发回执
 func (s *Server) AckReadTriggers(ctx context.Context, req *messagepb.AckReadTriggersRequest) (*messagepb.AckReadTriggersResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)

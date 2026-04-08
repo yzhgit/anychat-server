@@ -26,6 +26,7 @@ const (
 	MessageService_RecallMessage_FullMethodName           = "/anychat.message.MessageService/RecallMessage"
 	MessageService_DeleteMessage_FullMethodName           = "/anychat.message.MessageService/DeleteMessage"
 	MessageService_MarkAsRead_FullMethodName              = "/anychat.message.MessageService/MarkAsRead"
+	MessageService_MarkMessagesRead_FullMethodName        = "/anychat.message.MessageService/MarkMessagesRead"
 	MessageService_AckReadTriggers_FullMethodName         = "/anychat.message.MessageService/AckReadTriggers"
 	MessageService_GetUnreadCount_FullMethodName          = "/anychat.message.MessageService/GetUnreadCount"
 	MessageService_GetReadReceipts_FullMethodName         = "/anychat.message.MessageService/GetReadReceipts"
@@ -51,6 +52,8 @@ type MessageServiceClient interface {
 	DeleteMessage(ctx context.Context, in *DeleteMessageRequest, opts ...grpc.CallOption) (*common.Empty, error)
 	// MarkAsRead 标记消息已读
 	MarkAsRead(ctx context.Context, in *MarkAsReadRequest, opts ...grpc.CallOption) (*common.Empty, error)
+	// MarkMessagesRead 按消息ID批量标记已读
+	MarkMessagesRead(ctx context.Context, in *MarkMessagesReadRequest, opts ...grpc.CallOption) (*MarkMessagesReadResponse, error)
 	// AckReadTriggers 阅后即焚阅读触发回执
 	AckReadTriggers(ctx context.Context, in *AckReadTriggersRequest, opts ...grpc.CallOption) (*AckReadTriggersResponse, error)
 	// GetUnreadCount 获取未读消息数
@@ -131,6 +134,16 @@ func (c *messageServiceClient) MarkAsRead(ctx context.Context, in *MarkAsReadReq
 	return out, nil
 }
 
+func (c *messageServiceClient) MarkMessagesRead(ctx context.Context, in *MarkMessagesReadRequest, opts ...grpc.CallOption) (*MarkMessagesReadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MarkMessagesReadResponse)
+	err := c.cc.Invoke(ctx, MessageService_MarkMessagesRead_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *messageServiceClient) AckReadTriggers(ctx context.Context, in *AckReadTriggersRequest, opts ...grpc.CallOption) (*AckReadTriggersResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AckReadTriggersResponse)
@@ -199,6 +212,8 @@ type MessageServiceServer interface {
 	DeleteMessage(context.Context, *DeleteMessageRequest) (*common.Empty, error)
 	// MarkAsRead 标记消息已读
 	MarkAsRead(context.Context, *MarkAsReadRequest) (*common.Empty, error)
+	// MarkMessagesRead 按消息ID批量标记已读
+	MarkMessagesRead(context.Context, *MarkMessagesReadRequest) (*MarkMessagesReadResponse, error)
 	// AckReadTriggers 阅后即焚阅读触发回执
 	AckReadTriggers(context.Context, *AckReadTriggersRequest) (*AckReadTriggersResponse, error)
 	// GetUnreadCount 获取未读消息数
@@ -236,6 +251,9 @@ func (UnimplementedMessageServiceServer) DeleteMessage(context.Context, *DeleteM
 }
 func (UnimplementedMessageServiceServer) MarkAsRead(context.Context, *MarkAsReadRequest) (*common.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method MarkAsRead not implemented")
+}
+func (UnimplementedMessageServiceServer) MarkMessagesRead(context.Context, *MarkMessagesReadRequest) (*MarkMessagesReadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method MarkMessagesRead not implemented")
 }
 func (UnimplementedMessageServiceServer) AckReadTriggers(context.Context, *AckReadTriggersRequest) (*AckReadTriggersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AckReadTriggers not implemented")
@@ -381,6 +399,24 @@ func _MessageService_MarkAsRead_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MessageService_MarkMessagesRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkMessagesReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).MarkMessagesRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_MarkMessagesRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).MarkMessagesRead(ctx, req.(*MarkMessagesReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MessageService_AckReadTriggers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AckReadTriggersRequest)
 	if err := dec(in); err != nil {
@@ -501,6 +537,10 @@ var MessageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MarkAsRead",
 			Handler:    _MessageService_MarkAsRead_Handler,
+		},
+		{
+			MethodName: "MarkMessagesRead",
+			Handler:    _MessageService_MarkMessagesRead_Handler,
 		},
 		{
 			MethodName: "AckReadTriggers",

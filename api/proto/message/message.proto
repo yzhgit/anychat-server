@@ -27,6 +27,9 @@ service MessageService {
   // MarkAsRead 标记消息已读
   rpc MarkAsRead(MarkAsReadRequest) returns (common.Empty);
 
+  // MarkMessagesRead 按消息ID批量标记已读
+  rpc MarkMessagesRead(MarkMessagesReadRequest) returns (MarkMessagesReadResponse);
+
   // AckReadTriggers 阅后即焚阅读触发回执
   rpc AckReadTriggers(AckReadTriggersRequest) returns (AckReadTriggersResponse);
 
@@ -119,6 +122,21 @@ message MarkAsReadRequest {
   string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
   int64 last_read_seq = 2;
   optional string last_read_message_id = 3;
+}
+
+// MarkMessagesReadRequest 按消息ID批量标记已读请求
+message MarkMessagesReadRequest {
+  string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  repeated string message_ids = 2;
+  optional int64 client_read_at = 3;
+  optional string idempotency_key = 4;
+}
+
+// MarkMessagesReadResponse 按消息ID批量标记已读响应
+message MarkMessagesReadResponse {
+  repeated string accepted_ids = 1;
+  repeated string ignored_ids = 2;
+  int64 advanced_last_read_seq = 3;
 }
 
 // ReadTriggerEvent 阅后即焚阅读触发事件

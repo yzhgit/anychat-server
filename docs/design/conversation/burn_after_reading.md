@@ -223,7 +223,8 @@ message AckReadTriggersResponse {
 
 ### 7.2 与已读回执分离
 
-- 会话已读（未读数、已读序列）继续使用 `POST /messages/read`
+- 会话已读（全部已读）使用 `POST /conversations/{conversationId}/read-all`
+- 消息批量已读使用 `POST /conversations/{conversationId}/messages/read`
 - 阅后即焚触发使用 `POST /messages/read-triggers`
 
 ## 8. 状态字段映射

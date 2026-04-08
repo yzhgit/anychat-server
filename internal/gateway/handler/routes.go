@@ -159,6 +159,10 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			// Message路由
 			messages := authorized.Group("/messages")
 			{
+				messages.POST("", messageHandler.SendMessage)
+				messages.GET("", messageHandler.GetMessages)
+				messages.GET("/search", messageHandler.SearchMessages)
+				messages.GET("/:messageId", messageHandler.GetMessageByID)
 				messages.POST("/read-triggers", messageHandler.AckReadTriggers)
 				messages.POST("/recall", messageHandler.RecallMessage)
 				messages.DELETE("/:messageId", messageHandler.DeleteMessage)
@@ -170,12 +174,16 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				conversations.GET("", conversationHandler.GetConversations)
 				conversations.GET("/unread/total", conversationHandler.GetTotalUnread)
 				conversations.GET("/:conversationId", conversationHandler.GetConversation)
+				conversations.GET("/:conversationId/messages/unread-count", conversationHandler.GetMessageUnreadCount)
+				conversations.GET("/:conversationId/messages/read-receipts", conversationHandler.GetMessageReadReceipts)
+				conversations.GET("/:conversationId/messages/sequence", conversationHandler.GetMessageSequence)
+				conversations.POST("/:conversationId/messages/read", conversationHandler.MarkMessagesRead)
 				conversations.DELETE("/:conversationId", conversationHandler.DeleteConversation)
 				conversations.PUT("/:conversationId/pin", conversationHandler.SetPinned)
 				conversations.PUT("/:conversationId/mute", conversationHandler.SetMuted)
 				conversations.PUT("/:conversationId/burn", conversationHandler.SetBurnAfterReading)
 				conversations.PUT("/:conversationId/auto_delete", conversationHandler.SetAutoDelete)
-				conversations.POST("/:conversationId/read", conversationHandler.MarkRead)
+				conversations.POST("/:conversationId/read-all", conversationHandler.MarkRead)
 			}
 
 			// Sync路由
