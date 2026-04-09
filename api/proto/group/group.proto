@@ -94,6 +94,9 @@ service GroupService {
   // RefreshGroupQRCode 刷新群二维码（使旧码失效）
   rpc RefreshGroupQRCode(RefreshGroupQRCodeRequest) returns (GetGroupQRCodeResponse);
 
+  // GetGroupPreviewByQRCode 通过二维码获取群信息预览
+  rpc GetGroupPreviewByQRCode(GetGroupPreviewByQRCodeRequest) returns (GetGroupPreviewByQRCodeResponse);
+
   // JoinGroupByQRCode 扫码加入群组
   rpc JoinGroupByQRCode(JoinGroupByQRCodeRequest) returns (JoinGroupByQRCodeResponse);
 }
@@ -385,6 +388,18 @@ message GetGroupQRCodeResponse {
 message RefreshGroupQRCodeRequest {
   string user_id = 1;
   string group_id = 2;
+}
+
+message GetGroupPreviewByQRCodeRequest {
+  string token = 1;
+}
+
+message GetGroupPreviewByQRCodeResponse {
+  string group_id = 1;
+  string name = 2;
+  string avatar = 3;
+  int32 member_count = 4;
+  bool need_verify = 5;
 }
 
 message JoinGroupByQRCodeRequest {

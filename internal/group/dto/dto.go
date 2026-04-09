@@ -176,13 +176,22 @@ type PinnedMessageListResponse struct {
 // GroupQRCodeResponse 群二维码响应
 type GroupQRCodeResponse struct {
 	Token    string `json:"token" example:"550e8400-e29b-41d4-a716-446655440000"`
-	DeepLink string `json:"deepLink" example:"anychat://group/join?token=550e8400-e29b-41d4-a716-446655440000"`
+	DeepLink string `json:"deepLink" example:"anychat://join/group?token=550e8400-e29b-41d4-a716-446655440000"`
 	ExpireAt int64  `json:"expireAt" example:"1754006400"` // Unix 时间戳（秒）
+}
+
+// GroupQRCodePreviewResponse 二维码群信息预览响应
+type GroupQRCodePreviewResponse struct {
+	GroupID     string `json:"groupId" example:"group-123"`
+	Name        string `json:"name" example:"产品团队"`
+	Avatar      string `json:"avatar" example:"https://example.com/group.png"`
+	MemberCount int32  `json:"memberCount" example:"42"`
+	NeedVerify  bool   `json:"needVerify" example:"true"`
 }
 
 // JoinGroupByQRCodeResponse 扫码加入群响应
 type JoinGroupByQRCodeResponse struct {
-	Joined     bool   `json:"joined" example:"true"`      // true=直接加入，false=已提交申请
+	Joined     bool   `json:"joined" example:"true"` // true=直接加入，false=已提交申请
 	GroupID    string `json:"groupId" example:"group-123"`
 	NeedVerify bool   `json:"needVerify" example:"false"` // 是否需要审批
 	RequestID  *int64 `json:"requestId,omitempty" example:"123"`

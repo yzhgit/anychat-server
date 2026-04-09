@@ -25,6 +25,8 @@ const (
 	TypeGroupMuted           = "group.muted"            // 群组禁言
 	TypeGroupMessagePinned   = "group.message_pinned"   // 群消息置顶
 	TypeGroupMessageUnpinned = "group.message_unpinned" // 群消息取消置顶
+	TypeGroupJoinRequested   = "group.join_requested"   // 入群申请
+	TypeGroupQRCodeRefreshed = "group.qrcode_refreshed" // 群二维码刷新
 	TypeGroupDisbanded       = "group.disbanded"        // 群组解散
 )
 

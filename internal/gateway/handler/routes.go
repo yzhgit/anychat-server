@@ -40,6 +40,10 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			auth.POST("/password/reset", authHandler.ResetPassword)
 		}
 
+		// 群二维码预览（无需鉴权）
+		v1.GET("/groups/preview", groupHandler.GetGroupPreviewByQRCode)
+		v1.GET("/group/preview", groupHandler.GetGroupPreviewByQRCode) // 兼容设计文档单数路径
+
 		// 需要认证的路由
 		authorized := v1.Group("")
 		authorized.Use(gwmiddleware.JWTAuth(jwtManager))
@@ -150,6 +154,14 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groups.POST("/:id/join", groupHandler.JoinGroup)
 				groups.GET("/:id/requests", groupHandler.GetJoinRequests)
 				groups.PUT("/:id/requests/:requestId", groupHandler.HandleJoinRequest)
+			}
+
+			// 兼容设计文档单数路径
+			groupAlias := authorized.Group("/group")
+			{
+				groupAlias.POST("/join-by-qrcode", groupHandler.JoinGroupByQRCode)
+				groupAlias.GET("/:id/qrcode", groupHandler.GetGroupQRCode)
+				groupAlias.POST("/:id/qrcode/refresh", groupHandler.RefreshGroupQRCode)
 			}
 
 			// File路由

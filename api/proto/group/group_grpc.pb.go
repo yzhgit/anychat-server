@@ -20,34 +20,35 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GroupService_GetGroupInfo_FullMethodName         = "/anychat.group.GroupService/GetGroupInfo"
-	GroupService_GetGroupMembers_FullMethodName      = "/anychat.group.GroupService/GetGroupMembers"
-	GroupService_IsMember_FullMethodName             = "/anychat.group.GroupService/IsMember"
-	GroupService_GetUserGroups_FullMethodName        = "/anychat.group.GroupService/GetUserGroups"
-	GroupService_CreateGroup_FullMethodName          = "/anychat.group.GroupService/CreateGroup"
-	GroupService_UpdateGroup_FullMethodName          = "/anychat.group.GroupService/UpdateGroup"
-	GroupService_DissolveGroup_FullMethodName        = "/anychat.group.GroupService/DissolveGroup"
-	GroupService_InviteMembers_FullMethodName        = "/anychat.group.GroupService/InviteMembers"
-	GroupService_RemoveMember_FullMethodName         = "/anychat.group.GroupService/RemoveMember"
-	GroupService_QuitGroup_FullMethodName            = "/anychat.group.GroupService/QuitGroup"
-	GroupService_UpdateMemberRole_FullMethodName     = "/anychat.group.GroupService/UpdateMemberRole"
-	GroupService_UpdateMemberNickname_FullMethodName = "/anychat.group.GroupService/UpdateMemberNickname"
-	GroupService_TransferOwnership_FullMethodName    = "/anychat.group.GroupService/TransferOwnership"
-	GroupService_JoinGroup_FullMethodName            = "/anychat.group.GroupService/JoinGroup"
-	GroupService_HandleJoinRequest_FullMethodName    = "/anychat.group.GroupService/HandleJoinRequest"
-	GroupService_GetJoinRequests_FullMethodName      = "/anychat.group.GroupService/GetJoinRequests"
-	GroupService_PinGroupMessage_FullMethodName      = "/anychat.group.GroupService/PinGroupMessage"
-	GroupService_UnpinGroupMessage_FullMethodName    = "/anychat.group.GroupService/UnpinGroupMessage"
-	GroupService_GetPinnedMessages_FullMethodName    = "/anychat.group.GroupService/GetPinnedMessages"
-	GroupService_SetGroupMute_FullMethodName         = "/anychat.group.GroupService/SetGroupMute"
-	GroupService_MuteMember_FullMethodName           = "/anychat.group.GroupService/MuteMember"
-	GroupService_UnmuteMember_FullMethodName         = "/anychat.group.GroupService/UnmuteMember"
-	GroupService_UpdateGroupSettings_FullMethodName  = "/anychat.group.GroupService/UpdateGroupSettings"
-	GroupService_GetGroupSettings_FullMethodName     = "/anychat.group.GroupService/GetGroupSettings"
-	GroupService_UpdateMemberRemark_FullMethodName   = "/anychat.group.GroupService/UpdateMemberRemark"
-	GroupService_GetGroupQRCode_FullMethodName       = "/anychat.group.GroupService/GetGroupQRCode"
-	GroupService_RefreshGroupQRCode_FullMethodName   = "/anychat.group.GroupService/RefreshGroupQRCode"
-	GroupService_JoinGroupByQRCode_FullMethodName    = "/anychat.group.GroupService/JoinGroupByQRCode"
+	GroupService_GetGroupInfo_FullMethodName            = "/anychat.group.GroupService/GetGroupInfo"
+	GroupService_GetGroupMembers_FullMethodName         = "/anychat.group.GroupService/GetGroupMembers"
+	GroupService_IsMember_FullMethodName                = "/anychat.group.GroupService/IsMember"
+	GroupService_GetUserGroups_FullMethodName           = "/anychat.group.GroupService/GetUserGroups"
+	GroupService_CreateGroup_FullMethodName             = "/anychat.group.GroupService/CreateGroup"
+	GroupService_UpdateGroup_FullMethodName             = "/anychat.group.GroupService/UpdateGroup"
+	GroupService_DissolveGroup_FullMethodName           = "/anychat.group.GroupService/DissolveGroup"
+	GroupService_InviteMembers_FullMethodName           = "/anychat.group.GroupService/InviteMembers"
+	GroupService_RemoveMember_FullMethodName            = "/anychat.group.GroupService/RemoveMember"
+	GroupService_QuitGroup_FullMethodName               = "/anychat.group.GroupService/QuitGroup"
+	GroupService_UpdateMemberRole_FullMethodName        = "/anychat.group.GroupService/UpdateMemberRole"
+	GroupService_UpdateMemberNickname_FullMethodName    = "/anychat.group.GroupService/UpdateMemberNickname"
+	GroupService_TransferOwnership_FullMethodName       = "/anychat.group.GroupService/TransferOwnership"
+	GroupService_JoinGroup_FullMethodName               = "/anychat.group.GroupService/JoinGroup"
+	GroupService_HandleJoinRequest_FullMethodName       = "/anychat.group.GroupService/HandleJoinRequest"
+	GroupService_GetJoinRequests_FullMethodName         = "/anychat.group.GroupService/GetJoinRequests"
+	GroupService_PinGroupMessage_FullMethodName         = "/anychat.group.GroupService/PinGroupMessage"
+	GroupService_UnpinGroupMessage_FullMethodName       = "/anychat.group.GroupService/UnpinGroupMessage"
+	GroupService_GetPinnedMessages_FullMethodName       = "/anychat.group.GroupService/GetPinnedMessages"
+	GroupService_SetGroupMute_FullMethodName            = "/anychat.group.GroupService/SetGroupMute"
+	GroupService_MuteMember_FullMethodName              = "/anychat.group.GroupService/MuteMember"
+	GroupService_UnmuteMember_FullMethodName            = "/anychat.group.GroupService/UnmuteMember"
+	GroupService_UpdateGroupSettings_FullMethodName     = "/anychat.group.GroupService/UpdateGroupSettings"
+	GroupService_GetGroupSettings_FullMethodName        = "/anychat.group.GroupService/GetGroupSettings"
+	GroupService_UpdateMemberRemark_FullMethodName      = "/anychat.group.GroupService/UpdateMemberRemark"
+	GroupService_GetGroupQRCode_FullMethodName          = "/anychat.group.GroupService/GetGroupQRCode"
+	GroupService_RefreshGroupQRCode_FullMethodName      = "/anychat.group.GroupService/RefreshGroupQRCode"
+	GroupService_GetGroupPreviewByQRCode_FullMethodName = "/anychat.group.GroupService/GetGroupPreviewByQRCode"
+	GroupService_JoinGroupByQRCode_FullMethodName       = "/anychat.group.GroupService/JoinGroupByQRCode"
 )
 
 // GroupServiceClient is the client API for GroupService service.
@@ -110,6 +111,8 @@ type GroupServiceClient interface {
 	GetGroupQRCode(ctx context.Context, in *GetGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error)
 	// RefreshGroupQRCode 刷新群二维码（使旧码失效）
 	RefreshGroupQRCode(ctx context.Context, in *RefreshGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error)
+	// GetGroupPreviewByQRCode 通过二维码获取群信息预览
+	GetGroupPreviewByQRCode(ctx context.Context, in *GetGroupPreviewByQRCodeRequest, opts ...grpc.CallOption) (*GetGroupPreviewByQRCodeResponse, error)
 	// JoinGroupByQRCode 扫码加入群组
 	JoinGroupByQRCode(ctx context.Context, in *JoinGroupByQRCodeRequest, opts ...grpc.CallOption) (*JoinGroupByQRCodeResponse, error)
 }
@@ -392,6 +395,16 @@ func (c *groupServiceClient) RefreshGroupQRCode(ctx context.Context, in *Refresh
 	return out, nil
 }
 
+func (c *groupServiceClient) GetGroupPreviewByQRCode(ctx context.Context, in *GetGroupPreviewByQRCodeRequest, opts ...grpc.CallOption) (*GetGroupPreviewByQRCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGroupPreviewByQRCodeResponse)
+	err := c.cc.Invoke(ctx, GroupService_GetGroupPreviewByQRCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *groupServiceClient) JoinGroupByQRCode(ctx context.Context, in *JoinGroupByQRCodeRequest, opts ...grpc.CallOption) (*JoinGroupByQRCodeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(JoinGroupByQRCodeResponse)
@@ -462,6 +475,8 @@ type GroupServiceServer interface {
 	GetGroupQRCode(context.Context, *GetGroupQRCodeRequest) (*GetGroupQRCodeResponse, error)
 	// RefreshGroupQRCode 刷新群二维码（使旧码失效）
 	RefreshGroupQRCode(context.Context, *RefreshGroupQRCodeRequest) (*GetGroupQRCodeResponse, error)
+	// GetGroupPreviewByQRCode 通过二维码获取群信息预览
+	GetGroupPreviewByQRCode(context.Context, *GetGroupPreviewByQRCodeRequest) (*GetGroupPreviewByQRCodeResponse, error)
 	// JoinGroupByQRCode 扫码加入群组
 	JoinGroupByQRCode(context.Context, *JoinGroupByQRCodeRequest) (*JoinGroupByQRCodeResponse, error)
 	mustEmbedUnimplementedGroupServiceServer()
@@ -554,6 +569,9 @@ func (UnimplementedGroupServiceServer) GetGroupQRCode(context.Context, *GetGroup
 }
 func (UnimplementedGroupServiceServer) RefreshGroupQRCode(context.Context, *RefreshGroupQRCodeRequest) (*GetGroupQRCodeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefreshGroupQRCode not implemented")
+}
+func (UnimplementedGroupServiceServer) GetGroupPreviewByQRCode(context.Context, *GetGroupPreviewByQRCodeRequest) (*GetGroupPreviewByQRCodeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGroupPreviewByQRCode not implemented")
 }
 func (UnimplementedGroupServiceServer) JoinGroupByQRCode(context.Context, *JoinGroupByQRCodeRequest) (*JoinGroupByQRCodeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method JoinGroupByQRCode not implemented")
@@ -1065,6 +1083,24 @@ func _GroupService_RefreshGroupQRCode_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupService_GetGroupPreviewByQRCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupPreviewByQRCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).GetGroupPreviewByQRCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_GetGroupPreviewByQRCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).GetGroupPreviewByQRCode(ctx, req.(*GetGroupPreviewByQRCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupService_JoinGroupByQRCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(JoinGroupByQRCodeRequest)
 	if err := dec(in); err != nil {
@@ -1197,6 +1233,10 @@ var GroupService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshGroupQRCode",
 			Handler:    _GroupService_RefreshGroupQRCode_Handler,
+		},
+		{
+			MethodName: "GetGroupPreviewByQRCode",
+			Handler:    _GroupService_GetGroupPreviewByQRCode_Handler,
 		},
 		{
 			MethodName: "JoinGroupByQRCode",

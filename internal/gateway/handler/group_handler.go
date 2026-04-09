@@ -897,6 +897,40 @@ func (h *GroupHandler) RefreshGroupQRCode(c *gin.Context) {
 	})
 }
 
+// GetGroupPreviewByQRCode 通过二维码获取群信息预览（无需鉴权）
+// @Summary      群信息预览
+// @Description  通过二维码 Token 获取群名称、头像、成员数和加群验证方式
+// @Tags         群组
+// @Accept       json
+// @Produce      json
+// @Param        token  query  string  true  "二维码Token"
+// @Success      200  {object}  response.Response{data=groupdto.GroupQRCodePreviewResponse}
+// @Failure      400  {object}  response.Response  "参数错误或二维码失效"
+// @Router       /groups/preview [get]
+func (h *GroupHandler) GetGroupPreviewByQRCode(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		response.ParamError(c, "token is required")
+		return
+	}
+
+	resp, err := h.clientManager.Group().GetGroupPreviewByQRCode(c.Request.Context(), &grouppb.GetGroupPreviewByQRCodeRequest{
+		Token: token,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, groupdto.GroupQRCodePreviewResponse{
+		GroupID:     resp.GroupId,
+		Name:        resp.Name,
+		Avatar:      resp.Avatar,
+		MemberCount: resp.MemberCount,
+		NeedVerify:  resp.NeedVerify,
+	})
+}
+
 // JoinGroupByQRCode 扫码加入群组
 // @Summary      扫码加入群组
 // @Description  通过二维码 Token 加入群组，根据群设置直接加入或提交申请

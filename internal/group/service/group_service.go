@@ -58,6 +58,7 @@ type GroupService interface {
 	// 群二维码
 	GetGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
 	RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
+	GetGroupPreviewByQRCode(ctx context.Context, token string) (*dto.GroupQRCodePreviewResponse, error)
 	JoinGroupByQRCode(ctx context.Context, userID, token string) (*dto.JoinGroupByQRCodeResponse, error)
 
 	// 内部gRPC方法（供其他服务调用）
@@ -1352,7 +1353,7 @@ func (s *groupServiceImpl) GetGroupQRCode(ctx context.Context, userID, groupID s
 	return s.createNewQRCode(ctx, userID, groupID)
 }
 
-// RefreshGroupQRCode 刷新群二维码（使旧码立即失效��仅群主/管理员）
+// RefreshGroupQRCode 刷新群二维码（使旧码立即失效，仅群主/管理员）
 func (s *groupServiceImpl) RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
@@ -1371,7 +1372,46 @@ func (s *groupServiceImpl) RefreshGroupQRCode(ctx context.Context, userID, group
 		return nil, err
 	}
 
-	return s.createNewQRCode(ctx, userID, groupID)
+	resp, err := s.createNewQRCode(ctx, userID, groupID)
+	if err != nil {
+		return nil, err
+	}
+	s.publishGroupQRCodeRefreshedNotification(groupID, userID, resp.Token, resp.ExpireAt)
+	return resp, nil
+}
+
+// GetGroupPreviewByQRCode 通过二维码 token 获取群信息预览
+func (s *groupServiceImpl) GetGroupPreviewByQRCode(ctx context.Context, token string) (*dto.GroupQRCodePreviewResponse, error) {
+	qr, err := s.qrcodeRepo.GetByToken(ctx, token)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码无效")
+		}
+		return nil, err
+	}
+
+	if !qr.IsValid() {
+		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已失效，请联系群成员重新获取")
+	}
+
+	group, err := s.groupRepo.GetByGroupID(ctx, qr.GroupID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+		}
+		return nil, err
+	}
+	if !group.IsActive() {
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+	}
+
+	return &dto.GroupQRCodePreviewResponse{
+		GroupID:     group.GroupID,
+		Name:        group.Name,
+		Avatar:      group.Avatar,
+		MemberCount: group.MemberCount,
+		NeedVerify:  s.getGroupJoinVerify(ctx, group.GroupID),
+	}, nil
 }
 
 // JoinGroupByQRCode 扫码加入群组
@@ -1384,11 +1424,8 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 		return nil, err
 	}
 
-	if !qr.IsActive {
-		return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码已失效，请重新获取")
-	}
 	if !qr.IsValid() {
-		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已过期，请重新获取")
+		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已失效，请联系群成员重新获取")
 	}
 
 	groupID := qr.GroupID
@@ -1438,6 +1475,7 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 		if err := s.joinRequestRepo.Create(ctx, request); err != nil {
 			return nil, err
 		}
+		s.publishGroupJoinRequestedNotification(groupID, userID, request.ID, "qrcode")
 		return &dto.JoinGroupByQRCodeResponse{
 			Joined:     false,
 			GroupID:    groupID,
@@ -1496,12 +1534,13 @@ func (s *groupServiceImpl) createNewQRCode(ctx context.Context, userID, groupID 
 func buildQRCodeResponse(qr *model.GroupQRCode) *dto.GroupQRCodeResponse {
 	return &dto.GroupQRCodeResponse{
 		Token:    qr.Token,
-		DeepLink: fmt.Sprintf("anychat://group/join?token=%s", qr.Token),
+		DeepLink: fmt.Sprintf("anychat://join/group?token=%s", qr.Token),
 		ExpireAt: qr.ExpireAt.Unix(),
 	}
 }
 
-func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID string) bool {	settings, err := s.settingRepo.GetSettings(ctx, groupID)
+func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID string) bool {
+	settings, err := s.settingRepo.GetSettings(ctx, groupID)
 	if err != nil {
 		return true
 	}
@@ -1569,6 +1608,61 @@ func (s *groupServiceImpl) publishMemberJoinedNotification(groupID, userID, invi
 
 	if err := s.notificationPub.PublishToGroup(groupID, notif); err != nil {
 		logger.Error("Failed to publish member joined notification",
+			zap.String("groupId", groupID),
+			zap.Error(err))
+	}
+}
+
+// publishGroupJoinRequestedNotification 发布入群申请通知
+func (s *groupServiceImpl) publishGroupJoinRequestedNotification(groupID, userID string, requestID int64, source string) {
+	if s.notificationPub == nil {
+		return
+	}
+
+	payload := map[string]interface{}{
+		"group_id":   groupID,
+		"user_id":    userID,
+		"request_id": requestID,
+		"source":     source,
+		"created_at": time.Now().Unix(),
+	}
+
+	notif := notification.NewNotification(
+		notification.TypeGroupJoinRequested,
+		userID,
+		notification.PriorityNormal,
+	).WithPayload(payload)
+
+	if err := s.notificationPub.PublishToGroup(groupID, notif); err != nil {
+		logger.Error("Failed to publish group join requested notification",
+			zap.String("groupId", groupID),
+			zap.Int64("requestId", requestID),
+			zap.Error(err))
+	}
+}
+
+// publishGroupQRCodeRefreshedNotification 发布群二维码刷新通知
+func (s *groupServiceImpl) publishGroupQRCodeRefreshedNotification(groupID, operatorID, token string, expireAt int64) {
+	if s.notificationPub == nil {
+		return
+	}
+
+	payload := map[string]interface{}{
+		"group_id":         groupID,
+		"operator_user_id": operatorID,
+		"token":            token,
+		"expire_at":        expireAt,
+		"refreshed_at":     time.Now().Unix(),
+	}
+
+	notif := notification.NewNotification(
+		notification.TypeGroupQRCodeRefreshed,
+		operatorID,
+		notification.PriorityNormal,
+	).WithPayload(payload)
+
+	if err := s.notificationPub.PublishToGroup(groupID, notif); err != nil {
+		logger.Error("Failed to publish group qrcode refreshed notification",
 			zap.String("groupId", groupID),
 			zap.Error(err))
 	}

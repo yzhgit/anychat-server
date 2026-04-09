@@ -507,6 +507,21 @@ func (s *GroupServer) RefreshGroupQRCode(ctx context.Context, req *grouppb.Refre
 	}, nil
 }
 
+// GetGroupPreviewByQRCode 通过二维码获取群信息预览
+func (s *GroupServer) GetGroupPreviewByQRCode(ctx context.Context, req *grouppb.GetGroupPreviewByQRCodeRequest) (*grouppb.GetGroupPreviewByQRCodeResponse, error) {
+	resp, err := s.groupService.GetGroupPreviewByQRCode(ctx, req.Token)
+	if err != nil {
+		return nil, convertError(err)
+	}
+	return &grouppb.GetGroupPreviewByQRCodeResponse{
+		GroupId:     resp.GroupID,
+		Name:        resp.Name,
+		Avatar:      resp.Avatar,
+		MemberCount: resp.MemberCount,
+		NeedVerify:  resp.NeedVerify,
+	}, nil
+}
+
 // JoinGroupByQRCode 扫码加入群组
 func (s *GroupServer) JoinGroupByQRCode(ctx context.Context, req *grouppb.JoinGroupByQRCodeRequest) (*grouppb.JoinGroupByQRCodeResponse, error) {
 	resp, err := s.groupService.JoinGroupByQRCode(ctx, req.UserId, req.Token)
