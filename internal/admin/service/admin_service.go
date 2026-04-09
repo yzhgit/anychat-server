@@ -7,6 +7,7 @@ import (
 	"time"
 
 	adminpb "github.com/anychat/server/api/proto/admin"
+	filepb "github.com/anychat/server/api/proto/file"
 	grouppb "github.com/anychat/server/api/proto/group"
 	userpb "github.com/anychat/server/api/proto/user"
 	"github.com/anychat/server/internal/admin/model"
@@ -48,6 +49,10 @@ type AdminService interface {
 	// System config
 	GetAllConfigs(ctx context.Context) ([]*model.SystemConfig, error)
 	UpdateConfig(ctx context.Context, adminID, key, value string) error
+
+	// Client logs
+	ListLogFiles(ctx context.Context, userID string, page, pageSize int) ([]*filepb.FileInfo, int64, error)
+	GetLogDownloadURL(ctx context.Context, fileID string, expiresMinutes int32) (string, int64, error)
 }
 
 type adminServiceImpl struct {
@@ -57,6 +62,7 @@ type adminServiceImpl struct {
 	configRepo  repository.SystemConfigRepository
 	userClient  userpb.UserServiceClient
 	groupClient grouppb.GroupServiceClient
+	fileClient  filepb.FileServiceClient
 }
 
 // NewAdminService 创建管理服务
@@ -67,6 +73,7 @@ func NewAdminService(
 	configRepo repository.SystemConfigRepository,
 	userClient userpb.UserServiceClient,
 	groupClient grouppb.GroupServiceClient,
+	fileClient filepb.FileServiceClient,
 ) AdminService {
 	return &adminServiceImpl{
 		jwtManager:  jwtManager,
@@ -75,6 +82,7 @@ func NewAdminService(
 		configRepo:  configRepo,
 		userClient:  userClient,
 		groupClient: groupClient,
+		fileClient:  fileClient,
 	}
 }
 
@@ -229,6 +237,39 @@ func (s *adminServiceImpl) UpdateConfig(_ context.Context, adminID, key, value s
 	}
 	s.writeAuditLog(adminID, "config.update", "system_config", key, "", map[string]string{"value": value})
 	return s.configRepo.Set(cfg)
+}
+
+func (s *adminServiceImpl) ListLogFiles(ctx context.Context, userID string, page, pageSize int) ([]*filepb.FileInfo, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	fileType := "log"
+	resp, err := s.fileClient.ListUserFiles(ctx, &filepb.ListUserFilesRequest{
+		UserId:   userID,
+		FileType: &fileType,
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	return resp.Files, resp.Total, nil
+}
+
+func (s *adminServiceImpl) GetLogDownloadURL(ctx context.Context, fileID string, expiresMinutes int32) (string, int64, error) {
+	resp, err := s.fileClient.GenerateDownloadURL(ctx, &filepb.GenerateDownloadURLRequest{
+		FileId:         fileID,
+		UserId:         "",
+		ExpiresMinutes: &expiresMinutes,
+	})
+	if err != nil {
+		return "", 0, err
+	}
+	return resp.DownloadUrl, resp.ExpiresIn, nil
 }
 
 func (s *adminServiceImpl) writeAuditLog(adminID, action, resourceType, resourceID, ip string, details interface{}) {

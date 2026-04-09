@@ -18,6 +18,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 	friendHandler := NewFriendHandler(clientManager)
 	groupHandler := NewGroupHandler(clientManager)
 	fileHandler := NewFileHandler(clientManager)
+	logHandler := NewLogHandler(clientManager)
 	messageHandler := NewMessageHandler(clientManager)
 	wsHandler := NewWSHandler(clientManager, jwtManager, wsManager, subscriber)
 	conversationHandler := NewConversationHandler(clientManager)
@@ -160,6 +161,16 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				files.GET("/:fileId", fileHandler.GetFileInfo)
 				files.DELETE("/:fileId", fileHandler.DeleteFile)
 				files.GET("", fileHandler.ListFiles)
+			}
+
+			// Log路由
+			logs := authorized.Group("/logs")
+			{
+				logs.POST("/upload", logHandler.UploadLog)
+				logs.POST("/complete", logHandler.CompleteUpload)
+				logs.GET("", logHandler.ListLogs)
+				logs.GET("/:logId/download", logHandler.DownloadLog)
+				logs.DELETE("/:logId", logHandler.DeleteLog)
 			}
 
 			// Message路由

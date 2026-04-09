@@ -16,6 +16,7 @@ import (
 	adminhandler "github.com/anychat/server/internal/admin/handler"
 	"github.com/anychat/server/internal/admin/repository"
 	"github.com/anychat/server/internal/admin/service"
+	"github.com/anychat/server/pkg/config"
 	"github.com/anychat/server/pkg/database"
 	grpcpkg "github.com/anychat/server/pkg/grpc"
 	"github.com/anychat/server/pkg/jwt"
@@ -26,7 +27,6 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/anychat/server/pkg/config"
 )
 
 const (
@@ -63,6 +63,7 @@ func main() {
 	clientManager, err := adminclient.NewManager(
 		viper.GetString("services.user.grpc_addr"),
 		viper.GetString("services.group.grpc_addr"),
+		viper.GetString("services.file.grpc_addr"),
 	)
 	if err != nil {
 		logger.Fatal("Failed to connect to backend services", zap.Error(err))
@@ -83,6 +84,7 @@ func main() {
 		configRepo,
 		clientManager.UserClient,
 		clientManager.GroupClient,
+		clientManager.FileClient,
 	)
 
 	// 初始化gRPC服务器
@@ -162,6 +164,7 @@ func loadConfig() error {
 	viper.SetDefault("database.postgres.database", "anychat")
 	viper.SetDefault("services.user.grpc_addr", "localhost:9002")
 	viper.SetDefault("services.group.grpc_addr", "localhost:9004")
+	viper.SetDefault("services.file.grpc_addr", "localhost:9005")
 	viper.SetDefault("admin.jwt.secret", "admin-secret-change-in-production")
 	viper.SetDefault("admin.jwt.access_token_expire", 28800)
 	viper.SetDefault("log.level", "info")

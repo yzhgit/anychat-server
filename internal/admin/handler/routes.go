@@ -22,6 +22,7 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 	auditHandler := NewAdminAuditHandler(svc)
 	configHandler := NewAdminConfigHandler(svc)
 	adminMgmtHandler := NewAdminManageHandler(svc)
+	logHandler := NewLogHandler(svc)
 
 	api := r.Group("/api/admin")
 	{
@@ -72,6 +73,13 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 				admins.GET("", adminMgmtHandler.ListAdmins)
 				admins.POST("", adminMgmtHandler.CreateAdmin)
 				admins.PUT("/:adminId/status", adminMgmtHandler.UpdateAdminStatus)
+			}
+
+			// 客户端日志管理
+			logs := auth.Group("/logs")
+			{
+				logs.GET("", logHandler.ListLogs)
+				logs.GET("/:logId/download", logHandler.DownloadLog)
 			}
 		}
 	}
