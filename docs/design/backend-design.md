@@ -226,7 +226,9 @@ graph TB
 
 **详细设计**:
 - [消息发送](message/send.md)
-- [消息撤回](message/recall.md)
+- [消息撤回 / 重新编辑](message/recall.md)
+- [消息删除](message/delete.md)
+- [消息编辑](message/edit.md)
 - [已读回执](message/read-receipt.md)
 - [消息队列架构](message/message-service-architecture.md)
 - [消息队列对比](message/message-queue-comparison.md)

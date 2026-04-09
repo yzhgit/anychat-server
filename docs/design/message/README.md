@@ -17,7 +17,9 @@
 | 功能 | 文档 | 说明 |
 |------|------|------|
 | 消息发送（WS+HTTP） | [send.md](send.md) | 单聊/群聊发送，含 HTTP 兜底 |
-| 消息撤回 | [recall.md](recall.md) | 消息撤回功能 |
+| 消息撤回 / 重新编辑 | [recall.md](recall.md) | 消息撤回、客户端本地重新编辑 |
+| 消息删除 | [delete.md](delete.md) | 消息删除（仅自己可见） |
+| 消息编辑 | [edit.md](edit.md) | 已发送消息编辑 |
 | 已读/未读/回执 | [read-receipt.md](read-receipt.md) | 会话已读、逐条已读、未读数、回执 |
 | 正在输入 | [typing.md](typing.md) | 单聊输入状态提示 |
 | HTTP消息查询 | [query.md](query.md) | 历史消息、消息详情、序列号 |
@@ -31,6 +33,7 @@
 - **MessageStatus**: 消息状态表
 - **MessageRead**: 消息已读记录（群聊）
 - **MessageReference**: 消息引用关系
+- **MessageDelete**: 用户消息删除标记
 - **MessageEdit**: 消息编辑记录
 
 ## 4. 推送通知
@@ -38,6 +41,8 @@
 - `notification.message.new.{to_user_id}` - 新消息通知
 - `notification.message.read_receipt.{from_user_id}` - 消息已读回执通知
 - `notification.message.recalled.{conversation_id}` - 消息撤回通知
+- `notification.message.deleted.{user_id}` - 消息删除通知（用户维度）
+- `notification.message.edited.{user_id}` - 消息编辑通知
 - `notification.message.typing.{to_user_id}` - 正在输入提示
 - `notification.message.mentioned.{user_id}` - @提及通知
 
