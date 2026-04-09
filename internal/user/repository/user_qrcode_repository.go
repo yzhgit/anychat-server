@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserQRCodeRepository 用户二维码仓库接口
+// UserQRCodeRepository user QR code repository interface
 type UserQRCodeRepository interface {
 	Create(ctx context.Context, qrcode *model.UserQRCode) error
 	GetByToken(ctx context.Context, token string) (*model.UserQRCode, error)
@@ -16,22 +16,22 @@ type UserQRCodeRepository interface {
 	DeleteExpired(ctx context.Context) error
 }
 
-// userQRCodeRepositoryImpl 用户二维码仓库实现
+// userQRCodeRepositoryImpl user QR code repository implementation
 type userQRCodeRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewUserQRCodeRepository 创建用户二维码仓库
+// NewUserQRCodeRepository creates user QR code repository
 func NewUserQRCodeRepository(db *gorm.DB) UserQRCodeRepository {
 	return &userQRCodeRepositoryImpl{db: db}
 }
 
-// Create 创建二维码
+// Create creates QR code
 func (r *userQRCodeRepositoryImpl) Create(ctx context.Context, qrcode *model.UserQRCode) error {
 	return r.db.WithContext(ctx).Create(qrcode).Error
 }
 
-// GetByToken 根据Token获取二维码
+// GetByToken retrieves QR code by token
 func (r *userQRCodeRepositoryImpl) GetByToken(ctx context.Context, token string) (*model.UserQRCode, error) {
 	var qrcode model.UserQRCode
 	err := r.db.WithContext(ctx).
@@ -43,7 +43,7 @@ func (r *userQRCodeRepositoryImpl) GetByToken(ctx context.Context, token string)
 	return &qrcode, nil
 }
 
-// GetLatestByUserID 获取用户最新的二维码
+// GetLatestByUserID retrieves latest QR code for user
 func (r *userQRCodeRepositoryImpl) GetLatestByUserID(ctx context.Context, userID string) (*model.UserQRCode, error) {
 	var qrcode model.UserQRCode
 	err := r.db.WithContext(ctx).
@@ -56,7 +56,7 @@ func (r *userQRCodeRepositoryImpl) GetLatestByUserID(ctx context.Context, userID
 	return &qrcode, nil
 }
 
-// DeleteExpired 删除过期的二维码
+// DeleteExpired deletes expired QR codes
 func (r *userQRCodeRepositoryImpl) DeleteExpired(ctx context.Context) error {
 	return r.db.WithContext(ctx).
 		Where("expires_at < ?", time.Now()).

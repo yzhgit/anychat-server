@@ -12,20 +12,20 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// FileServer gRPC服务器
+// FileServer gRPC server
 type FileServer struct {
 	filepb.UnimplementedFileServiceServer
 	fileService service.FileService
 }
 
-// NewFileServer 创建gRPC服务器
+// NewFileServer creates gRPC server
 func NewFileServer(fileService service.FileService) *FileServer {
 	return &FileServer{
 		fileService: fileService,
 	}
 }
 
-// GenerateUploadToken 生成上传凭证
+// GenerateUploadToken generates upload token
 func (s *FileServer) GenerateUploadToken(ctx context.Context, req *filepb.GenerateUploadTokenRequest) (*filepb.GenerateUploadTokenResponse, error) {
 	dtoReq := &dto.GenerateUploadTokenRequest{
 		FileName:     req.FileName,
@@ -47,7 +47,7 @@ func (s *FileServer) GenerateUploadToken(ctx context.Context, req *filepb.Genera
 	}, nil
 }
 
-// CompleteUpload 完成上传
+// CompleteUpload completes upload
 func (s *FileServer) CompleteUpload(ctx context.Context, req *filepb.CompleteUploadRequest) (*filepb.FileInfo, error) {
 	resp, err := s.fileService.CompleteUpload(ctx, req.FileId, req.UserId)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *FileServer) CompleteUpload(ctx context.Context, req *filepb.CompleteUpl
 	return toProtoFileInfo(resp), nil
 }
 
-// GenerateDownloadURL 生成下载链接
+// GenerateDownloadURL generates download URL
 func (s *FileServer) GenerateDownloadURL(ctx context.Context, req *filepb.GenerateDownloadURLRequest) (*filepb.GenerateDownloadURLResponse, error) {
 	resp, err := s.fileService.GenerateDownloadURL(ctx, req.FileId, req.UserId, req.ExpiresMinutes)
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *FileServer) GenerateDownloadURL(ctx context.Context, req *filepb.Genera
 	return pbResp, nil
 }
 
-// GetFileInfo 获取文件信息
+// GetFileInfo gets file info
 func (s *FileServer) GetFileInfo(ctx context.Context, req *filepb.GetFileInfoRequest) (*filepb.FileInfo, error) {
 	resp, err := s.fileService.GetFileInfo(ctx, req.FileId, req.UserId)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *FileServer) GetFileInfo(ctx context.Context, req *filepb.GetFileInfoReq
 	return toProtoFileInfo(resp), nil
 }
 
-// DeleteFile 删除文件
+// DeleteFile deletes file
 func (s *FileServer) DeleteFile(ctx context.Context, req *filepb.DeleteFileRequest) (*filepb.DeleteFileResponse, error) {
 	err := s.fileService.DeleteFile(ctx, req.FileId, req.UserId)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *FileServer) DeleteFile(ctx context.Context, req *filepb.DeleteFileReque
 	}, nil
 }
 
-// ListUserFiles 列出用户文件
+// ListUserFiles lists user files
 func (s *FileServer) ListUserFiles(ctx context.Context, req *filepb.ListUserFilesRequest) (*filepb.ListUserFilesResponse, error) {
 	resp, err := s.fileService.ListUserFiles(ctx, req.UserId, req.FileType, int(req.Page), int(req.PageSize))
 	if err != nil {
@@ -118,7 +118,7 @@ func (s *FileServer) ListUserFiles(ctx context.Context, req *filepb.ListUserFile
 	}, nil
 }
 
-// BatchGetFileInfo 批量获取文件信息
+// BatchGetFileInfo batch gets file info
 func (s *FileServer) BatchGetFileInfo(ctx context.Context, req *filepb.BatchGetFileInfoRequest) (*filepb.BatchGetFileInfoResponse, error) {
 	resp, err := s.fileService.BatchGetFileInfo(ctx, req.FileIds, req.UserId)
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *FileServer) BatchGetFileInfo(ctx context.Context, req *filepb.BatchGetF
 	}, nil
 }
 
-// toProtoFileInfo 转换为proto FileInfo
+// toProtoFileInfo converts to proto FileInfo
 func toProtoFileInfo(file *dto.FileInfoResponse) *filepb.FileInfo {
 	pbFile := &filepb.FileInfo{
 		FileId:        file.FileID,
@@ -172,7 +172,7 @@ func toProtoFileInfo(file *dto.FileInfoResponse) *filepb.FileInfo {
 	return pbFile
 }
 
-// convertError 错误转换
+// convertError converts error
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
 		switch bizErr.Code {

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// AuditLog 操作审计日志
+// AuditLog operation audit log
 type AuditLog struct {
 	ID           int64           `gorm:"column:id;primaryKey;autoIncrement"`
 	AdminID      string          `gorm:"column:admin_id"`

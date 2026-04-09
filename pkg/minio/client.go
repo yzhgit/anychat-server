@@ -10,7 +10,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// Config MinIO配置
+// Config MinIO configuration
 type Config struct {
 	Endpoint  string   `mapstructure:"endpoint"`
 	AccessKey string   `mapstructure:"access_key"`
@@ -19,19 +19,19 @@ type Config struct {
 	Buckets   []string `mapstructure:"buckets"`
 }
 
-// Client MinIO客户端封装
+// Client MinIO client wrapper
 type Client struct {
 	client  *minio.Client
 	buckets []string
 }
 
-// NewClient 创建MinIO客户端
+// NewClient creates a new MinIO client
 func NewClient(cfg *Config) (*Client, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("minio config is nil")
 	}
 
-	// 初始化MinIO客户端
+	// Initialize MinIO client
 	minioClient, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure: cfg.UseSSL,
@@ -45,7 +45,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		buckets: cfg.Buckets,
 	}
 
-	// 确保所有bucket存在
+	// Ensure all buckets exist
 	ctx := context.Background()
 	for _, bucket := range cfg.Buckets {
 		exists, err := minioClient.BucketExists(ctx, bucket)
@@ -64,14 +64,14 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
-// PutObject 上传对象
+// PutObject uploads an object
 func (c *Client) PutObject(ctx context.Context, bucketName, objectName, filePath string, contentType string) (minio.UploadInfo, error) {
 	return c.client.FPutObject(ctx, bucketName, objectName, filePath, minio.PutObjectOptions{
 		ContentType: contentType,
 	})
 }
 
-// PutObjectReader 从Reader上传对象
+// PutObjectReader uploads an object from reader
 func (c *Client) PutObjectReader(ctx context.Context, bucketName, objectName string, reader interface{}, objectSize int64, contentType string) (minio.UploadInfo, error) {
 	return c.client.PutObject(ctx, bucketName, objectName, reader.(interface {
 		Read(p []byte) (n int, err error)
@@ -80,23 +80,23 @@ func (c *Client) PutObjectReader(ctx context.Context, bucketName, objectName str
 	})
 }
 
-// GetObject 获取对象
+// GetObject gets an object
 func (c *Client) GetObject(ctx context.Context, bucketName, objectName string) (*minio.Object, error) {
 	return c.client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 }
 
-// RemoveObject 删除对象
+// RemoveObject deletes an object
 func (c *Client) RemoveObject(ctx context.Context, bucketName, objectName string) error {
 	return c.client.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
 }
 
-// StatObject 获取对象元数据
+// StatObject gets object metadata
 func (c *Client) StatObject(ctx context.Context, bucketName, objectName string) (minio.ObjectInfo, error) {
 	return c.client.StatObject(ctx, bucketName, objectName, minio.StatObjectOptions{})
 }
 
-// PresignedGetObject 生成下载presigned URL
-// 默认有效期1小时
+// PresignedGetObject generates a download presigned URL
+// Default expiration is 1 hour
 func (c *Client) PresignedGetObject(ctx context.Context, bucketName, objectName string, expires time.Duration) (*url.URL, error) {
 	if expires == 0 {
 		expires = time.Hour
@@ -104,8 +104,8 @@ func (c *Client) PresignedGetObject(ctx context.Context, bucketName, objectName 
 	return c.client.PresignedGetObject(ctx, bucketName, objectName, expires, nil)
 }
 
-// PresignedPutObject 生成上传presigned URL
-// 默认有效期1小时
+// PresignedPutObject generates an upload presigned URL
+// Default expiration is 1 hour
 func (c *Client) PresignedPutObject(ctx context.Context, bucketName, objectName string, expires time.Duration) (*url.URL, error) {
 	if expires == 0 {
 		expires = time.Hour
@@ -113,17 +113,17 @@ func (c *Client) PresignedPutObject(ctx context.Context, bucketName, objectName 
 	return c.client.PresignedPutObject(ctx, bucketName, objectName, expires)
 }
 
-// GetClient 获取底层minio.Client
+// GetClient gets the underlying minio.Client
 func (c *Client) GetClient() *minio.Client {
 	return c.client
 }
 
-// ListBuckets 列出所有bucket
+// ListBuckets lists all buckets
 func (c *Client) ListBuckets(ctx context.Context) ([]minio.BucketInfo, error) {
 	return c.client.ListBuckets(ctx)
 }
 
-// Close 关闭连接（MinIO客户端无需显式关闭）
+// Close closes the connection (MinIO client does not need explicit closing)
 func (c *Client) Close() error {
 	return nil
 }

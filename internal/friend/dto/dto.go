@@ -2,68 +2,68 @@ package dto
 
 import "time"
 
-// SendFriendRequestRequest 发送好友申请请求
+// SendFriendRequestRequest is the request for sending a friend request
 type SendFriendRequestRequest struct {
 	UserID  string `json:"userId" binding:"required" example:"user-123"`
-	Message string `json:"message" binding:"max=200" example:"你好，我想加你为好友"`
+	Message string `json:"message" binding:"max=200" example:"Hello, I'd like to add you as a friend"`
 	Source  string `json:"source" binding:"required,oneof=search qrcode group contacts" example:"search"`
 }
 
-// HandleFriendRequestRequest 处理好友申请请求
+// HandleFriendRequestRequest is the request for handling a friend request
 type HandleFriendRequestRequest struct {
 	Action string `json:"action" binding:"required,oneof=accept reject" example:"accept"`
 }
 
-// UpdateRemarkRequest 更新备注请求
+// UpdateRemarkRequest is the request for updating remark
 type UpdateRemarkRequest struct {
-	Remark string `json:"remark" binding:"max=50" example:"老朋友"`
+	Remark string `json:"remark" binding:"max=50" example:"old friend"`
 }
 
-// AddToBlacklistRequest 添加黑名单请求
+// AddToBlacklistRequest is the request for adding to blacklist
 type AddToBlacklistRequest struct {
 	UserId string `json:"userId" binding:"required" example:"user-456"`
 }
 
-// FriendResponse 好友信息响应
+// FriendResponse is the friend info response
 type FriendResponse struct {
 	UserID    string    `json:"userId" example:"user-123"`
-	Remark    string    `json:"remark" example:"老朋友"`
+	Remark    string    `json:"remark" example:"old friend"`
 	CreatedAt time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt time.Time `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 	UserInfo  *UserInfo `json:"userInfo,omitempty"`
 }
 
-// FriendListResponse 好友列表响应
+// FriendListResponse is the friend list response
 type FriendListResponse struct {
 	Friends []*FriendResponse `json:"friends"`
 	Total   int64             `json:"total" example:"10"`
 }
 
-// FriendRequestResponse 好友申请响应
+// FriendRequestResponse is the friend request response
 type FriendRequestResponse struct {
 	ID           int64     `json:"id" example:"1"`
 	FromUserID   string    `json:"fromUserId" example:"user-123"`
 	ToUserID     string    `json:"toUserId" example:"user-456"`
-	Message      string    `json:"message" example:"你好"`
+	Message      string    `json:"message" example:"Hello"`
 	Source       string    `json:"source" example:"search"`
 	Status       string    `json:"status" example:"pending"`
 	CreatedAt    time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 	FromUserInfo *UserInfo `json:"fromUserInfo,omitempty"`
 }
 
-// FriendRequestListResponse 好友申请列表响应
+// FriendRequestListResponse is the friend request list response
 type FriendRequestListResponse struct {
 	Requests []*FriendRequestResponse `json:"requests"`
 	Total    int64                    `json:"total" example:"5"`
 }
 
-// SendFriendRequestResponse 发送好友申请响应
+// SendFriendRequestResponse is the response for sending a friend request
 type SendFriendRequestResponse struct {
 	RequestID    int64 `json:"requestId" example:"1"`
 	AutoAccepted bool  `json:"autoAccepted" example:"false"`
 }
 
-// BlacklistItemResponse 黑名单项响应
+// BlacklistItemResponse is the blacklist item response
 type BlacklistItemResponse struct {
 	ID              int64     `json:"id" example:"1"`
 	UserID          string    `json:"userId" example:"user-123"`
@@ -72,17 +72,17 @@ type BlacklistItemResponse struct {
 	BlockedUserInfo *UserInfo `json:"blockedUserInfo,omitempty"`
 }
 
-// BlacklistResponse 黑名单列表响应
+// BlacklistResponse is the blacklist list response
 type BlacklistResponse struct {
 	Items []*BlacklistItemResponse `json:"items"`
 	Total int64                    `json:"total" example:"2"`
 }
 
-// UserInfo 用户基本信息（从user-service获取）
+// UserInfo is the basic user info (retrieved from user-service)
 type UserInfo struct {
 	UserID   string  `json:"userId" example:"user-123"`
-	Nickname string  `json:"nickname" example:"张三"`
+	Nickname string  `json:"nickname" example:"John"`
 	Avatar   string  `json:"avatar" example:"https://example.com/avatar.jpg"`
 	Gender   *int32  `json:"gender,omitempty" example:"1"`
-	Bio      *string `json:"bio,omitempty" example:"个性签名"`
+	Bio      *string `json:"bio,omitempty" example:"Personal signature"`
 }

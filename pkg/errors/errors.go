@@ -2,312 +2,312 @@ package errors
 
 import "errors"
 
-// 通用错误码
+// Common error codes
 const (
 	CodeSuccess       = 0
-	CodeParamError    = 1   // 参数错误
-	CodeInternalError = 2   // 内部错误
-	CodeUnauthorized  = 401 // 未授权
-	CodeForbidden     = 403 // 禁止访问
-	CodeNotFound      = 404 // 资源不存在
+	CodeParamError    = 1   // Parameter error
+	CodeInternalError = 2   // Internal error
+	CodeUnauthorized  = 401 // Unauthorized
+	CodeForbidden     = 403 // Forbidden
+	CodeNotFound      = 404 // Resource not found
 )
 
-// Auth Service 错误码 (10xxx)
+// Auth Service error codes (10xxx)
 const (
-	CodeUserExists          = 10101 // 用户已存在
-	CodePasswordWeak        = 10103 // 密码强度不足
-	CodeUserNotFound        = 10104 // 用户不存在
-	CodePasswordError       = 10105 // 密码错误
-	CodeAccountDisabled     = 10106 // 账号已被禁用
-	CodeRefreshTokenInvalid = 10107 // RefreshToken无效
-	CodeRefreshTokenExpired = 10108 // RefreshToken已过期
-	CodeTokenInvalid        = 10109 // Token无效
-	CodeTokenExpired        = 10110 // Token已过期
+	CodeUserExists          = 10101 // User already exists
+	CodePasswordWeak        = 10103 // Password too weak
+	CodeUserNotFound        = 10104 // User not found
+	CodePasswordError       = 10105 // Incorrect password
+	CodeAccountDisabled     = 10106 // Account disabled
+	CodeRefreshTokenInvalid = 10107 // Invalid RefreshToken
+	CodeRefreshTokenExpired = 10108 // RefreshToken expired
+	CodeTokenInvalid        = 10109 // Invalid Token
+	CodeTokenExpired        = 10110 // Token expired
 
-	// 验证码子域错误码 (102xx)
-	CodeSendRateLimited        = 10201 // 发送频率过快
-	CodeSendLimitReached       = 10202 // 验证码发送次数已达上限
-	CodeTargetFormatInvalid    = 10203 // 目标格式不正确
-	CodeSMSServiceError        = 10204 // 短信服务错误
-	CodeEmailServiceError      = 10205 // 邮件服务错误
-	CodeVerifyCodeError        = 10206 // 验证码错误
-	CodeVerifyCodeExpired      = 10207 // 验证码已过期
-	CodeVerifyCodeAlreadyUsed  = 10208 // 验证码已验证，请重新获取
-	CodeVerifyCodeNotFound     = 10209 // 验证码不存在
-	CodeVerifyAttemptsExceeded = 10210 // 验证次数过多
+	// Verification code sub-domain error codes (102xx)
+	CodeSendRateLimited        = 10201 // Sending too frequently
+	CodeSendLimitReached       = 10202 // Verification code send limit reached
+	CodeTargetFormatInvalid    = 10203 // Invalid target format
+	CodeSMSServiceError        = 10204 // SMS service error
+	CodeEmailServiceError      = 10205 // Email service error
+	CodeVerifyCodeError        = 10206 // Incorrect verification code
+	CodeVerifyCodeExpired      = 10207 // Verification code expired
+	CodeVerifyCodeAlreadyUsed  = 10208 // Verification code already used, please get a new one
+	CodeVerifyCodeNotFound     = 10209 // Verification code not found
+	CodeVerifyAttemptsExceeded = 10210 // Too many verification attempts
 )
 
-// User Service 错误码 (20xxx)
+// User Service error codes (20xxx)
 const (
-	CodeNicknameUsed        = 20101 // 昵称已被使用
-	CodeNicknameSensitive   = 20102 // 昵称包含敏感词
-	CodeUserProfileNotFound = 20103 // 用户不存在
-	CodeQRCodeExpired       = 20104 // 二维码已过期
-	CodeQRCodeInvalid       = 20105 // 二维码无效
-	CodePhoneFormatInvalid  = 20106 // 手机号格式错误
-	CodePhoneAlreadyBound   = 20107 // 手机号已被绑定
-	CodeEmailFormatInvalid  = 20108 // 邮箱格式错误
-	CodeEmailAlreadyBound   = 20109 // 邮箱已被绑定
-	CodeOldPhoneNotMatch    = 20110 // 旧手机号不匹配
-	CodeOldEmailNotMatch    = 20111 // 旧邮箱不匹配
+	CodeNicknameUsed        = 20101 // Nickname already used
+	CodeNicknameSensitive   = 20102 // Nickname contains sensitive words
+	CodeUserProfileNotFound = 20103 // User not found
+	CodeQRCodeExpired       = 20104 // QR code expired
+	CodeQRCodeInvalid       = 20105 // Invalid QR code
+	CodePhoneFormatInvalid  = 20106 // Invalid phone number format
+	CodePhoneAlreadyBound   = 20107 // Phone number already bound
+	CodeEmailFormatInvalid  = 20108 // Invalid email format
+	CodeEmailAlreadyBound   = 20109 // Email already bound
+	CodeOldPhoneNotMatch    = 20110 // Old phone number does not match
+	CodeOldEmailNotMatch    = 20111 // Old email does not match
 )
 
-// Friend Service 错误码 (30xxx)
+// Friend Service error codes (30xxx)
 const (
-	CodeAlreadyFriend         = 30101 // 已经是好友
-	CodeBlockedByUser         = 30102 // 对方已拉黑你
-	CodeDuplicateRequest      = 30103 // 重复发送申请
-	CodeFriendNotFound        = 30104 // 好友不存在
-	CodeRequestNotFound       = 30105 // 申请不存在
-	CodeCannotAddSelf         = 30106 // 不能添加自己为好友
-	CodeRequestProcessed      = 30107 // 申请已处理
-	CodeRequestExpired        = 30108 // 申请已过期
-	CodeFriendLimitReached    = 30109 // 好友数量已达上限
-	CodeTargetFriendLimit     = 30110 // 对方好友数量已达上限
-	CodeBlacklistLimitReached = 30111 // 黑名单数量已达上限
-	CodeAlreadyInBlacklist    = 30112 // 已在黑名单中
-	CodeNotInBlacklist        = 30113 // 不在黑名单中
-	CodeUserBlocked           = 30114 // 用户被拉黑
-	CodeRequestExists         = 30115 // 申请已存在
-	CodePermissionDenied      = 30116 // 权限不足
-	CodeNotFriend             = 30117 // 不是好友
+	CodeAlreadyFriend         = 30101 // Already friends
+	CodeBlockedByUser         = 30102 // Blocked by user
+	CodeDuplicateRequest      = 30103 // Duplicate request
+	CodeFriendNotFound        = 30104 // Friend not found
+	CodeRequestNotFound       = 30105 // Request not found
+	CodeCannotAddSelf         = 30106 // Cannot add yourself as friend
+	CodeRequestProcessed      = 30107 // Request already processed
+	CodeRequestExpired        = 30108 // Request expired
+	CodeFriendLimitReached    = 30109 // Friend limit reached
+	CodeTargetFriendLimit     = 30110 // Target friend limit reached
+	CodeBlacklistLimitReached = 30111 // Blacklist limit reached
+	CodeAlreadyInBlacklist    = 30112 // Already in blacklist
+	CodeNotInBlacklist        = 30113 // Not in blacklist
+	CodeUserBlocked           = 30114 // User blocked
+	CodeRequestExists         = 30115 // Request already exists
+	CodePermissionDenied      = 30116 // Permission denied
+	CodeNotFriend             = 30117 // Not a friend
 )
 
-// Group Service 错误码 (40xxx)
+// Group Service error codes (40xxx)
 const (
-	CodeGroupNotFound            = 40101 // 群组不存在
-	CodeGroupDissolved           = 40102 // 群组已解散
-	CodeGroupMemberTooFew        = 40103 // 群成员数量不足
-	CodeGroupMemberLimitReached  = 40104 // 群成员已达上限
-	CodeNotGroupMember           = 40105 // 不是群成员
-	CodeAlreadyGroupMember       = 40106 // 已经是群成员
-	CodeNoOwnerPermission        = 40107 // 无群主权限
-	CodeNoAdminPermission        = 40108 // 无管理员权限
-	CodeCannotRemoveOwner        = 40109 // 不能移除群主
-	CodeCannotRemoveAdmin        = 40110 // 不能移除管理员
-	CodeGroupNameSensitive       = 40111 // 群名称包含敏感词
-	CodeAnnouncementSensitive    = 40112 // 群公告包含敏感词
-	CodeJoinRequestNotFound      = 40113 // 入群申请不存在
-	CodeJoinRequestProcessed     = 40114 // 入群申请已处理
-	CodeMemberMuted              = 40115 // 群内已被禁言
-	CodeCannotQuitOwnGroup       = 40116 // 不能退出自己的群
-	CodeGroupQRExpired           = 40117 // 群二维码已过期
-	CodeGroupQRInvalid           = 40118 // 群二维码无效
-	CodeGroupPinnedLimitExceeded = 40119 // 群置顶数量超限
+	CodeGroupNotFound            = 40101 // Group not found
+	CodeGroupDissolved           = 40102 // Group dissolved
+	CodeGroupMemberTooFew        = 40103 // Insufficient group members
+	CodeGroupMemberLimitReached  = 40104 // Group member limit reached
+	CodeNotGroupMember           = 40105 // Not a group member
+	CodeAlreadyGroupMember       = 40106 // Already a group member
+	CodeNoOwnerPermission        = 40107 // No owner permission
+	CodeNoAdminPermission        = 40108 // No admin permission
+	CodeCannotRemoveOwner        = 40109 // Cannot remove owner
+	CodeCannotRemoveAdmin        = 40110 // Cannot remove admin
+	CodeGroupNameSensitive       = 40111 // Group name contains sensitive words
+	CodeAnnouncementSensitive    = 40112 // Group announcement contains sensitive words
+	CodeJoinRequestNotFound      = 40113 // Join request not found
+	CodeJoinRequestProcessed     = 40114 // Join request already processed
+	CodeMemberMuted              = 40115 // Member muted
+	CodeCannotQuitOwnGroup       = 40116 // Cannot quit your own group
+	CodeGroupQRExpired           = 40117 // Group QR code expired
+	CodeGroupQRInvalid           = 40118 // Invalid group QR code
+	CodeGroupPinnedLimitExceeded = 40119 // Group pinned limit exceeded
 )
 
-// Message Service 错误码 (50xxx)
+// Message Service error codes (50xxx)
 const (
-	CodeMessageNotFound         = 50101 // 消息不存在
-	CodeMessageSendFailed       = 50102 // 消息发送失败
-	CodeMessageRecallFailed     = 50103 // 消息撤回失败
-	CodeMessageRecallTimeLimit  = 50104 // 消息撤回时间超限
-	CodeMessageDeleteFailed     = 50105 // 消息删除失败
-	CodeMessagePermissionDenied = 50106 // 消息权限不足
-	CodeConversationNotFound    = 50107 // 会话不存在
-	CodeSequenceGenerateFailed  = 50108 // 序列号生成失败
-	CodeMarkReadFailed          = 50109 // 标记已读失败
-	CodeGetUnreadCountFailed    = 50110 // 获取未读数失败
-	CodeSearchMessageFailed     = 50111 // 搜索消息失败
-	CodeInvalidOperation        = 50112 // 无效操作
-	CodeMessageNotInGroup       = 50113 // 消息不属于该群
+	CodeMessageNotFound         = 50101 // Message not found
+	CodeMessageSendFailed       = 50102 // Message send failed
+	CodeMessageRecallFailed     = 50103 // Message recall failed
+	CodeMessageRecallTimeLimit  = 50104 // Message recall time limit exceeded
+	CodeMessageDeleteFailed     = 50105 // Message delete failed
+	CodeMessagePermissionDenied = 50106 // Message permission denied
+	CodeConversationNotFound    = 50107 // Conversation not found
+	CodeSequenceGenerateFailed  = 50108 // Sequence number generation failed
+	CodeMarkReadFailed          = 50109 // Mark read failed
+	CodeGetUnreadCountFailed    = 50110 // Get unread count failed
+	CodeSearchMessageFailed     = 50111 // Search message failed
+	CodeInvalidOperation        = 50112 // Invalid operation
+	CodeMessageNotInGroup       = 50113 // Message not in this group
 )
 
-// File Service 错误码 (70xxx)
+// File Service error codes (70xxx)
 const (
-	CodeFileNotFound         = 70101 // 文件不存在
-	CodeFileAccessDenied     = 70102 // 无权访问文件
-	CodeFileSizeExceeded     = 70103 // 文件大小超限
-	CodeFileTypeNotAllowed   = 70104 // 文件类型不允许
-	CodeFileUploadFailed     = 70105 // 文件上传失败
-	CodeFileAlreadyExists    = 70106 // 文件已存在
-	CodeInvalidFileID        = 70107 // 无效的文件ID
-	CodeFileExpired          = 70108 // 文件已过期
-	CodeStorageQuotaExceeded = 70109 // 存储空间不足
-	CodeThumbnailGenFailed   = 70110 // 缩略图生成失败
+	CodeFileNotFound         = 70101 // File not found
+	CodeFileAccessDenied     = 70102 // File access denied
+	CodeFileSizeExceeded     = 70103 // File size exceeded
+	CodeFileTypeNotAllowed   = 70104 // File type not allowed
+	CodeFileUploadFailed     = 70105 // File upload failed
+	CodeFileAlreadyExists    = 70106 // File already exists
+	CodeInvalidFileID        = 70107 // Invalid file ID
+	CodeFileExpired          = 70108 // File expired
+	CodeStorageQuotaExceeded = 70109 // Storage quota exceeded
+	CodeThumbnailGenFailed   = 70110 // Thumbnail generation failed
 )
 
-// Sync Service 错误码 (11xxx)
+// Sync Service error codes (11xxx)
 const (
-	CodeSyncFailed         = 11101 // 同步失败
-	CodeSyncMessagesFailed = 11102 // 消息补齐失败
+	CodeSyncFailed         = 11101 // Sync failed
+	CodeSyncMessagesFailed = 11102 // Message sync failed
 )
 
-// Version Service 错误码 (82xxx)
+// Version Service error codes (82xxx)
 const (
-	CodeVersionFormatError   = 82001 // 版本号格式错误
-	CodeVersionAlreadyExists = 82002 // 该版本已存在
-	CodeVersionNotFound      = 82003 // 版本不存在
-	CodeDownloadUrlInvalid   = 82004 // 下载链接无效
-	CodePlatformNotSupported = 82005 // 平台不支持
+	CodeVersionFormatError   = 82001 // Version format error
+	CodeVersionAlreadyExists = 82002 // Version already exists
+	CodeVersionNotFound      = 82003 // Version not found
+	CodeDownloadUrlInvalid   = 82004 // Invalid download URL
+	CodePlatformNotSupported = 82005 // Platform not supported
 )
 
-// Push Service 错误码 (80xxx)
+// Push Service error codes (80xxx)
 const (
-	CodePushFailed        = 80101 // 推送失败
-	CodePushTokenNotFound = 80102 // 推送 Token 不存在
-	CodePushConfigInvalid = 80103 // 推送配置无效
+	CodePushFailed        = 80101 // Push failed
+	CodePushTokenNotFound = 80102 // Push token not found
+	CodePushConfigInvalid = 80103 // Push config invalid
 )
 
-// Calling Service 错误码 (90xxx)
+// Calling Service error codes (90xxx)
 const (
-	CodeCallNotFound         = 90101 // 通话不存在
-	CodeCallAlreadyActive    = 90102 // 通话已进行中
-	CodeCallPermissionDenied = 90103 // 无权操作此通话
-	CodeCallInvalidStatus    = 90104 // 通话状态无效
-	CodeMeetingNotFound      = 90105 // 会议室不存在
-	CodeMeetingPasswordWrong = 90106 // 会议室密码错误
-	CodeMeetingAlreadyEnded  = 90107 // 会议室已结束
-	CodeMeetingPermission    = 90108 // 无权操作此会议室
-	CodeLiveKitTokenFailed   = 90109 // LiveKit Token 生成失败
-	CodeLiveKitRoomFailed    = 90110 // LiveKit 房间操作失败
+	CodeCallNotFound         = 90101 // Call not found
+	CodeCallAlreadyActive    = 90102 // Call already active
+	CodeCallPermissionDenied = 90103 // Call permission denied
+	CodeCallInvalidStatus    = 90104 // Invalid call status
+	CodeMeetingNotFound      = 90105 // Meeting room not found
+	CodeMeetingPasswordWrong = 90106 // Meeting room password incorrect
+	CodeMeetingAlreadyEnded  = 90107 // Meeting room already ended
+	CodeMeetingPermission    = 90108 // Meeting room permission denied
+	CodeLiveKitTokenFailed   = 90109 // LiveKit token generation failed
+	CodeLiveKitRoomFailed    = 90110 // LiveKit room operation failed
 )
 
-// Admin Service 错误码 (12xxx)
+// Admin Service error codes (12xxx)
 const (
-	CodeAdminNotFound        = 12101 // 管理员不存在
-	CodeAdminDisabled        = 12102 // 管理员账号已禁用
-	CodeAdminUsernameExists  = 12103 // 管理员用户名已存在
-	CodeAdminInvalidPassword = 12104 // 管理员密码错误
-	CodeAdminTokenInvalid    = 12105 // 管理员Token无效
-	CodeAdminPermission      = 12106 // 管理员权限不足
-	CodeConfigKeyNotFound    = 12107 // 配置项不存在
+	CodeAdminNotFound        = 12101 // Admin not found
+	CodeAdminDisabled        = 12102 // Admin account disabled
+	CodeAdminUsernameExists  = 12103 // Admin username already exists
+	CodeAdminInvalidPassword = 12104 // Admin password incorrect
+	CodeAdminTokenInvalid    = 12105 // Admin token invalid
+	CodeAdminPermission      = 12106 // Admin permission denied
+	CodeConfigKeyNotFound    = 12107 // Config key not found
 )
 
-// Session Service 错误码 (60xxx)
+// Session Service error codes (60xxx)
 const (
-	CodeSessionNotFound     = 60101 // 会话不存在
-	CodeSessionDeleted      = 60102 // 会话已删除
-	CodeSessionCreateFailed = 60103 // 会话创建失败
-	CodeUnreadCountFailed   = 60104 // 未读数统计错误
+	CodeSessionNotFound     = 60101 // Session not found
+	CodeSessionDeleted      = 60102 // Session deleted
+	CodeSessionCreateFailed = 60103 // Session creation failed
+	CodeUnreadCountFailed   = 60104 // Unread count error
 )
 
-// 错误消息映射
+// Error message mapping
 var errorMessages = map[int]string{
-	CodeSuccess:       "成功",
-	CodeParamError:    "参数错误",
-	CodeInternalError: "内部错误",
-	CodeUnauthorized:  "未授权",
-	CodeForbidden:     "禁止访问",
-	CodeNotFound:      "资源不存在",
+	CodeSuccess:       "Success",
+	CodeParamError:    "Parameter error",
+	CodeInternalError: "Internal error",
+	CodeUnauthorized:  "Unauthorized",
+	CodeForbidden:     "Forbidden",
+	CodeNotFound:      "Resource not found",
 
-	CodeUserExists:          "用户已存在",
-	CodePasswordWeak:        "密码强度不足",
-	CodeUserNotFound:        "用户不存在",
-	CodePasswordError:       "密码错误",
-	CodeAccountDisabled:     "账号已被禁用",
-	CodeRefreshTokenInvalid: "RefreshToken无效",
-	CodeRefreshTokenExpired: "RefreshToken已过期",
-	CodeTokenInvalid:        "Token无效",
-	CodeTokenExpired:        "Token已过期",
+	CodeUserExists:          "User already exists",
+	CodePasswordWeak:        "Password too weak",
+	CodeUserNotFound:        "User not found",
+	CodePasswordError:       "Incorrect password",
+	CodeAccountDisabled:     "Account disabled",
+	CodeRefreshTokenInvalid: "Invalid RefreshToken",
+	CodeRefreshTokenExpired: "RefreshToken expired",
+	CodeTokenInvalid:        "Invalid Token",
+	CodeTokenExpired:        "Token expired",
 
-	CodeNicknameUsed:        "昵称已被使用",
-	CodeNicknameSensitive:   "昵称包含敏感词",
-	CodeUserProfileNotFound: "用户不存在",
-	CodeQRCodeExpired:       "二维码已过期",
-	CodeQRCodeInvalid:       "二维码无效",
-	CodePhoneFormatInvalid:  "手机号格式错误",
-	CodePhoneAlreadyBound:   "手机号已被占用",
-	CodeEmailFormatInvalid:  "邮箱格式错误",
-	CodeEmailAlreadyBound:   "邮箱已被占用",
-	CodeOldPhoneNotMatch:    "旧手机号不匹配",
-	CodeOldEmailNotMatch:    "旧邮箱不匹配",
+	CodeNicknameUsed:        "Nickname already used",
+	CodeNicknameSensitive:   "Nickname contains sensitive words",
+	CodeUserProfileNotFound: "User not found",
+	CodeQRCodeExpired:       "QR code expired",
+	CodeQRCodeInvalid:       "Invalid QR code",
+	CodePhoneFormatInvalid:  "Invalid phone number format",
+	CodePhoneAlreadyBound:   "Phone number already bound",
+	CodeEmailFormatInvalid:  "Invalid email format",
+	CodeEmailAlreadyBound:   "Email already bound",
+	CodeOldPhoneNotMatch:    "Old phone number does not match",
+	CodeOldEmailNotMatch:    "Old email does not match",
 
-	CodeAlreadyFriend:         "已经是好友",
-	CodeBlockedByUser:         "对方已拉黑你",
-	CodeDuplicateRequest:      "重复发送申请",
-	CodeFriendNotFound:        "好友不存在",
-	CodeRequestNotFound:       "申请不存在",
-	CodeCannotAddSelf:         "不能添加自己为好友",
-	CodeRequestProcessed:      "申请已处理",
-	CodeRequestExpired:        "申请已过期",
-	CodeFriendLimitReached:    "好友数量已达上限",
-	CodeTargetFriendLimit:     "对方好友数量已达上限",
-	CodeBlacklistLimitReached: "黑名单数量已达上限",
-	CodeAlreadyInBlacklist:    "已在黑名单中",
-	CodeNotInBlacklist:        "不在黑名单中",
-	CodeUserBlocked:           "用户被拉黑",
-	CodeRequestExists:         "申请已存在",
-	CodePermissionDenied:      "权限不足",
-	CodeNotFriend:             "不是好友",
+	CodeAlreadyFriend:         "Already friends",
+	CodeBlockedByUser:         "Blocked by user",
+	CodeDuplicateRequest:      "Duplicate request",
+	CodeFriendNotFound:        "Friend not found",
+	CodeRequestNotFound:       "Request not found",
+	CodeCannotAddSelf:         "Cannot add yourself as friend",
+	CodeRequestProcessed:      "Request already processed",
+	CodeRequestExpired:        "Request expired",
+	CodeFriendLimitReached:    "Friend limit reached",
+	CodeTargetFriendLimit:     "Target friend limit reached",
+	CodeBlacklistLimitReached: "Blacklist limit reached",
+	CodeAlreadyInBlacklist:    "Already in blacklist",
+	CodeNotInBlacklist:        "Not in blacklist",
+	CodeUserBlocked:           "User blocked",
+	CodeRequestExists:         "Request already exists",
+	CodePermissionDenied:      "Permission denied",
+	CodeNotFriend:             "Not a friend",
 
-	CodeGroupNotFound:            "群组不存在",
-	CodeGroupDissolved:           "群组已解散",
-	CodeGroupMemberTooFew:        "群成员数量不足",
-	CodeGroupMemberLimitReached:  "群成员已达上限",
-	CodeNotGroupMember:           "不是群成员",
-	CodeAlreadyGroupMember:       "已经是群成员",
-	CodeNoOwnerPermission:        "无群主权限",
-	CodeNoAdminPermission:        "无管理员权限",
-	CodeCannotRemoveOwner:        "不能移除群主",
-	CodeCannotRemoveAdmin:        "不能移除管理员",
-	CodeGroupNameSensitive:       "群名称包含敏感词",
-	CodeAnnouncementSensitive:    "群公告包含敏感词",
-	CodeJoinRequestNotFound:      "入群申请不存在",
-	CodeJoinRequestProcessed:     "入群申请已处理",
-	CodeMemberMuted:              "群内已被禁言",
-	CodeCannotQuitOwnGroup:       "不能退出自己的群",
-	CodeGroupQRExpired:           "群二维码已过期",
-	CodeGroupQRInvalid:           "群二维码无效",
-	CodeGroupPinnedLimitExceeded: "已达置顶上限，请先取消部分置顶",
+	CodeGroupNotFound:            "Group not found",
+	CodeGroupDissolved:           "Group dissolved",
+	CodeGroupMemberTooFew:        "Insufficient group members",
+	CodeGroupMemberLimitReached:  "Group member limit reached",
+	CodeNotGroupMember:           "Not a group member",
+	CodeAlreadyGroupMember:       "Already a group member",
+	CodeNoOwnerPermission:        "No owner permission",
+	CodeNoAdminPermission:        "No admin permission",
+	CodeCannotRemoveOwner:        "Cannot remove owner",
+	CodeCannotRemoveAdmin:        "Cannot remove admin",
+	CodeGroupNameSensitive:       "Group name contains sensitive words",
+	CodeAnnouncementSensitive:    "Group announcement contains sensitive words",
+	CodeJoinRequestNotFound:      "Join request not found",
+	CodeJoinRequestProcessed:     "Join request already processed",
+	CodeMemberMuted:              "Member muted",
+	CodeCannotQuitOwnGroup:       "Cannot quit your own group",
+	CodeGroupQRExpired:           "Group QR code expired",
+	CodeGroupQRInvalid:           "Invalid group QR code",
+	CodeGroupPinnedLimitExceeded: "Group pinned limit exceeded, please unpin some first",
 
-	CodeMessageNotFound:         "消息不存在",
-	CodeMessageSendFailed:       "消息发送失败",
-	CodeMessageRecallFailed:     "消息撤回失败",
-	CodeMessageRecallTimeLimit:  "消息撤回时间超限",
-	CodeMessageDeleteFailed:     "消息删除失败",
-	CodeMessagePermissionDenied: "消息权限不足",
-	CodeConversationNotFound:    "会话不存在",
-	CodeSequenceGenerateFailed:  "序列号生成失败",
-	CodeMarkReadFailed:          "标记已读失败",
-	CodeGetUnreadCountFailed:    "获取未读数失败",
-	CodeSearchMessageFailed:     "搜索消息失败",
-	CodeInvalidOperation:        "无效操作",
-	CodeMessageNotInGroup:       "消息不属于该群",
+	CodeMessageNotFound:         "Message not found",
+	CodeMessageSendFailed:       "Message send failed",
+	CodeMessageRecallFailed:     "Message recall failed",
+	CodeMessageRecallTimeLimit:  "Message recall time limit exceeded",
+	CodeMessageDeleteFailed:     "Message delete failed",
+	CodeMessagePermissionDenied: "Message permission denied",
+	CodeConversationNotFound:    "Conversation not found",
+	CodeSequenceGenerateFailed:  "Sequence number generation failed",
+	CodeMarkReadFailed:          "Mark read failed",
+	CodeGetUnreadCountFailed:    "Get unread count failed",
+	CodeSearchMessageFailed:     "Search message failed",
+	CodeInvalidOperation:        "Invalid operation",
+	CodeMessageNotInGroup:       "Message not in this group",
 
-	CodeFileNotFound:         "文件不存在",
-	CodeFileAccessDenied:     "无权访问文件",
-	CodeFileSizeExceeded:     "文件大小超限",
-	CodeFileTypeNotAllowed:   "文件类型不允许",
-	CodeFileUploadFailed:     "文件上传失败",
-	CodeFileAlreadyExists:    "文件已存在",
-	CodeInvalidFileID:        "无效的文件ID",
-	CodeFileExpired:          "文件已过期",
-	CodeStorageQuotaExceeded: "存储空间不足",
-	CodeThumbnailGenFailed:   "缩略图生成失败",
+	CodeFileNotFound:         "File not found",
+	CodeFileAccessDenied:     "File access denied",
+	CodeFileSizeExceeded:     "File size exceeded",
+	CodeFileTypeNotAllowed:   "File type not allowed",
+	CodeFileUploadFailed:     "File upload failed",
+	CodeFileAlreadyExists:    "File already exists",
+	CodeInvalidFileID:        "Invalid file ID",
+	CodeFileExpired:          "File expired",
+	CodeStorageQuotaExceeded: "Storage quota exceeded",
+	CodeThumbnailGenFailed:   "Thumbnail generation failed",
 
-	CodeSessionNotFound:     "会话不存在",
-	CodeSessionDeleted:      "会话已删除",
-	CodeSessionCreateFailed: "会话创建失败",
-	CodeUnreadCountFailed:   "未读数统计错误",
+	CodeSessionNotFound:     "Session not found",
+	CodeSessionDeleted:      "Session deleted",
+	CodeSessionCreateFailed: "Session creation failed",
+	CodeUnreadCountFailed:   "Unread count error",
 
-	CodeSendRateLimited:        "发送频率过快，请稍后重试",
-	CodeSendLimitReached:       "验证码发送次数已达上限",
-	CodeTargetFormatInvalid:    "目标格式不正确",
-	CodeSMSServiceError:        "短信服务错误，请稍后重试",
-	CodeEmailServiceError:      "邮件服务错误，请稍后重试",
-	CodeVerifyCodeError:        "验证码错误",
-	CodeVerifyCodeExpired:      "验证码已过期",
-	CodeVerifyCodeAlreadyUsed:  "验证码已验证，请重新获取",
-	CodeVerifyCodeNotFound:     "验证码不存在",
-	CodeVerifyAttemptsExceeded: "验证次数过多，请重新获取验证码",
+	CodeSendRateLimited:        "Sending too frequently, please try again later",
+	CodeSendLimitReached:       "Verification code send limit reached",
+	CodeTargetFormatInvalid:    "Invalid target format",
+	CodeSMSServiceError:        "SMS service error, please try again later",
+	CodeEmailServiceError:      "Email service error, please try again later",
+	CodeVerifyCodeError:        "Incorrect verification code",
+	CodeVerifyCodeExpired:      "Verification code expired",
+	CodeVerifyCodeAlreadyUsed:  "Verification code already used, please get a new one",
+	CodeVerifyCodeNotFound:     "Verification code not found",
+	CodeVerifyAttemptsExceeded: "Too many verification attempts, please get a new verification code",
 
-	CodeVersionFormatError:   "版本号格式错误",
-	CodeVersionAlreadyExists: "该版本已存在",
-	CodeVersionNotFound:      "版本不存在",
-	CodeDownloadUrlInvalid:   "下载链接无效",
-	CodePlatformNotSupported: "平台不支持",
+	CodeVersionFormatError:   "Version format error",
+	CodeVersionAlreadyExists: "Version already exists",
+	CodeVersionNotFound:      "Version not found",
+	CodeDownloadUrlInvalid:   "Invalid download URL",
+	CodePlatformNotSupported: "Platform not supported",
 }
 
-// GetMessage 获取错误消息
+// GetMessage returns the error message for a given code
 func GetMessage(code int) string {
 	if msg, ok := errorMessages[code]; ok {
 		return msg
 	}
-	return "未知错误"
+	return "Unknown error"
 }
 
-// Business 业务错误
+// Business represents a business error
 type Business struct {
 	Code    int
 	Message string
@@ -317,7 +317,7 @@ func (e *Business) Error() string {
 	return e.Message
 }
 
-// NewBusiness 创建业务错误
+// NewBusiness creates a new business error
 func NewBusiness(code int, message string) error {
 	if message == "" {
 		message = GetMessage(code)
@@ -328,13 +328,13 @@ func NewBusiness(code int, message string) error {
 	}
 }
 
-// IsBusiness 判断是否为业务错误
+// IsBusiness checks if the error is a business error
 func IsBusiness(err error) bool {
 	var bizErr *Business
 	return errors.As(err, &bizErr)
 }
 
-// GetBusinessCode 获取业务错误码
+// GetBusinessCode retrieves the business error code
 func GetBusinessCode(err error) int {
 	var bizErr *Business
 	if errors.As(err, &bizErr) {

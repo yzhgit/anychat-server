@@ -13,22 +13,22 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// GroupServer group gRPC服务器
+// GroupServer represents the group gRPC server
 type GroupServer struct {
 	grouppb.UnimplementedGroupServiceServer
 	groupService service.GroupService
 }
 
-// NewGroupServer 创建group gRPC服务器
+// NewGroupServer creates a new group gRPC server
 func NewGroupServer(groupService service.GroupService) *GroupServer {
 	return &GroupServer{
 		groupService: groupService,
 	}
 }
 
-// ========== 内部服务调用接口实现 ==========
+// ========== Internal service call interface implementation ==========
 
-// GetGroupInfo 获取群信息
+// GetGroupInfo gets group information
 func (s *GroupServer) GetGroupInfo(ctx context.Context, req *grouppb.GetGroupInfoRequest) (*grouppb.GetGroupInfoResponse, error) {
 	userID := ""
 	if req.UserId != nil {
@@ -57,7 +57,7 @@ func (s *GroupServer) GetGroupInfo(ctx context.Context, req *grouppb.GetGroupInf
 	}, nil
 }
 
-// GetGroupMembers 获取群成员列表
+// GetGroupMembers gets group member list
 func (s *GroupServer) GetGroupMembers(ctx context.Context, req *grouppb.GetGroupMembersRequest) (*grouppb.GetGroupMembersResponse, error) {
 	page := int(req.GetPage())
 	pageSize := int(req.GetPageSize())
@@ -73,7 +73,7 @@ func (s *GroupServer) GetGroupMembers(ctx context.Context, req *grouppb.GetGroup
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	members := make([]*grouppb.GroupMember, 0, len(resp.Members))
 	for _, m := range resp.Members {
 		member := &grouppb.GroupMember{
@@ -103,7 +103,7 @@ func (s *GroupServer) GetGroupMembers(ctx context.Context, req *grouppb.GetGroup
 	}, nil
 }
 
-// IsMember 检查是否为群成员
+// IsMember checks if user is group member
 func (s *GroupServer) IsMember(ctx context.Context, req *grouppb.IsMemberRequest) (*grouppb.IsMemberResponse, error) {
 	isMember, role, err := s.groupService.IsMember(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -116,7 +116,7 @@ func (s *GroupServer) IsMember(ctx context.Context, req *grouppb.IsMemberRequest
 	}, nil
 }
 
-// GetUserGroups 获取用户加入的群列表
+// GetUserGroups gets list of groups user joined
 func (s *GroupServer) GetUserGroups(ctx context.Context, req *grouppb.GetUserGroupsRequest) (*grouppb.GetUserGroupsResponse, error) {
 	var lastUpdateTime *int64
 	if req.LastUpdateTime != nil {
@@ -128,7 +128,7 @@ func (s *GroupServer) GetUserGroups(ctx context.Context, req *grouppb.GetUserGro
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	groups := make([]*grouppb.GroupInfo, 0, len(resp.Groups))
 	for _, g := range resp.Groups {
 		groups = append(groups, &grouppb.GroupInfo{
@@ -148,11 +148,11 @@ func (s *GroupServer) GetUserGroups(ctx context.Context, req *grouppb.GetUserGro
 	}, nil
 }
 
-// ========== Gateway HTTP API调用接口实现 ==========
+// ========== Gateway HTTP API call interface implementation ==========
 
-// CreateGroup 创建群组
+// CreateGroup creates a new group
 func (s *GroupServer) CreateGroup(ctx context.Context, req *grouppb.CreateGroupRequest) (*grouppb.CreateGroupResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.CreateGroupRequest{
 		Name:      req.Name,
 		MemberIDs: req.MemberIds,
@@ -161,7 +161,7 @@ func (s *GroupServer) CreateGroup(ctx context.Context, req *grouppb.CreateGroupR
 		dtoReq.Avatar = *req.Avatar
 	}
 
-	// 调用service层
+	// Call service layer
 	resp, err := s.groupService.CreateGroup(ctx, req.UserId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -177,9 +177,9 @@ func (s *GroupServer) CreateGroup(ctx context.Context, req *grouppb.CreateGroupR
 	}, nil
 }
 
-// UpdateGroup 更新群信息
+// UpdateGroup updates group information
 func (s *GroupServer) UpdateGroup(ctx context.Context, req *grouppb.UpdateGroupRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.UpdateGroupRequest{
 		Name:         req.Name,
 		Avatar:       req.Avatar,
@@ -187,7 +187,7 @@ func (s *GroupServer) UpdateGroup(ctx context.Context, req *grouppb.UpdateGroupR
 		Description:  req.Description,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.UpdateGroup(ctx, req.UserId, req.GroupId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -196,7 +196,7 @@ func (s *GroupServer) UpdateGroup(ctx context.Context, req *grouppb.UpdateGroupR
 	return &commonpb.Empty{}, nil
 }
 
-// DissolveGroup 解散群组
+// DissolveGroup dissolves a group
 func (s *GroupServer) DissolveGroup(ctx context.Context, req *grouppb.DissolveGroupRequest) (*commonpb.Empty, error) {
 	err := s.groupService.DissolveGroup(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -206,14 +206,14 @@ func (s *GroupServer) DissolveGroup(ctx context.Context, req *grouppb.DissolveGr
 	return &commonpb.Empty{}, nil
 }
 
-// InviteMembers 邀请成员
+// InviteMembers invites members
 func (s *GroupServer) InviteMembers(ctx context.Context, req *grouppb.InviteMembersRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.InviteMembersRequest{
 		UserIDs: req.InviteeIds,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.InviteMembers(ctx, req.UserId, req.GroupId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -222,7 +222,7 @@ func (s *GroupServer) InviteMembers(ctx context.Context, req *grouppb.InviteMemb
 	return &commonpb.Empty{}, nil
 }
 
-// RemoveMember 移除成员
+// RemoveMember removes a member
 func (s *GroupServer) RemoveMember(ctx context.Context, req *grouppb.RemoveMemberRequest) (*commonpb.Empty, error) {
 	err := s.groupService.RemoveMember(ctx, req.UserId, req.GroupId, req.TargetUserId)
 	if err != nil {
@@ -232,7 +232,7 @@ func (s *GroupServer) RemoveMember(ctx context.Context, req *grouppb.RemoveMembe
 	return &commonpb.Empty{}, nil
 }
 
-// QuitGroup 退出群组
+// QuitGroup quits a group
 func (s *GroupServer) QuitGroup(ctx context.Context, req *grouppb.QuitGroupRequest) (*commonpb.Empty, error) {
 	err := s.groupService.QuitGroup(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -242,14 +242,14 @@ func (s *GroupServer) QuitGroup(ctx context.Context, req *grouppb.QuitGroupReque
 	return &commonpb.Empty{}, nil
 }
 
-// UpdateMemberRole 更新成员角色
+// UpdateMemberRole updates member role
 func (s *GroupServer) UpdateMemberRole(ctx context.Context, req *grouppb.UpdateMemberRoleRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.UpdateMemberRoleRequest{
 		Role: req.Role,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.UpdateMemberRole(ctx, req.UserId, req.GroupId, req.TargetUserId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -258,14 +258,14 @@ func (s *GroupServer) UpdateMemberRole(ctx context.Context, req *grouppb.UpdateM
 	return &commonpb.Empty{}, nil
 }
 
-// UpdateMemberNickname 更新群昵称
+// UpdateMemberNickname updates member nickname
 func (s *GroupServer) UpdateMemberNickname(ctx context.Context, req *grouppb.UpdateMemberNicknameRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.UpdateMemberNicknameRequest{
 		Nickname: req.Nickname,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.UpdateMemberNickname(ctx, req.UserId, req.GroupId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -274,7 +274,7 @@ func (s *GroupServer) UpdateMemberNickname(ctx context.Context, req *grouppb.Upd
 	return &commonpb.Empty{}, nil
 }
 
-// TransferOwnership 转让群主
+// TransferOwnership transfers ownership
 func (s *GroupServer) TransferOwnership(ctx context.Context, req *grouppb.TransferOwnershipRequest) (*commonpb.Empty, error) {
 	err := s.groupService.TransferOwnership(ctx, req.UserId, req.GroupId, req.NewOwnerId)
 	if err != nil {
@@ -284,15 +284,15 @@ func (s *GroupServer) TransferOwnership(ctx context.Context, req *grouppb.Transf
 	return &commonpb.Empty{}, nil
 }
 
-// JoinGroup 加入群组
+// JoinGroup joins a group
 func (s *GroupServer) JoinGroup(ctx context.Context, req *grouppb.JoinGroupRequest) (*grouppb.JoinGroupResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.JoinGroupRequest{}
 	if req.Message != nil {
 		dtoReq.Message = *req.Message
 	}
 
-	// 调用service层
+	// Call service layer
 	resp, err := s.groupService.JoinGroup(ctx, req.UserId, req.GroupId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -308,14 +308,14 @@ func (s *GroupServer) JoinGroup(ctx context.Context, req *grouppb.JoinGroupReque
 	return result, nil
 }
 
-// HandleJoinRequest 处理入群申请
+// HandleJoinRequest handles join request
 func (s *GroupServer) HandleJoinRequest(ctx context.Context, req *grouppb.HandleJoinRequestRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.HandleJoinRequestRequest{
 		Accept: req.Accept,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.HandleJoinRequest(ctx, req.UserId, req.RequestId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -324,7 +324,7 @@ func (s *GroupServer) HandleJoinRequest(ctx context.Context, req *grouppb.Handle
 	return &commonpb.Empty{}, nil
 }
 
-// GetJoinRequests 获取入群申请列表
+// GetJoinRequests gets join request list
 func (s *GroupServer) GetJoinRequests(ctx context.Context, req *grouppb.GetJoinRequestsRequest) (*grouppb.GetJoinRequestsResponse, error) {
 	var status *string
 	if req.Status != nil {
@@ -336,7 +336,7 @@ func (s *GroupServer) GetJoinRequests(ctx context.Context, req *grouppb.GetJoinR
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	requests := make([]*grouppb.JoinRequest, 0, len(resp.Requests))
 	for _, r := range resp.Requests {
 		request := &grouppb.JoinRequest{
@@ -366,7 +366,7 @@ func (s *GroupServer) GetJoinRequests(ctx context.Context, req *grouppb.GetJoinR
 	}, nil
 }
 
-// PinGroupMessage 置顶群消息
+// PinGroupMessage pins a message
 func (s *GroupServer) PinGroupMessage(ctx context.Context, req *grouppb.PinGroupMessageRequest) (*commonpb.Empty, error) {
 	if err := s.groupService.PinGroupMessage(ctx, req.UserId, req.GroupId, req.MessageId); err != nil {
 		return nil, convertError(err)
@@ -374,7 +374,7 @@ func (s *GroupServer) PinGroupMessage(ctx context.Context, req *grouppb.PinGroup
 	return &commonpb.Empty{}, nil
 }
 
-// UnpinGroupMessage 取消置顶群消息
+// UnpinGroupMessage unpins a message
 func (s *GroupServer) UnpinGroupMessage(ctx context.Context, req *grouppb.UnpinGroupMessageRequest) (*commonpb.Empty, error) {
 	if err := s.groupService.UnpinGroupMessage(ctx, req.UserId, req.GroupId, req.MessageId); err != nil {
 		return nil, convertError(err)
@@ -382,7 +382,7 @@ func (s *GroupServer) UnpinGroupMessage(ctx context.Context, req *grouppb.UnpinG
 	return &commonpb.Empty{}, nil
 }
 
-// GetPinnedMessages 获取置顶消息列表
+// GetPinnedMessages gets pinned message list
 func (s *GroupServer) GetPinnedMessages(ctx context.Context, req *grouppb.GetPinnedMessagesRequest) (*grouppb.GetPinnedMessagesResponse, error) {
 	resp, err := s.groupService.GetPinnedMessages(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -430,7 +430,7 @@ func (s *GroupServer) GetPinnedMessages(ctx context.Context, req *grouppb.GetPin
 	}, nil
 }
 
-// SetGroupMute 设置全体禁言
+// SetGroupMute sets group mute
 func (s *GroupServer) SetGroupMute(ctx context.Context, req *grouppb.SetGroupMuteRequest) (*commonpb.Empty, error) {
 	if err := s.groupService.SetGroupMute(ctx, req.UserId, req.GroupId, req.Enabled); err != nil {
 		return nil, convertError(err)
@@ -438,7 +438,7 @@ func (s *GroupServer) SetGroupMute(ctx context.Context, req *grouppb.SetGroupMut
 	return &commonpb.Empty{}, nil
 }
 
-// MuteMember 禁言成员
+// MuteMember mutes a member
 func (s *GroupServer) MuteMember(ctx context.Context, req *grouppb.MuteMemberRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.MuteMemberRequest{
 		DurationMinutes: req.DurationMinutes,
@@ -455,7 +455,7 @@ func (s *GroupServer) MuteMember(ctx context.Context, req *grouppb.MuteMemberReq
 	return &commonpb.Empty{}, nil
 }
 
-// UnmuteMember 解除禁言
+// UnmuteMember unmutes a member
 func (s *GroupServer) UnmuteMember(ctx context.Context, req *grouppb.UnmuteMemberRequest) (*commonpb.Empty, error) {
 	if err := s.groupService.UnmuteMember(ctx, req.UserId, req.GroupId, req.TargetUserId); err != nil {
 		return nil, convertError(err)
@@ -463,9 +463,9 @@ func (s *GroupServer) UnmuteMember(ctx context.Context, req *grouppb.UnmuteMembe
 	return &commonpb.Empty{}, nil
 }
 
-// UpdateGroupSettings 更新群组设置
+// UpdateGroupSettings updates group settings
 func (s *GroupServer) UpdateGroupSettings(ctx context.Context, req *grouppb.UpdateGroupSettingsRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.UpdateGroupSettingsRequest{
 		JoinVerify:        req.JoinVerify,
 		AllowMemberInvite: req.AllowMemberInvite,
@@ -474,7 +474,7 @@ func (s *GroupServer) UpdateGroupSettings(ctx context.Context, req *grouppb.Upda
 		AllowMemberModify: req.AllowMemberModify,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.groupService.UpdateGroupSettings(ctx, req.UserId, req.GroupId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -483,7 +483,7 @@ func (s *GroupServer) UpdateGroupSettings(ctx context.Context, req *grouppb.Upda
 	return &commonpb.Empty{}, nil
 }
 
-// GetGroupSettings 获取群组设置
+// GetGroupSettings gets group settings
 func (s *GroupServer) GetGroupSettings(ctx context.Context, req *grouppb.GetGroupSettingsRequest) (*grouppb.GetGroupSettingsResponse, error) {
 	resp, err := s.groupService.GetGroupSettings(ctx, req.GroupId)
 	if err != nil {
@@ -500,7 +500,7 @@ func (s *GroupServer) GetGroupSettings(ctx context.Context, req *grouppb.GetGrou
 	}, nil
 }
 
-// UpdateMemberRemark 设置/清空群备注
+// UpdateMemberRemark sets/clears remark
 func (s *GroupServer) UpdateMemberRemark(ctx context.Context, req *grouppb.UpdateMemberRemarkRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.UpdateMemberRemarkRequest{Remark: req.Remark}
 	if err := s.groupService.UpdateMemberRemark(ctx, req.UserId, req.GroupId, dtoReq); err != nil {
@@ -509,7 +509,7 @@ func (s *GroupServer) UpdateMemberRemark(ctx context.Context, req *grouppb.Updat
 	return &commonpb.Empty{}, nil
 }
 
-// GetGroupQRCode 获取群二维码
+// GetGroupQRCode gets group QR code
 func (s *GroupServer) GetGroupQRCode(ctx context.Context, req *grouppb.GetGroupQRCodeRequest) (*grouppb.GetGroupQRCodeResponse, error) {
 	resp, err := s.groupService.GetGroupQRCode(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -522,7 +522,7 @@ func (s *GroupServer) GetGroupQRCode(ctx context.Context, req *grouppb.GetGroupQ
 	}, nil
 }
 
-// RefreshGroupQRCode 刷新群二维码
+// RefreshGroupQRCode refreshes QR code
 func (s *GroupServer) RefreshGroupQRCode(ctx context.Context, req *grouppb.RefreshGroupQRCodeRequest) (*grouppb.GetGroupQRCodeResponse, error) {
 	resp, err := s.groupService.RefreshGroupQRCode(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -535,7 +535,7 @@ func (s *GroupServer) RefreshGroupQRCode(ctx context.Context, req *grouppb.Refre
 	}, nil
 }
 
-// GetGroupPreviewByQRCode 通过二维码获取群信息预览
+// GetGroupPreviewByQRCode gets group preview by QR code
 func (s *GroupServer) GetGroupPreviewByQRCode(ctx context.Context, req *grouppb.GetGroupPreviewByQRCodeRequest) (*grouppb.GetGroupPreviewByQRCodeResponse, error) {
 	resp, err := s.groupService.GetGroupPreviewByQRCode(ctx, req.Token)
 	if err != nil {
@@ -550,7 +550,7 @@ func (s *GroupServer) GetGroupPreviewByQRCode(ctx context.Context, req *grouppb.
 	}, nil
 }
 
-// JoinGroupByQRCode 扫码加入群组
+// JoinGroupByQRCode joins group by QR code
 func (s *GroupServer) JoinGroupByQRCode(ctx context.Context, req *grouppb.JoinGroupByQRCodeRequest) (*grouppb.JoinGroupByQRCodeResponse, error) {
 	resp, err := s.groupService.JoinGroupByQRCode(ctx, req.UserId, req.Token)
 	if err != nil {
@@ -567,7 +567,7 @@ func (s *GroupServer) JoinGroupByQRCode(ctx context.Context, req *grouppb.JoinGr
 	return result, nil
 }
 
-// convertError 将业务错误转换为gRPC错误
+// convertError converts business errors to gRPC errors
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
 		switch bizErr.Code {

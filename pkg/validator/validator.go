@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-// ValidatePhone 验证手机号
+// ValidatePhone validates phone number
 func ValidatePhone(phone string) bool {
 	if phone == "" {
 		return false
 	}
 
-	// 简单的手机号验证（中国）
+	// Simple phone number validation (China)
 	matched, _ := regexp.MatchString(`^1[3-9]\d{9}$`, phone)
 	return matched
 }
 
-// ValidateEmail 验证邮箱
+// ValidateEmail validates email
 func ValidateEmail(email string) bool {
 	if email == "" {
 		return false
@@ -26,13 +26,13 @@ func ValidateEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
 
-// ValidateNickname 验证昵称
+// ValidateNickname validates nickname
 func ValidateNickname(nickname string) bool {
 	if nickname == "" {
 		return false
 	}
 
-	// 1-20个字符
+	// 1-20 characters
 	if len([]rune(nickname)) < 1 || len([]rune(nickname)) > 20 {
 		return false
 	}
@@ -40,10 +40,10 @@ func ValidateNickname(nickname string) bool {
 	return true
 }
 
-// ContainsSensitiveWords 检查是否包含敏感词
+// ContainsSensitiveWords checks if text contains sensitive words
 func ContainsSensitiveWords(text string) bool {
-	// 简单的敏感词列表，实际应该从数据库或配置文件读取
-	sensitiveWords := []string{"admin", "系统", "客服", "官方"}
+	// Simple sensitive word list, should actually be read from database or config file
+	sensitiveWords := []string{"admin", "system", "customer service", "official"}
 
 	lowerText := strings.ToLower(text)
 	for _, word := range sensitiveWords {
@@ -55,7 +55,7 @@ func ContainsSensitiveWords(text string) bool {
 	return false
 }
 
-// ValidateDeviceType 验证设备类型
+// ValidateDeviceType validates device type
 func ValidateDeviceType(deviceType string) bool {
 	validTypes := []string{"iOS", "Android", "Web", "PC"}
 	for _, t := range validTypes {
@@ -66,12 +66,12 @@ func ValidateDeviceType(deviceType string) bool {
 	return false
 }
 
-// ValidateGender 验证性别
+// ValidateGender validates gender
 func ValidateGender(gender int) bool {
 	return gender >= 0 && gender <= 2
 }
 
-// SanitizeString 清理字符串
+// SanitizeString sanitizes string
 func SanitizeString(str string) string {
 	return strings.TrimSpace(str)
 }

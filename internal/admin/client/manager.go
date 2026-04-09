@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Manager 下游gRPC客户端管理器
+// Manager downstream gRPC client manager
 type Manager struct {
 	userConn    *grpc.ClientConn
 	groupConn   *grpc.ClientConn
@@ -22,7 +22,7 @@ type Manager struct {
 	FileClient  filepb.FileServiceClient
 }
 
-// NewManager 创建客户端管理器
+// NewManager creates client manager
 func NewManager(userAddr, groupAddr, fileAddr string) (*Manager, error) {
 	userConn, err := grpc.NewClient(userAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -55,7 +55,7 @@ func NewManager(userAddr, groupAddr, fileAddr string) (*Manager, error) {
 	}, nil
 }
 
-// Close 关闭所有连接
+// Close closes all connections
 func (m *Manager) Close() {
 	if m.userConn != nil {
 		m.userConn.Close()

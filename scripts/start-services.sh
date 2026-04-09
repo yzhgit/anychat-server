@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# 启动所有微服务
-# 按依赖顺序启动全部服务
+# Start all microservices
+# Starts all services in dependency order
 #
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -31,7 +31,7 @@ print_info() {
     echo -e "${YELLOW}➜ $1${NC}"
 }
 
-# 检查端口是否可用
+# Check if port is available
 check_port_available() {
     local port=$1
     local result=$(lsof -i :$port 2>/dev/null | grep LISTEN || echo "")
@@ -42,18 +42,18 @@ check_port_available() {
     fi
 }
 
-# 等待服务启动（检测 gRPC 或 HTTP 端口）
+# Wait for service to start (check gRPC or HTTP port)
 wait_for_service() {
     local port=$1
     local service=$2
     local max_attempts=30
     local attempt=0
 
-    print_info "等待 $service 启动 (端口 $port)..."
+    print_info "Waiting for $service to start (port $port)..."
 
     while [ $attempt -lt $max_attempts ]; do
         if lsof -i :$port 2>/dev/null | grep LISTEN > /dev/null; then
-            print_success "$service 已启动"
+            print_success "$service started"
             return 0
         fi
         sleep 1
@@ -62,12 +62,12 @@ wait_for_service() {
     done
 
     echo ""
-    print_error "$service 启动超时"
+    print_error "$service start timeout"
     return 1
 }
 
-# 启动单个服务的通用函数
-# 用法: start_service <服务名> <mage目标> <检测端口> <PID文件>
+# Generic function to start a single service
+# Usage: start_service <service_name> <mage_target> <check_port> <pid_file>
 start_service() {
     local name=$1
     local mage_target=$2
@@ -75,89 +75,89 @@ start_service() {
     local pid_file="/tmp/${name}.pid"
 
     if check_port_available "$port"; then
-        print_info "启动 ${name}..."
+        print_info "Starting ${name}..."
         nohup mage "$mage_target" > "logs/${name}.log" 2>&1 &
         local pid=$!
         echo $pid > "$pid_file"
 
         if wait_for_service "$port" "$name"; then
-            print_success "${name} 运行在 PID: $pid"
+            print_success "${name} running on PID: $pid"
         else
-            print_error "${name} 启动失败，查看日志: logs/${name}.log"
+            print_error "${name} failed to start, check logs: logs/${name}.log"
             exit 1
         fi
     else
-        print_success "${name} 已在运行"
+        print_success "${name} is already running"
     fi
 }
 
-# 检查基础设施
+# Check infrastructure
 check_infrastructure() {
-    print_header "检查基础设施"
+    print_header "Checking Infrastructure"
 
     local failed=0
 
     if ! docker ps | grep anychat-postgres | grep -q "healthy\|Up"; then
-        print_error "PostgreSQL 未运行，请先执行: mage docker:up"
+        print_error "PostgreSQL not running, please run: mage docker:up"
         ((failed++))
     else
-        print_success "PostgreSQL 正在运行"
+        print_success "PostgreSQL is running"
     fi
 
     if ! docker ps | grep anychat-redis | grep -q "healthy\|Up"; then
-        print_error "Redis 未运行，请先执行: mage docker:up"
+        print_error "Redis not running, please run: mage docker:up"
         ((failed++))
     else
-        print_success "Redis 正在运行"
+        print_success "Redis is running"
     fi
 
     if ! docker ps | grep anychat-nats | grep -q "Up"; then
-        print_error "NATS 未运行，请先执行: mage docker:up"
+        print_error "NATS not running, please run: mage docker:up"
         ((failed++))
     else
-        print_success "NATS 正在运行"
+        print_success "NATS is running"
     fi
 
     if ! docker ps | grep anychat-minio | grep -q "healthy\|Up"; then
-        print_error "MinIO 未运行，请先执行: mage docker:up"
+        print_error "MinIO not running, please run: mage docker:up"
         ((failed++))
     else
-        print_success "MinIO 正在运行"
+        print_success "MinIO is running"
     fi
 
     if ! docker ps | grep anychat-livekit | grep -q "Up"; then
-        print_error "LiveKit 未运行，请先执行: mage docker:up"
+        print_error "LiveKit not running, please run: mage docker:up"
         ((failed++))
     else
-        print_success "LiveKit 正在运行"
+        print_success "LiveKit is running"
     fi
 
     if [ $failed -gt 0 ]; then
         echo ""
-        print_error "基础设施未就绪，请先启动: mage docker:up"
+        print_error "Infrastructure not ready, please start: mage docker:up"
         exit 1
     fi
 
     echo ""
-    print_success "所有基础设施就绪"
+    print_success "All infrastructure ready"
 }
 
-# 检查数据库迁移
+# Check database migrations
 check_migrations() {
-    print_header "检查数据库迁移"
+    print_header "Checking Database Migrations"
 
     if docker exec anychat-postgres psql -U anychat -d anychat -c "\dt" 2>/dev/null | grep -q users; then
-        print_success "数据库迁移已完成"
+        print_success "Database migrations completed"
     else
-        print_info "数据库迁移未完成，正在运行迁移..."
+        print_info "Database migrations not completed, running migrations..."
         mage db:up
-        print_success "数据库迁移完成"
+        print_success "Database migrations completed"
     fi
 }
 
-# 启动核心域服务（第一层，无互相依赖）
+# Start core domain services (first layer, no inter-dependencies)
 start_core_services() {
-    print_header "启动核心域服务"
+    print_header "Starting Core Domain Services"
 
     start_service "auth-service"    "dev:auth"    9001
     start_service "user-service"    "dev:user"    9002
@@ -166,88 +166,88 @@ start_core_services() {
     start_service "file-service"    "dev:file"    9007
 }
 
-# 启动应用层服务（第二层，消息/会话）
+# Start application layer services (second layer, message/conversation)
 start_app_services() {
-    print_header "启动应用层服务"
+    print_header "Starting Application Layer Services"
 
     start_service "message-service" "dev:message"  9005
     start_service "conversation-service" "dev:conversation"  9006
 }
 
-# 启动辅助服务（第三层，推送/Calling/同步）
+# Start auxiliary services (third layer, push/Calling/sync)
 start_auxiliary_services() {
-    print_header "启动辅助服务"
+    print_header "Starting Auxiliary Services"
 
     start_service "push-service"    "dev:push"    9008
     start_service "calling-service" "dev:calling" 9009
     start_service "sync-service"    "dev:sync"    9010
 }
 
-# 启动管理服务
+# Start admin service
 start_admin_service() {
-    print_header "启动管理服务"
+    print_header "Starting Admin Service"
 
     start_service "admin-service"   "dev:admin"   9011
 }
 
-# 启动版本服务
+# Start version service
 start_version_service() {
-    print_header "启动版本服务"
+    print_header "Starting Version Service"
 
     start_service "version-service" "dev:version" 9012
 }
 
-# 启动网关服务（最后，依赖所有后端服务）
+# Start gateway service (last, depends on all backend services)
 start_gateway() {
-    print_header "启动网关服务"
+    print_header "Starting Gateway Service"
 
     start_service "gateway-service" "dev:gateway" 8080
 }
 
-# 显示服务状态
+# Show service status
 show_status() {
-    print_header "服务状态"
+    print_header "Service Status"
 
-    echo -e "${YELLOW}核心域服务:${NC}"
+    echo -e "${YELLOW}Core Domain Services:${NC}"
     echo "  auth-service:     grpc://localhost:9001  logs/auth-service.log"
     echo "  user-service:     grpc://localhost:9002  logs/user-service.log"
     echo "  friend-service:   grpc://localhost:9003  logs/friend-service.log"
     echo "  group-service:    grpc://localhost:9004  logs/group-service.log"
     echo "  file-service:     grpc://localhost:9007  logs/file-service.log"
 
-    echo -e "\n${YELLOW}应用层服务:${NC}"
+    echo -e "\n${YELLOW}Application Layer Services:${NC}"
     echo "  message-service:  grpc://localhost:9005  logs/message-service.log"
     echo "  conversation-service:  grpc://localhost:9006  logs/conversation-service.log"
 
-    echo -e "\n${YELLOW}辅助服务:${NC}"
+    echo -e "\n${YELLOW}Auxiliary Services:${NC}"
     echo "  push-service:     grpc://localhost:9008  logs/push-service.log"
     echo "  calling-service: grpc://localhost:9009  logs/calling-service.log"
     echo "  sync-service:     grpc://localhost:9010  logs/sync-service.log"
 
-    echo -e "\n${YELLOW}管理服务:${NC}"
+    echo -e "\n${YELLOW}Admin Services:${NC}"
     echo "  admin-service:    http://localhost:8011  logs/admin-service.log"
     echo "                    grpc://localhost:9011"
 
-    echo -e "\n${YELLOW}版本服务:${NC}"
+    echo -e "\n${YELLOW}Version Services:${NC}"
     echo "  version-service: grpc://localhost:9012  logs/version-service.log"
 
-    echo -e "\n${YELLOW}网关服务:${NC}"
+    echo -e "\n${YELLOW}Gateway Service:${NC}"
     echo "  gateway-service:  http://localhost:8080  logs/gateway-service.log"
     echo "  Swagger UI:       http://localhost:8080/swagger/index.html"
 
-    echo -e "\n${YELLOW}停止所有服务:${NC}"
+    echo -e "\n${YELLOW}Stop All Services:${NC}"
     echo "  ./scripts/stop-services.sh"
 
-    echo -e "\n${YELLOW}查看实时日志（示例）:${NC}"
+    echo -e "\n${YELLOW}View Real-time Logs (example):${NC}"
     echo "  tail -f logs/gateway-service.log"
     echo "  tail -f logs/message-service.log"
 }
 
-# 主函数
+# Main function
 main() {
     echo -e "${GREEN}"
     echo "╔═══════════════════════════════════════════╗"
-    echo "║   AnyChat 服务启动脚本                    ║"
+    echo "║   AnyChat Service Startup Script          ║"
     echo "╚═══════════════════════════════════════════╝"
     echo -e "${NC}"
 
@@ -270,7 +270,7 @@ main() {
 
     show_status
 
-    echo -e "\n${GREEN}✓ 所有服务启动成功！${NC}\n"
+    echo -e "\n${GREEN}✓ All services started successfully!${NC}\n"
 }
 
 main "$@"

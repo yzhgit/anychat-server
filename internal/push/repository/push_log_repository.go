@@ -5,15 +5,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// PushTokenRow 从 user_push_tokens 表读取的推送 token 记录
+// PushTokenRow push token record read from user_push_tokens table
 type PushTokenRow struct {
 	UserID   string
 	DeviceID string
-	Token    string   // JPush registration_id
-	Platform string   // ios / android
+	Token    string // JPush registration_id
+	Platform string // ios / android
 }
 
-// PushLogRepository 推送日志仓库接口
+// PushLogRepository push log repository interface
 type PushLogRepository interface {
 	Create(log *model.PushLog) error
 	GetTokensByUserID(userID string) ([]*PushTokenRow, error)
@@ -24,17 +24,17 @@ type pushLogRepository struct {
 	db *gorm.DB
 }
 
-// NewPushLogRepository 创建推送日志仓库
+// NewPushLogRepository creates push log repository
 func NewPushLogRepository(db *gorm.DB) PushLogRepository {
 	return &pushLogRepository{db: db}
 }
 
-// Create 创建推送日志
+// Create creates push log
 func (r *pushLogRepository) Create(log *model.PushLog) error {
 	return r.db.Create(log).Error
 }
 
-// GetTokensByUserID 获取指定用户的所有推送 token
+// GetTokensByUserID retrieves all push tokens for specified user
 func (r *pushLogRepository) GetTokensByUserID(userID string) ([]*PushTokenRow, error) {
 	var rows []*PushTokenRow
 	err := r.db.Raw(
@@ -45,7 +45,7 @@ func (r *pushLogRepository) GetTokensByUserID(userID string) ([]*PushTokenRow, e
 	return rows, err
 }
 
-// GetTokensByUserIDs 批量获取多个用户的推送 token
+// GetTokensByUserIDs retrieves push tokens for multiple users in batch
 func (r *pushLogRepository) GetTokensByUserIDs(userIDs []string) (map[string][]*PushTokenRow, error) {
 	if len(userIDs) == 0 {
 		return nil, nil

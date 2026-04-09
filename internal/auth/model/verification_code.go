@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// VerificationCode 验证码
+// VerificationCode verification code model
 type VerificationCode struct {
 	ID                int64      `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	CodeID            string     `gorm:"column:code_id;not null;uniqueIndex" json:"codeId"`

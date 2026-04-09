@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// FriendRequestRepository 好友申请仓库接口
+// FriendRequestRepository is the friend request repository interface
 type FriendRequestRepository interface {
 	Create(ctx context.Context, request *model.FriendRequest) error
 	GetByID(ctx context.Context, id int64) (*model.FriendRequest, error)
@@ -20,22 +20,22 @@ type FriendRequestRepository interface {
 	WithTx(tx *gorm.DB) FriendRequestRepository
 }
 
-// friendRequestRepositoryImpl 好友申请仓库实现
+// friendRequestRepositoryImpl is the friend request repository implementation
 type friendRequestRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewFriendRequestRepository 创建好友申请仓库
+// NewFriendRequestRepository creates a new friend request repository
 func NewFriendRequestRepository(db *gorm.DB) FriendRequestRepository {
 	return &friendRequestRepositoryImpl{db: db}
 }
 
-// Create 创建好友申请
+// Create creates a friend request
 func (r *friendRequestRepositoryImpl) Create(ctx context.Context, request *model.FriendRequest) error {
 	return r.db.WithContext(ctx).Create(request).Error
 }
 
-// GetByID 根据ID获取好友申请
+// GetByID retrieves a friend request by ID
 func (r *friendRequestRepositoryImpl) GetByID(ctx context.Context, id int64) (*model.FriendRequest, error) {
 	var request model.FriendRequest
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&request).Error
@@ -45,7 +45,7 @@ func (r *friendRequestRepositoryImpl) GetByID(ctx context.Context, id int64) (*m
 	return &request, nil
 }
 
-// GetByUserIDs 根据用户ID获取最新的好友申请记录
+// GetByUserIDs retrieves the latest friend request by user IDs
 func (r *friendRequestRepositoryImpl) GetByUserIDs(ctx context.Context, fromUserID, toUserID string) (*model.FriendRequest, error) {
 	var request model.FriendRequest
 	err := r.db.WithContext(ctx).
@@ -58,7 +58,7 @@ func (r *friendRequestRepositoryImpl) GetByUserIDs(ctx context.Context, fromUser
 	return &request, nil
 }
 
-// GetPendingRequest 获取待处理的好友申请
+// GetPendingRequest retrieves pending friend request
 func (r *friendRequestRepositoryImpl) GetPendingRequest(ctx context.Context, fromUserID, toUserID string) (*model.FriendRequest, error) {
 	var request model.FriendRequest
 	err := r.db.WithContext(ctx).
@@ -71,7 +71,7 @@ func (r *friendRequestRepositoryImpl) GetPendingRequest(ctx context.Context, fro
 	return &request, nil
 }
 
-// GetReceivedRequests 获取收到的好友申请
+// GetReceivedRequests retrieves received friend requests
 func (r *friendRequestRepositoryImpl) GetReceivedRequests(ctx context.Context, userID string) ([]*model.FriendRequest, error) {
 	var requests []*model.FriendRequest
 	err := r.db.WithContext(ctx).
@@ -81,7 +81,7 @@ func (r *friendRequestRepositoryImpl) GetReceivedRequests(ctx context.Context, u
 	return requests, err
 }
 
-// GetSentRequests 获取发送的好友申请
+// GetSentRequests retrieves sent friend requests
 func (r *friendRequestRepositoryImpl) GetSentRequests(ctx context.Context, userID string) ([]*model.FriendRequest, error) {
 	var requests []*model.FriendRequest
 	err := r.db.WithContext(ctx).
@@ -91,7 +91,7 @@ func (r *friendRequestRepositoryImpl) GetSentRequests(ctx context.Context, userI
 	return requests, err
 }
 
-// UpdateStatus 更新申请状态
+// UpdateStatus updates request status
 func (r *friendRequestRepositoryImpl) UpdateStatus(ctx context.Context, id int64, status string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.FriendRequest{}).
@@ -99,12 +99,12 @@ func (r *friendRequestRepositoryImpl) UpdateStatus(ctx context.Context, id int64
 		Update("status", status).Error
 }
 
-// Update 更新好友申请
+// Update updates a friend request
 func (r *friendRequestRepositoryImpl) Update(ctx context.Context, request *model.FriendRequest) error {
 	return r.db.WithContext(ctx).Save(request).Error
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *friendRequestRepositoryImpl) WithTx(tx *gorm.DB) FriendRequestRepository {
 	return &friendRequestRepositoryImpl{db: tx}
 }

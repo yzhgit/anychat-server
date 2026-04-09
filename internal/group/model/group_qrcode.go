@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// GroupQRCode 群二维码
+// GroupQRCode represents a group QR code
 type GroupQRCode struct {
 	ID        int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	GroupID   string    `gorm:"column:group_id;not null;index" json:"groupId"`
@@ -16,12 +16,12 @@ type GroupQRCode struct {
 
 func (GroupQRCode) TableName() string { return "group_qrcodes" }
 
-// IsValid 当前二维码是否有效（未过期且处于激活状态）
+// IsValid checks if QR code is valid (not expired and active)
 func (q *GroupQRCode) IsValid() bool {
 	return q.IsActive && q.ExpireAt.After(time.Now())
 }
 
 const DefaultQRCodeTTL = 7 * 24 * time.Hour
 
-// QRCodeRenewThreshold 距过期不足该时长时自动续期
+// QRCodeRenewThreshold auto-renew when within this duration of expiration
 const QRCodeRenewThreshold = 24 * time.Hour

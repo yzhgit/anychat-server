@@ -12,7 +12,7 @@ import (
 
 const adminIDKey = "adminID"
 
-// AdminAuthHandler 管理员认证处理器
+// AdminAuthHandler admin authentication handler
 type AdminAuthHandler struct {
 	svc        service.AdminService
 	jwtManager *jwt.Manager
@@ -27,17 +27,17 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// Login 管理员登录
-// @Summary      管理员登录
-// @Description  管理员通过用户名密码登录，返回访问Token
-// @Tags         管理后台-认证
+// Login admin login
+// @Summary      admin login
+// @Description  admin login with username and password, returns access token
+// @Tags         admin-auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      loginRequest  true  "登录信息"
-// @Success      200      {object}  response.Response{data=object}  "登录成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "账号或密码错误"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      loginRequest  true  "login info"
+// @Success      200      {object}  response.Response{data=object}  "login success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "invalid username or password"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /admin/auth/login [post]
 func (h *AdminAuthHandler) Login(c *gin.Context) {
 	var req loginRequest
@@ -58,18 +58,18 @@ func (h *AdminAuthHandler) Login(c *gin.Context) {
 	})
 }
 
-// Logout 管理员退出
-// @Summary      管理员退出
-// @Tags         管理后台-认证
+// Logout admin logout
+// @Summary      admin logout
+// @Tags         admin-auth
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200  {object}  response.Response  "退出成功"
+// @Success      200  {object}  response.Response  "logout success"
 // @Router       /admin/auth/logout [post]
 func (h *AdminAuthHandler) Logout(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// AdminAuthMiddleware 管理员JWT验证中间件
+// AdminAuthMiddleware admin JWT verification middleware
 func AdminAuthMiddleware(jwtManager *jwt.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")

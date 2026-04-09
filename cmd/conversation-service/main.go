@@ -46,7 +46,7 @@ func main() {
 
 	logger.Info("Starting conversation-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := database.NewPostgresDB(&database.Config{
 		Host:            viper.GetString("database.postgres.host"),
 		Port:            viper.GetInt("database.postgres.port"),
@@ -68,7 +68,7 @@ func main() {
 	}
 	logger.Info("Database connected successfully")
 
-	// 连接NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
@@ -76,14 +76,14 @@ func main() {
 	defer nc.Close()
 	logger.Info("Connected to NATS")
 
-	// 初始化通知发布器
+	// Initialize notification publisher
 	notificationPub := notification.NewPublisher(nc)
 
-	// 初始化仓库和服务
+	// Initialize repositories and services
 	conversationRepo := repository.NewConversationRepository(db)
 	conversationSvc := service.NewConversationService(conversationRepo, notificationPub)
 
-	// 初始化并启动gRPC服务器
+	// Initialize and start gRPC server
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcpkg.RecoveryInterceptor(),
@@ -104,7 +104,7 @@ func main() {
 		}
 	}()
 
-	// 启动健康检查HTTP服务器
+	// Start health check HTTP server
 	httpServer := initHTTPServer()
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))
@@ -116,7 +116,7 @@ func main() {
 
 	logger.Info("Conversation service started successfully")
 
-	// 优雅关闭
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

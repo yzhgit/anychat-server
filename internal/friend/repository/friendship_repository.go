@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// FriendshipRepository 好友关系仓库接口
+// FriendshipRepository is the friendship repository interface
 type FriendshipRepository interface {
 	Create(ctx context.Context, friendship *model.Friendship) error
 	CreateBatch(ctx context.Context, friendships []*model.Friendship) error
@@ -23,27 +23,27 @@ type FriendshipRepository interface {
 	WithTx(tx *gorm.DB) FriendshipRepository
 }
 
-// friendshipRepositoryImpl 好友关系仓库实现
+// friendshipRepositoryImpl is the friendship repository implementation
 type friendshipRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewFriendshipRepository 创建好友关系仓库
+// NewFriendshipRepository creates a new friendship repository
 func NewFriendshipRepository(db *gorm.DB) FriendshipRepository {
 	return &friendshipRepositoryImpl{db: db}
 }
 
-// Create 创建好友关系
+// Create creates a friendship
 func (r *friendshipRepositoryImpl) Create(ctx context.Context, friendship *model.Friendship) error {
 	return r.db.WithContext(ctx).Create(friendship).Error
 }
 
-// CreateBatch 批量创建好友关系（用于双向创建）
+// CreateBatch batch creates friendships (for bidirectional creation)
 func (r *friendshipRepositoryImpl) CreateBatch(ctx context.Context, friendships []*model.Friendship) error {
 	return r.db.WithContext(ctx).Create(friendships).Error
 }
 
-// GetByUserAndFriend 根据用户ID和好友ID获取关系
+// GetByUserAndFriend retrieves a friendship by user ID and friend ID
 func (r *friendshipRepositoryImpl) GetByUserAndFriend(ctx context.Context, userID, friendID string) (*model.Friendship, error) {
 	var friendship model.Friendship
 	err := r.db.WithContext(ctx).
@@ -55,7 +55,7 @@ func (r *friendshipRepositoryImpl) GetByUserAndFriend(ctx context.Context, userI
 	return &friendship, nil
 }
 
-// GetFriendList 获取好友列表
+// GetFriendList retrieves the friend list
 func (r *friendshipRepositoryImpl) GetFriendList(ctx context.Context, userID string) ([]*model.Friendship, error) {
 	var friendships []*model.Friendship
 	err := r.db.WithContext(ctx).
@@ -65,7 +65,7 @@ func (r *friendshipRepositoryImpl) GetFriendList(ctx context.Context, userID str
 	return friendships, err
 }
 
-// GetFriendListByUpdateTime 根据更新时间获取好友列表（增量同步）
+// GetFriendListByUpdateTime retrieves the friend list by update time (incremental sync)
 func (r *friendshipRepositoryImpl) GetFriendListByUpdateTime(ctx context.Context, userID string, lastUpdateTime time.Time) ([]*model.Friendship, error) {
 	var friendships []*model.Friendship
 	err := r.db.WithContext(ctx).
@@ -75,12 +75,12 @@ func (r *friendshipRepositoryImpl) GetFriendListByUpdateTime(ctx context.Context
 	return friendships, err
 }
 
-// Update 更新好友关系
+// Update updates a friendship
 func (r *friendshipRepositoryImpl) Update(ctx context.Context, friendship *model.Friendship) error {
 	return r.db.WithContext(ctx).Save(friendship).Error
 }
 
-// UpdateRemark 更新备注
+// UpdateRemark updates remark
 func (r *friendshipRepositoryImpl) UpdateRemark(ctx context.Context, userID, friendID, remark string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Friendship{}).
@@ -88,7 +88,7 @@ func (r *friendshipRepositoryImpl) UpdateRemark(ctx context.Context, userID, fri
 		Update("remark", remark).Error
 }
 
-// Delete 删除好友关系（软删除，更新状态）
+// Delete deletes a friendship (soft delete, updates status)
 func (r *friendshipRepositoryImpl) Delete(ctx context.Context, userID, friendID string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Friendship{}).
@@ -96,17 +96,17 @@ func (r *friendshipRepositoryImpl) Delete(ctx context.Context, userID, friendID 
 		Update("status", model.FriendshipStatusDeleted).Error
 }
 
-// DeleteBidirectional 双向删除好友关系（需在事务中调用）
+// DeleteBidirectional deletes bidirectional friendship (must be called in transaction)
 func (r *friendshipRepositoryImpl) DeleteBidirectional(ctx context.Context, userID, friendID string) error {
-	// 删除 A->B
+	// Delete A->B
 	if err := r.Delete(ctx, userID, friendID); err != nil {
 		return err
 	}
-	// 删除 B->A
+	// Delete B->A
 	return r.Delete(ctx, friendID, userID)
 }
 
-// IsFriend 检查是否是好友
+// IsFriend checks if users are friends
 func (r *friendshipRepositoryImpl) IsFriend(ctx context.Context, userID, friendID string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -116,7 +116,7 @@ func (r *friendshipRepositoryImpl) IsFriend(ctx context.Context, userID, friendI
 	return count > 0, err
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *friendshipRepositoryImpl) WithTx(tx *gorm.DB) FriendshipRepository {
 	return &friendshipRepositoryImpl{db: tx}
 }

@@ -1,10 +1,10 @@
--- 创建用户表
+-- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     phone VARCHAR(20) UNIQUE,
     email VARCHAR(100) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    status INT NOT NULL DEFAULT 1, -- 1-正常 2-禁用
+    status INT NOT NULL DEFAULT 1, -- 1-normal, 2-disabled
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
@@ -15,7 +15,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_status ON users(status);
 CREATE INDEX idx_users_deleted_at ON users(deleted_at);
 
--- 创建用户设备表
+-- Create user devices table
 CREATE TABLE IF NOT EXISTS user_devices (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS user_devices (
 CREATE INDEX idx_user_devices_user_id ON user_devices(user_id);
 CREATE INDEX idx_user_devices_device_id ON user_devices(device_id);
 
--- 创建用户会话表
+-- Create user sessions table
 CREATE TABLE IF NOT EXISTS user_sessions (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
@@ -50,14 +50,14 @@ CREATE INDEX idx_user_sessions_device_id ON user_sessions(device_id);
 CREATE INDEX idx_user_sessions_access_token ON user_sessions(access_token);
 CREATE INDEX idx_user_sessions_refresh_token ON user_sessions(refresh_token);
 
--- 创建用户资料表
+-- Create user profiles table
 CREATE TABLE IF NOT EXISTS user_profiles (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) UNIQUE NOT NULL,
     nickname VARCHAR(50) NOT NULL,
     avatar VARCHAR(500),
     signature VARCHAR(200),
-    gender INT NOT NULL DEFAULT 0, -- 0-未知 1-男 2-女
+    gender INT NOT NULL DEFAULT 0, -- 0-unknown, 1-male, 2-female
     birthday DATE,
     region VARCHAR(100),
     qrcode_url VARCHAR(500),
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX idx_user_profiles_nickname ON user_profiles(nickname);
 
--- 创建用户设置表
+-- Create user settings table
 CREATE TABLE IF NOT EXISTS user_settings (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) UNIQUE NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
 
 CREATE INDEX idx_user_settings_user_id ON user_settings(user_id);
 
--- 创建用户二维码表
+-- Create user qrcode table
 CREATE TABLE IF NOT EXISTS user_qrcodes (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
@@ -104,7 +104,7 @@ CREATE INDEX idx_user_qrcodes_user_id ON user_qrcodes(user_id);
 CREATE INDEX idx_user_qrcodes_token ON user_qrcodes(qrcode_token);
 CREATE INDEX idx_user_qrcodes_expires_at ON user_qrcodes(expires_at);
 
--- 创建推送Token表
+-- Create push token table
 CREATE TABLE IF NOT EXISTS user_push_tokens (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,

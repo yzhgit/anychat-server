@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserSessionRepository 用户会话仓库接口
+// UserSessionRepository user session repository interface
 type UserSessionRepository interface {
 	Create(ctx context.Context, session *model.UserSession) error
 	GetByAccessToken(ctx context.Context, accessToken string) (*model.UserSession, error)
@@ -19,22 +19,22 @@ type UserSessionRepository interface {
 	DeleteByUserIDExceptDeviceID(ctx context.Context, userID, deviceID string) error
 }
 
-// userSessionRepositoryImpl 用户会话仓库实现
+// userSessionRepositoryImpl user session repository implementation
 type userSessionRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewUserSessionRepository 创建用户会话仓库
+// NewUserSessionRepository creates user session repository
 func NewUserSessionRepository(db *gorm.DB) UserSessionRepository {
 	return &userSessionRepositoryImpl{db: db}
 }
 
-// Create 创建会话
+// Create creates session
 func (r *userSessionRepositoryImpl) Create(ctx context.Context, session *model.UserSession) error {
 	return r.db.WithContext(ctx).Create(session).Error
 }
 
-// GetByAccessToken 根据AccessToken获取会话
+// GetByAccessToken gets session by access token
 func (r *userSessionRepositoryImpl) GetByAccessToken(ctx context.Context, accessToken string) (*model.UserSession, error) {
 	var session model.UserSession
 	err := r.db.WithContext(ctx).
@@ -46,7 +46,7 @@ func (r *userSessionRepositoryImpl) GetByAccessToken(ctx context.Context, access
 	return &session, nil
 }
 
-// GetByRefreshToken 根据RefreshToken获取会话
+// GetByRefreshToken gets session by refresh token
 func (r *userSessionRepositoryImpl) GetByRefreshToken(ctx context.Context, refreshToken string) (*model.UserSession, error) {
 	var session model.UserSession
 	err := r.db.WithContext(ctx).
@@ -58,7 +58,7 @@ func (r *userSessionRepositoryImpl) GetByRefreshToken(ctx context.Context, refre
 	return &session, nil
 }
 
-// GetByUserIDAndDeviceID 根据用户ID和设备ID获取会话
+// GetByUserIDAndDeviceID gets session by user ID and device ID
 func (r *userSessionRepositoryImpl) GetByUserIDAndDeviceID(ctx context.Context, userID, deviceID string) (*model.UserSession, error) {
 	var session model.UserSession
 	err := r.db.WithContext(ctx).
@@ -70,26 +70,26 @@ func (r *userSessionRepositoryImpl) GetByUserIDAndDeviceID(ctx context.Context, 
 	return &session, nil
 }
 
-// Update 更新会话
+// Update updates session
 func (r *userSessionRepositoryImpl) Update(ctx context.Context, session *model.UserSession) error {
 	return r.db.WithContext(ctx).Save(session).Error
 }
 
-// DeleteByUserIDAndDeviceID 删除指定设备的会话
+// DeleteByUserIDAndDeviceID deletes session for specified device
 func (r *userSessionRepositoryImpl) DeleteByUserIDAndDeviceID(ctx context.Context, userID, deviceID string) error {
 	return r.db.WithContext(ctx).
 		Where("user_id = ? AND device_id = ?", userID, deviceID).
 		Delete(&model.UserSession{}).Error
 }
 
-// DeleteByUserID 删除用户的所有会话
+// DeleteByUserID deletes all sessions for user
 func (r *userSessionRepositoryImpl) DeleteByUserID(ctx context.Context, userID string) error {
 	return r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Delete(&model.UserSession{}).Error
 }
 
-// DeleteByUserIDExceptDeviceID 删除用户除当前设备外的所有会话
+// DeleteByUserIDExceptDeviceID deletes all sessions except current device
 func (r *userSessionRepositoryImpl) DeleteByUserIDExceptDeviceID(ctx context.Context, userID, deviceID string) error {
 	query := r.db.WithContext(ctx).Where("user_id = ?", userID)
 	if deviceID != "" {

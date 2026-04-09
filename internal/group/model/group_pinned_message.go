@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// GroupPinnedMessage 群置顶消息
+// GroupPinnedMessage represents a pinned message in a group
 type GroupPinnedMessage struct {
 	ID          int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	GroupID     string    `gorm:"column:group_id;not null;index:idx_group_pinned_messages_group_id" json:"groupId"`

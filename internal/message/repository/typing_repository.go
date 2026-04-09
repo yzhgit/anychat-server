@@ -8,7 +8,7 @@ import (
 	pkgredis "github.com/anychat/server/pkg/redis"
 )
 
-// TypingRepository 输入状态缓存仓库
+// TypingRepository typing status cache repository
 type TypingRepository interface {
 	SetState(ctx context.Context, conversationID, fromUserID string, ttl time.Duration) error
 	ClearState(ctx context.Context, conversationID, fromUserID string) error
@@ -19,7 +19,7 @@ type typingRepositoryImpl struct {
 	cache *pkgredis.Client
 }
 
-// NewTypingRepository 创建输入状态缓存仓库
+// NewTypingRepository creates typing status cache repository
 func NewTypingRepository(cache *pkgredis.Client) TypingRepository {
 	return &typingRepositoryImpl{cache: cache}
 }

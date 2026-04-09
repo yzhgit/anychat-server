@@ -10,30 +10,30 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// FileHandler 文件处理器
+// FileHandler file handler
 type FileHandler struct {
 	clientManager *client.Manager
 }
 
-// NewFileHandler 创建文件处理器
+// NewFileHandler creates file handler
 func NewFileHandler(clientManager *client.Manager) *FileHandler {
 	return &FileHandler{
 		clientManager: clientManager,
 	}
 }
 
-// GenerateUploadToken 生成文件上传凭证
-// @Summary      生成文件上传凭证
-// @Description  生成预签名上传URL，客户端使用此URL直接上传到MinIO
-// @Tags         文件
+// GenerateUploadToken generate file upload token
+// @Summary      generate file upload token
+// @Description  Generate presigned upload URL, client uses this URL to upload directly to MinIO
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      object  true  "上传请求"
-// @Success      200      {object}  response.Response{data=object}  "成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      object  true  "upload request"
+// @Success      200      {object}  response.Response{data=object}  "success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /files/upload-token [post]
 func (h *FileHandler) GenerateUploadToken(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -68,19 +68,19 @@ func (h *FileHandler) GenerateUploadToken(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// CompleteUpload 完成文件上传
-// @Summary      完成文件上传
-// @Description  客户端上传完成后，通知服务端激活文件
-// @Tags         文件
+// CompleteUpload complete file upload
+// @Summary      complete file upload
+// @Description  After client finishes upload, notify server to activate file
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        fileId   path      string  true  "文件ID"
-// @Success      200      {object}  response.Response{data=object}  "成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      404      {object}  response.Response  "文件不存在"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        fileId   path      string  true  "file ID"
+// @Success      200      {object}  response.Response{data=object}  "success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      404      {object}  response.Response  "file not found"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /files/{fileId}/complete [post]
 func (h *FileHandler) CompleteUpload(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -104,21 +104,21 @@ func (h *FileHandler) CompleteUpload(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GenerateDownloadURL 生成文件下载链接
-// @Summary      生成文件下载链接
-// @Description  生成预签名下载URL，客户端使用此URL直接从MinIO下载
-// @Tags         文件
+// GenerateDownloadURL generate file download URL
+// @Summary      generate file download URL
+// @Description  Generate presigned download URL, client uses this URL to download directly from MinIO
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        fileId          path   string  true   "文件ID"
-// @Param        expiresMinutes  query  int     false  "URL有效期（分钟）" default(60)
-// @Success      200             {object}  response.Response{data=object}  "成功"
-// @Failure      400             {object}  response.Response  "参数错误"
-// @Failure      401             {object}  response.Response  "未授权"
-// @Failure      403             {object}  response.Response  "无权访问"
-// @Failure      404             {object}  response.Response  "文件不存在"
-// @Failure      500             {object}  response.Response  "服务器错误"
+// @Param        fileId          path   string  true   "file ID"
+// @Param        expiresMinutes  query  int     false  "URL expiration (minutes)" default(60)
+// @Success      200             {object}  response.Response{data=object}  "success"
+// @Failure      400             {object}  response.Response  "parameter error"
+// @Failure      401             {object}  response.Response  "unauthorized"
+// @Failure      403             {object}  response.Response  "no permission"
+// @Failure      404             {object}  response.Response  "file not found"
+// @Failure      500             {object}  response.Response  "server error"
 // @Router       /files/{fileId}/download [get]
 func (h *FileHandler) GenerateDownloadURL(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -129,7 +129,7 @@ func (h *FileHandler) GenerateDownloadURL(c *gin.Context) {
 		return
 	}
 
-	// 可选参数：过期时间（分钟）
+	// Optional parameter: expiration time (minutes)
 	var expiresMinutes *int32
 	if expiresStr := c.Query("expiresMinutes"); expiresStr != "" {
 		if expires, err := strconv.Atoi(expiresStr); err == nil && expires > 0 {
@@ -152,20 +152,20 @@ func (h *FileHandler) GenerateDownloadURL(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetFileInfo 获取文件信息
-// @Summary      获取文件信息
-// @Description  获取文件元数据信息
-// @Tags         文件
+// GetFileInfo get file info
+// @Summary      get file info
+// @Description  Get file metadata info
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        fileId  path      string  true  "文件ID"
-// @Success      200     {object}  response.Response{data=object}  "成功"
-// @Failure      400     {object}  response.Response  "参数错误"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      403     {object}  response.Response  "无权访问"
-// @Failure      404     {object}  response.Response  "文件不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        fileId  path      string  true  "file ID"
+// @Success      200     {object}  response.Response{data=object}  "success"
+// @Failure      400     {object}  response.Response  "parameter error"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      403     {object}  response.Response  "no permission"
+// @Failure      404     {object}  response.Response  "file not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /files/{fileId} [get]
 func (h *FileHandler) GetFileInfo(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -189,20 +189,20 @@ func (h *FileHandler) GetFileInfo(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// DeleteFile 删除文件
-// @Summary      删除文件
-// @Description  删除文件（包括MinIO中的对象）
-// @Tags         文件
+// DeleteFile delete file
+// @Summary      delete file
+// @Description  Delete file (including object in MinIO)
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        fileId  path      string  true  "文件ID"
-// @Success      200     {object}  response.Response  "成功"
-// @Failure      400     {object}  response.Response  "参数错误"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      403     {object}  response.Response  "无权访问"
-// @Failure      404     {object}  response.Response  "文件不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        fileId  path      string  true  "file ID"
+// @Success      200     {object}  response.Response  "success"
+// @Failure      400     {object}  response.Response  "parameter error"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      403     {object}  response.Response  "no permission"
+// @Failure      404     {object}  response.Response  "file not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /files/{fileId} [delete]
 func (h *FileHandler) DeleteFile(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -226,25 +226,25 @@ func (h *FileHandler) DeleteFile(c *gin.Context) {
 	response.Success(c, gin.H{"success": true})
 }
 
-// ListFiles 列出用户文件
-// @Summary      列出用户文件
-// @Description  分页列出当前用户的文件，支持按类型过滤
-// @Tags         文件
+// ListFiles list user files
+// @Summary      list user files
+// @Description  Paginate list of current user's files, supports filtering by type
+// @Tags         file
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        fileType  query  string  false  "文件类型（image/video/audio/file）"
-// @Param        page      query  int     false  "页码"  default(1)
-// @Param        pageSize  query  int     false  "每页数量"  default(20)
-// @Success      200       {object}  response.Response{data=object}  "成功"
-// @Failure      400       {object}  response.Response  "参数错误"
-// @Failure      401       {object}  response.Response  "未授权"
-// @Failure      500       {object}  response.Response  "服务器错误"
+// @Param        fileType  query  string  false  "file type (image/video/audio/file)"
+// @Param        page      query  int     false  "page number"  default(1)
+// @Param        pageSize  query  int     false  "page size"  default(20)
+// @Success      200       {object}  response.Response{data=object}  "success"
+// @Failure      400       {object}  response.Response  "parameter error"
+// @Failure      401       {object}  response.Response  "unauthorized"
+// @Failure      500       {object}  response.Response  "server error"
 // @Router       /files [get]
 func (h *FileHandler) ListFiles(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
-	// 解析查询参数
+	// Parse query parameters
 	fileType := c.Query("fileType")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))

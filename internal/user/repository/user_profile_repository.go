@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserProfileRepository 用户资料仓库接口
+// UserProfileRepository user profile repository interface
 type UserProfileRepository interface {
 	Create(ctx context.Context, profile *model.UserProfile) error
 	GetByUserID(ctx context.Context, userID string) (*model.UserProfile, error)
@@ -17,22 +17,22 @@ type UserProfileRepository interface {
 	SearchByKeyword(ctx context.Context, keyword string, limit, offset int) ([]*model.UserProfile, int64, error)
 }
 
-// userProfileRepositoryImpl 用户资料仓库实现
+// userProfileRepositoryImpl user profile repository implementation
 type userProfileRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewUserProfileRepository 创建用户资料仓库
+// NewUserProfileRepository creates user profile repository
 func NewUserProfileRepository(db *gorm.DB) UserProfileRepository {
 	return &userProfileRepositoryImpl{db: db}
 }
 
-// Create 创建用户资料
+// Create creates user profile
 func (r *userProfileRepositoryImpl) Create(ctx context.Context, profile *model.UserProfile) error {
 	return r.db.WithContext(ctx).Create(profile).Error
 }
 
-// GetByUserID 根据用户ID获取资料
+// GetByUserID retrieves profile by user ID
 func (r *userProfileRepositoryImpl) GetByUserID(ctx context.Context, userID string) (*model.UserProfile, error) {
 	var profile model.UserProfile
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&profile).Error
@@ -42,12 +42,12 @@ func (r *userProfileRepositoryImpl) GetByUserID(ctx context.Context, userID stri
 	return &profile, nil
 }
 
-// Update 更新用户资料
+// Update updates user profile
 func (r *userProfileRepositoryImpl) Update(ctx context.Context, profile *model.UserProfile) error {
 	return r.db.WithContext(ctx).Save(profile).Error
 }
 
-// UpdateQRCode 更新二维码
+// UpdateQRCode updates QR code
 func (r *userProfileRepositoryImpl) UpdateQRCode(ctx context.Context, userID, qrcodeURL string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.UserProfile{}).
@@ -58,7 +58,7 @@ func (r *userProfileRepositoryImpl) UpdateQRCode(ctx context.Context, userID, qr
 		}).Error
 }
 
-// CheckNicknameExists 检查昵称是否存在
+// CheckNicknameExists checks if nickname exists
 func (r *userProfileRepositoryImpl) CheckNicknameExists(ctx context.Context, nickname string, excludeUserID string) (bool, error) {
 	var count int64
 	query := r.db.WithContext(ctx).Model(&model.UserProfile{}).Where("nickname = ?", nickname)
@@ -75,21 +75,21 @@ func (r *userProfileRepositoryImpl) CheckNicknameExists(ctx context.Context, nic
 	return count > 0, nil
 }
 
-// SearchByKeyword 根据关键词搜索用户
+// SearchByKeyword searches users by keyword
 func (r *userProfileRepositoryImpl) SearchByKeyword(ctx context.Context, keyword string, limit, offset int) ([]*model.UserProfile, int64, error) {
 	var profiles []*model.UserProfile
 	var total int64
 
-	// 搜索昵称
+	// Search nickname
 	query := r.db.WithContext(ctx).Model(&model.UserProfile{}).
 		Where("nickname LIKE ?", "%"+keyword+"%")
 
-	// 统计总数
+	// Count total
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// 分页查询
+	// Paginated query
 	if err := query.Limit(limit).Offset(offset).Find(&profiles).Error; err != nil {
 		return nil, 0, err
 	}

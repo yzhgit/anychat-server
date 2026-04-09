@@ -47,7 +47,7 @@ func main() {
 
 	logger.Info("Starting sync-service", zap.String("version", version))
 
-	// 连接上游服务
+	// Connect to upstream services
 	friendClient, err := connectService[friendpb.FriendServiceClient](
 		viper.GetString("services.friend.grpc_addr"), "friend-service",
 		func(cc *grpc.ClientConn) friendpb.FriendServiceClient {
@@ -86,7 +86,7 @@ func main() {
 
 	logger.Info("Connected to all upstream services")
 
-	// 连接NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
@@ -96,10 +96,10 @@ func main() {
 
 	notificationPub := notification.NewPublisher(nc)
 
-	// 初始化服务
+	// Initialize services
 	syncSvc := service.NewSyncService(friendClient, groupClient, conversationClient, messageClient, notificationPub)
 
-	// 初始化并启动gRPC服务器
+	// Initialize and start gRPC server
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcpkg.RecoveryInterceptor(),
@@ -120,7 +120,7 @@ func main() {
 		}
 	}()
 
-	// 启动健康检查HTTP服务器
+	// Start health check HTTP server
 	httpServer := initHTTPServer()
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))
@@ -148,7 +148,7 @@ func main() {
 	logger.Info("Service stopped!")
 }
 
-// connectService 泛型辅助：建立 gRPC 连接并返回客户端
+// connectService generic helper: establishes gRPC connection and returns client
 func connectService[T any](addr, name string, newClient func(*grpc.ClientConn) T) (T, error) {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

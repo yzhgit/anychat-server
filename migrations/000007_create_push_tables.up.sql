@@ -1,4 +1,4 @@
--- 创建推送日志表
+-- Create push logs table
 CREATE TABLE IF NOT EXISTS push_logs (
     id          BIGSERIAL PRIMARY KEY,
     user_id     VARCHAR(36)  NOT NULL,

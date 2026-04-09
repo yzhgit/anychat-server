@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// FriendService 好友服务接口
+// FriendService is the friend service interface
 type FriendService interface {
 	GetFriendList(ctx context.Context, userID string, lastUpdateTime *int64) (*dto.FriendListResponse, error)
 	SendFriendRequest(ctx context.Context, fromUserID string, req *dto.SendFriendRequestRequest) (*dto.SendFriendRequestResponse, error)
@@ -33,7 +33,7 @@ type FriendService interface {
 	BatchCheckFriend(ctx context.Context, userID string, friendIDs []string) (map[string]bool, error)
 }
 
-// friendServiceImpl 好友服务实现
+// friendServiceImpl is the friend service implementation
 type friendServiceImpl struct {
 	friendshipRepo     FriendshipRepo
 	requestRepo        FriendRequestRepo
@@ -44,22 +44,22 @@ type friendServiceImpl struct {
 	db                 *gorm.DB
 }
 
-// FriendshipRepo 好友关系仓库接口（简化版，用于依赖注入）
+// FriendshipRepo is the friendship repository interface (simplified version for dependency injection)
 type FriendshipRepo interface {
 	repository.FriendshipRepository
 }
 
-// FriendRequestRepo 好友申请仓库接口（简化版，用于依赖注入）
+// FriendRequestRepo is the friend request repository interface (simplified version for dependency injection)
 type FriendRequestRepo interface {
 	repository.FriendRequestRepository
 }
 
-// BlacklistRepo 黑名单仓库接口（简化版，用于依赖注入）
+// BlacklistRepo is the blacklist repository interface (simplified version for dependency injection)
 type BlacklistRepo interface {
 	repository.BlacklistRepository
 }
 
-// NewFriendService 创建好友服务
+// NewFriendService creates a new friend service
 func NewFriendService(
 	friendshipRepo repository.FriendshipRepository,
 	requestRepo repository.FriendRequestRepository,
@@ -80,12 +80,12 @@ func NewFriendService(
 	}
 }
 
-// GetFriendList 获取好友列表
+// GetFriendList retrieves the friend list
 func (s *friendServiceImpl) GetFriendList(ctx context.Context, userID string, lastUpdateTime *int64) (*dto.FriendListResponse, error) {
 	var friendships []*model.Friendship
 	var err error
 
-	// 增量同步
+	// Incremental sync
 	if lastUpdateTime != nil && *lastUpdateTime > 0 {
 		t := time.Unix(*lastUpdateTime, 0)
 		friendships, err = s.friendshipRepo.GetFriendListByUpdateTime(ctx, userID, t)
@@ -98,7 +98,7 @@ func (s *friendServiceImpl) GetFriendList(ctx context.Context, userID string, la
 		return nil, err
 	}
 
-	// 转换为DTO
+	// Convert to DTO
 	friends := make([]*dto.FriendResponse, 0, len(friendships))
 	for _, f := range friendships {
 		friend := &dto.FriendResponse{
@@ -108,7 +108,7 @@ func (s *friendServiceImpl) GetFriendList(ctx context.Context, userID string, la
 			UpdatedAt: f.UpdatedAt,
 		}
 
-		// 获取用户信息（可选，如果失败不影响整体结果）
+		// Get user info (optional, failure does not affect overall result)
 		if userInfo, err := s.getUserInfo(ctx, f.FriendID); err == nil {
 			friend.UserInfo = userInfo
 		}
@@ -122,14 +122,14 @@ func (s *friendServiceImpl) GetFriendList(ctx context.Context, userID string, la
 	}, nil
 }
 
-// SendFriendRequest 发送好友申请
+// SendFriendRequest sends a friend request
 func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID string, req *dto.SendFriendRequestRequest) (*dto.SendFriendRequestResponse, error) {
-	// 验证：不能添加自己
+	// Validation: cannot add yourself
 	if fromUserID == req.UserID {
 		return nil, errors.NewBusiness(errors.CodeCannotAddSelf, "")
 	}
 
-	// 检查黑名单
+	// Check blacklist
 	isBlocked, err := s.blacklistRepo.IsBlocked(ctx, fromUserID, req.UserID)
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 		return nil, errors.NewBusiness(errors.CodeUserBlocked, "")
 	}
 
-	// 检查是否已是好友
+	// Check if already a friend
 	isFriend, err := s.friendshipRepo.IsFriend(ctx, fromUserID, req.UserID)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 		return nil, errors.NewBusiness(errors.CodeAlreadyFriend, "")
 	}
 
-	// 检查是否有待处理的申请
+	// Check if there is a pending request
 	existingReq, err := s.requestRepo.GetPendingRequest(ctx, fromUserID, req.UserID)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
@@ -156,7 +156,7 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 		return nil, errors.NewBusiness(errors.CodeRequestExists, "")
 	}
 
-	// 获取对方设置，检查是否需要验证
+	// Get recipient settings, check if verification is required
 	settingsResp, err := s.userClient.GetSettings(ctx, &userpb.GetSettingsRequest{UserId: req.UserID})
 	if err != nil {
 		logger.Error("Failed to get user settings", zap.Error(err))
@@ -164,12 +164,12 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 	}
 	friendVerifyRequired := settingsResp.FriendVerifyRequired
 
-	// 使用事务处理申请创建和可能的自动接受
+	// Use transaction to handle request creation and possible auto-accept
 	var autoAccepted bool
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
-		// 创建好友申请
+		// Create friend request
 		status := model.FriendRequestStatusPending
 		if !friendVerifyRequired {
 			status = model.FriendRequestStatusAccepted
@@ -189,11 +189,11 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 			return err
 		}
 
-		// 如果对方不需要验证，自动接受
+		// If recipient does not require verification, auto accept
 		if !friendVerifyRequired {
 			autoAccepted = true
 
-			// 创建双向好友关系
+			// Create bidirectional friendship
 			friendships := []*model.Friendship{
 				{
 					UserID:    fromUserID,
@@ -225,7 +225,7 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 		return nil, err
 	}
 
-	// 获取刚创建的申请ID
+	// Get newly created request ID
 	createdReq, err := s.requestRepo.GetByUserIDs(ctx, fromUserID, req.UserID)
 	if err != nil {
 		logger.Error("Failed to get created friend request", zap.Error(err))
@@ -233,17 +233,17 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 	}
 	requestID := createdReq.ID
 
-	// 根据是否自动接受，发送不同通知
+	// Based on auto accept status, send different notifications
 	if autoAccepted {
-		// 创建会话（双方）
+		// Create conversation (both sides)
 		s.createFriendConversation(ctx, fromUserID, req.UserID)
 		s.createFriendConversation(ctx, req.UserID, fromUserID)
 
-		// 通知双方
+		// Notify both sides
 		s.publishFriendAddedNotification(fromUserID, req.UserID)
 		s.publishFriendAddedNotification(req.UserID, fromUserID)
 	} else {
-		// 发布好友请求通知
+		// Publish friend request notification
 		s.publishFriendRequestNotification(createdReq)
 	}
 
@@ -253,9 +253,9 @@ func (s *friendServiceImpl) SendFriendRequest(ctx context.Context, fromUserID st
 	}, nil
 }
 
-// HandleFriendRequest 处理好友申请
+// HandleFriendRequest handles a friend request
 func (s *friendServiceImpl) HandleFriendRequest(ctx context.Context, userID string, requestID int64, req *dto.HandleFriendRequestRequest) error {
-	// 获取申请记录
+	// Get request record
 	friendRequest, err := s.requestRepo.GetByID(ctx, requestID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -264,27 +264,27 @@ func (s *friendServiceImpl) HandleFriendRequest(ctx context.Context, userID stri
 		return err
 	}
 
-	// 验证权限：只有接收方可以处理
+	// Validate permission: only recipient can handle
 	if friendRequest.ToUserID != userID {
 		return errors.NewBusiness(errors.CodePermissionDenied, "")
 	}
 
-	// 检查申请状态
+	// Check request status
 	if !friendRequest.IsPending() {
 		return errors.NewBusiness(errors.CodeRequestProcessed, "")
 	}
 
-	// 处理申请
+	// Handle request
 	if req.Action == "accept" {
-		// 使用事务：更新申请状态 + 创建双向好友关系
+		// Use transaction: update request status + create bidirectional friendship
 		err = s.db.Transaction(func(tx *gorm.DB) error {
-			// 更新申请状态
+			// Update request status
 			requestRepoTx := s.requestRepo.WithTx(tx)
 			if err := requestRepoTx.UpdateStatus(ctx, requestID, model.FriendRequestStatusAccepted); err != nil {
 				return err
 			}
 
-			// 创建双向好友关系
+			// Create bidirectional friendship
 			now := time.Now()
 			friendships := []*model.Friendship{
 				{
@@ -312,7 +312,7 @@ func (s *friendServiceImpl) HandleFriendRequest(ctx context.Context, userID stri
 			return err
 		}
 
-		// 发布好友请求接受通知
+		// Publish friend request accepted notification
 		s.publishFriendRequestHandledNotification(friendRequest, "accepted")
 	} else if req.Action == "reject" {
 		if err := s.requestRepo.UpdateStatus(ctx, requestID, model.FriendRequestStatusRejected); err != nil {
@@ -320,14 +320,14 @@ func (s *friendServiceImpl) HandleFriendRequest(ctx context.Context, userID stri
 			return err
 		}
 
-		// 发布好友请求拒绝通知
+		// Publish friend request rejected notification
 		s.publishFriendRequestHandledNotification(friendRequest, "rejected")
 	}
 
 	return nil
 }
 
-// GetFriendRequests 获取好友申请列表
+// GetFriendRequests retrieves the friend request list
 func (s *friendServiceImpl) GetFriendRequests(ctx context.Context, userID string, requestType string) (*dto.FriendRequestListResponse, error) {
 	var requests []*model.FriendRequest
 	var err error
@@ -343,7 +343,7 @@ func (s *friendServiceImpl) GetFriendRequests(ctx context.Context, userID string
 		return nil, err
 	}
 
-	// 转换为DTO
+	// Convert to DTO
 	dtoRequests := make([]*dto.FriendRequestResponse, 0, len(requests))
 	for _, r := range requests {
 		dtoReq := &dto.FriendRequestResponse{
@@ -356,7 +356,7 @@ func (s *friendServiceImpl) GetFriendRequests(ctx context.Context, userID string
 			CreatedAt:  r.CreatedAt,
 		}
 
-		// 获取申请人信息
+		// Get requester info
 		if userInfo, err := s.getUserInfo(ctx, r.FromUserID); err == nil {
 			dtoReq.FromUserInfo = userInfo
 		}
@@ -370,9 +370,9 @@ func (s *friendServiceImpl) GetFriendRequests(ctx context.Context, userID string
 	}, nil
 }
 
-// DeleteFriend 删除好友
+// DeleteFriend deletes a friend
 func (s *friendServiceImpl) DeleteFriend(ctx context.Context, userID, friendID string) error {
-	// 检查是否是好友
+	// Check if is a friend
 	isFriend, err := s.friendshipRepo.IsFriend(ctx, userID, friendID)
 	if err != nil {
 		return err
@@ -381,7 +381,7 @@ func (s *friendServiceImpl) DeleteFriend(ctx context.Context, userID, friendID s
 		return errors.NewBusiness(errors.CodeNotFriend, "")
 	}
 
-	// 使用事务删除双向关系
+	// Use transaction to delete bidirectional relationship
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		friendshipRepoTx := s.friendshipRepo.WithTx(tx)
 		return friendshipRepoTx.DeleteBidirectional(ctx, userID, friendID)
@@ -392,15 +392,15 @@ func (s *friendServiceImpl) DeleteFriend(ctx context.Context, userID, friendID s
 		return err
 	}
 
-	// 发布好友删除通知
+	// Publish friend deleted notification
 	s.publishFriendDeletedNotification(userID, friendID)
 
 	return nil
 }
 
-// UpdateRemark 更新好友备注
+// UpdateRemark updates friend remark
 func (s *friendServiceImpl) UpdateRemark(ctx context.Context, userID, friendID string, req *dto.UpdateRemarkRequest) error {
-	// 检查是否是好友
+	// Check if is a friend
 	isFriend, err := s.friendshipRepo.IsFriend(ctx, userID, friendID)
 	if err != nil {
 		return err
@@ -414,15 +414,15 @@ func (s *friendServiceImpl) UpdateRemark(ctx context.Context, userID, friendID s
 		return err
 	}
 
-	// 发布备注更新通知（多端同步）
+	// Publish remark updated notification (multi-device sync)
 	s.publishRemarkUpdatedNotification(userID, friendID, req.Remark)
 
 	return nil
 }
 
-// AddToBlacklist 添加到黑名单
+// AddToBlacklist adds user to blacklist
 func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, req *dto.AddToBlacklistRequest) error {
-	// 验证：不能拉黑自己
+	// Validation: cannot block yourself
 	if userID == req.UserId {
 		return errors.NewBusiness(errors.CodeCannotAddSelf, "")
 	}
@@ -432,7 +432,7 @@ func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, r
 		blacklistRepoTx := s.blacklistRepo.WithTx(tx)
 		friendshipRepoTx := s.friendshipRepo.WithTx(tx)
 
-		// 检查是否已在黑名单
+		// Check if already in blacklist
 		existing, err := blacklistRepoTx.GetByUserAndBlocked(ctx, userID, req.UserId)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return err
@@ -441,7 +441,7 @@ func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, r
 			return errors.NewBusiness(errors.CodeAlreadyInBlacklist, "")
 		}
 
-		// 创建黑名单记录
+		// Create blacklist record
 		blacklist := &model.Blacklist{
 			UserID:        userID,
 			BlockedUserID: req.UserId,
@@ -451,7 +451,7 @@ func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, r
 			return err
 		}
 
-		// 若双方是好友，拉黑后自动解除双向好友关系
+		// If both are friends, block will automatically remove bidirectional friendship
 		isFriend, err := friendshipRepoTx.IsFriend(ctx, userID, req.UserId)
 		if err != nil {
 			return err
@@ -469,10 +469,10 @@ func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, r
 		return err
 	}
 
-	// 发布黑名单变更通知
+	// Publish blacklist changed notification
 	s.publishBlacklistChangedNotification(userID, req.UserId, "add")
 
-	// 触发被删除好友端更新
+	// Trigger update on the removed friend's side
 	if removedFriend {
 		s.publishFriendDeletedNotification(userID, req.UserId)
 	}
@@ -480,9 +480,9 @@ func (s *friendServiceImpl) AddToBlacklist(ctx context.Context, userID string, r
 	return nil
 }
 
-// RemoveFromBlacklist 从黑名单移除
+// RemoveFromBlacklist removes user from blacklist
 func (s *friendServiceImpl) RemoveFromBlacklist(ctx context.Context, userID, blockedUserID string) error {
-	// 检查是否在黑名单
+	// Check if in blacklist
 	existing, err := s.blacklistRepo.GetByUserAndBlocked(ctx, userID, blockedUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -499,13 +499,13 @@ func (s *friendServiceImpl) RemoveFromBlacklist(ctx context.Context, userID, blo
 		return err
 	}
 
-	// 发布黑名单变更通知
+	// Publish blacklist changed notification
 	s.publishBlacklistChangedNotification(userID, blockedUserID, "remove")
 
 	return nil
 }
 
-// GetBlacklist 获取黑名单列表
+// GetBlacklist retrieves the blacklist
 func (s *friendServiceImpl) GetBlacklist(ctx context.Context, userID string) (*dto.BlacklistResponse, error) {
 	blacklist, err := s.blacklistRepo.GetBlacklist(ctx, userID)
 	if err != nil {
@@ -522,7 +522,7 @@ func (s *friendServiceImpl) GetBlacklist(ctx context.Context, userID string) (*d
 			CreatedAt:     b.CreatedAt,
 		}
 
-		// 获取被拉黑用户信息
+		// Get blocked user info
 		if userInfo, err := s.getUserInfo(ctx, b.BlockedUserID); err == nil {
 			item.BlockedUserInfo = userInfo
 		}
@@ -536,17 +536,17 @@ func (s *friendServiceImpl) GetBlacklist(ctx context.Context, userID string) (*d
 	}, nil
 }
 
-// IsFriend 检查是否是好友
+// IsFriend checks if users are friends
 func (s *friendServiceImpl) IsFriend(ctx context.Context, userID, friendID string) (bool, error) {
 	return s.friendshipRepo.IsFriend(ctx, userID, friendID)
 }
 
-// IsBlocked 检查是否被拉黑
+// IsBlocked checks if user is blocked
 func (s *friendServiceImpl) IsBlocked(ctx context.Context, userID, targetUserID string) (bool, error) {
 	return s.blacklistRepo.IsBlocked(ctx, userID, targetUserID)
 }
 
-// BatchCheckFriend 批量检查好友关系
+// BatchCheckFriend batch checks friend relationships
 func (s *friendServiceImpl) BatchCheckFriend(ctx context.Context, userID string, friendIDs []string) (map[string]bool, error) {
 	results := make(map[string]bool, len(friendIDs))
 
@@ -563,11 +563,11 @@ func (s *friendServiceImpl) BatchCheckFriend(ctx context.Context, userID string,
 	return results, nil
 }
 
-// getUserInfo 获取用户信息（内部辅助方法）
+// getUserInfo gets user info (internal helper method)
 func (s *friendServiceImpl) getUserInfo(ctx context.Context, userID string) (*dto.UserInfo, error) {
-	// 注意：这里传空字符串作为查询者ID，因为我们只是获取基本信息
+	// Note: pass empty string as query user ID since we only need basic info
 	resp, err := s.userClient.GetUserInfo(ctx, &userpb.GetUserInfoRequest{
-		UserId:       "", // 系统内部调用
+		UserId:       "", // system internal call
 		TargetUserId: userID,
 	})
 	if err != nil {
@@ -591,7 +591,7 @@ func (s *friendServiceImpl) getUserInfo(ctx context.Context, userID string) (*dt
 	return userInfo, nil
 }
 
-// publishFriendRequestNotification 发布好友请求通知
+// publishFriendRequestNotification publishes friend request notification
 func (s *friendServiceImpl) publishFriendRequestNotification(req *model.FriendRequest) {
 	if s.notificationPub == nil {
 		return
@@ -618,7 +618,7 @@ func (s *friendServiceImpl) publishFriendRequestNotification(req *model.FriendRe
 	}
 }
 
-// publishFriendRequestHandledNotification 发布好友请求处理结果通知
+// publishFriendRequestHandledNotification publishes friend request handled notification
 func (s *friendServiceImpl) publishFriendRequestHandledNotification(req *model.FriendRequest, status string) {
 	if s.notificationPub == nil {
 		return
@@ -644,7 +644,7 @@ func (s *friendServiceImpl) publishFriendRequestHandledNotification(req *model.F
 	}
 }
 
-// publishFriendDeletedNotification 发布好友删除通知
+// publishFriendDeletedNotification publishes friend deleted notification
 func (s *friendServiceImpl) publishFriendDeletedNotification(userID, friendID string) {
 	if s.notificationPub == nil {
 		return
@@ -661,7 +661,7 @@ func (s *friendServiceImpl) publishFriendDeletedNotification(userID, friendID st
 		notification.PriorityNormal,
 	).WithPayload(payload)
 
-	// 通知被删除的好友
+	// Notify the deleted friend
 	if err := s.notificationPub.PublishToUser(friendID, notif); err != nil {
 		logger.Error("Failed to publish friend deleted notification",
 			zap.String("friendId", friendID),
@@ -669,7 +669,7 @@ func (s *friendServiceImpl) publishFriendDeletedNotification(userID, friendID st
 	}
 }
 
-// publishRemarkUpdatedNotification 发布备注更新通知（多端同步）
+// publishRemarkUpdatedNotification publishes remark updated notification (multi-device sync)
 func (s *friendServiceImpl) publishRemarkUpdatedNotification(userID, friendID, remark string) {
 	if s.notificationPub == nil {
 		return
@@ -687,7 +687,7 @@ func (s *friendServiceImpl) publishRemarkUpdatedNotification(userID, friendID, r
 		notification.PriorityLow,
 	).WithPayload(payload)
 
-	// 推送给用户自己的其他设备（多端同步）
+	// Push to user's other devices (multi-device sync)
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
 		logger.Error("Failed to publish remark updated notification",
 			zap.String("userId", userID),
@@ -695,7 +695,7 @@ func (s *friendServiceImpl) publishRemarkUpdatedNotification(userID, friendID, r
 	}
 }
 
-// publishBlacklistChangedNotification 发布黑名单变更通知
+// publishBlacklistChangedNotification publishes blacklist changed notification
 func (s *friendServiceImpl) publishBlacklistChangedNotification(userID, targetUserID, action string) {
 	if s.notificationPub == nil {
 		return
@@ -713,7 +713,7 @@ func (s *friendServiceImpl) publishBlacklistChangedNotification(userID, targetUs
 		notification.PriorityNormal,
 	).WithPayload(payload)
 
-	// 推送给用户自己的其他设备（多端同步）
+	// Push to user's other devices (multi-device sync)
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
 		logger.Error("Failed to publish blacklist changed notification",
 			zap.String("userId", userID),
@@ -721,7 +721,7 @@ func (s *friendServiceImpl) publishBlacklistChangedNotification(userID, targetUs
 	}
 }
 
-// createFriendConversation 创建好友会话
+// createFriendConversation creates friend conversation
 func (s *friendServiceImpl) createFriendConversation(ctx context.Context, userID, friendID string) {
 	if s.conversationClient == nil {
 		return
@@ -740,7 +740,7 @@ func (s *friendServiceImpl) createFriendConversation(ctx context.Context, userID
 	}
 }
 
-// publishFriendAddedNotification 发布好友添加通知（自动通过）
+// publishFriendAddedNotification publishes friend added notification (auto accepted)
 func (s *friendServiceImpl) publishFriendAddedNotification(userID, addedByUserID string) {
 	if s.notificationPub == nil {
 		return

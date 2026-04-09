@@ -1,71 +1,71 @@
-# Scripts 使用指南
+# Scripts Guide
 
-本目录包含 AnyChat 项目的环境管理和服务管理脚本。
+This directory contains environment management and service management scripts for the AnyChat project.
 
-## 📁 脚本列表
+## 📁 Script List
 
-### 环境管理
+### Environment Management
 
-- **`setup-env.sh`** - 环境检查和设置脚本
-  - 检查开发工具（Go, Docker, jq, curl 等）
-  - 检查基础设施服务（PostgreSQL, Redis, NATS, MinIO）
-  - 检查微服务状态
-  - 检查数据库连接和 Go 模块
-  - 提供快速修复建议
+- **`setup-env.sh`** - Environment check and setup script
+  - Checks development tools (Go, Docker, jq, curl, etc.)
+  - Checks infrastructure services (PostgreSQL, Redis, NATS, MinIO)
+  - Checks microservice status
+  - Checks database connections and Go modules
+  - Provides quick fix suggestions
 
-- **`health-check.sh`** - 服务健康检查
-  - 检查所有微服务的 HTTP 健康端点
-  - 检查 gRPC 端口是否监听
-  - 检查基础设施服务端口
-  - 检查 Docker 容器状态
+- **`health-check.sh`** - Service health check
+  - Checks HTTP health endpoints for all microservices
+  - Checks if gRPC ports are listening
+  - Checks infrastructure service ports
+  - Checks Docker container status
 
-- **`check-ports.sh`** - 端口检查工具
-  - 检查所有服务端口占用情况
-  - 识别端口冲突
+- **`check-ports.sh`** - Port check utility
+  - Checks port usage for all services
+  - Identifies port conflicts
 
-### 服务管理
+### Service Management
 
-- **`start-services.sh`** - 启动所有微服务
-- **`stop-services.sh`** - 停止所有微服务
+- **`start-services.sh`** - Start all microservices
+- **`stop-services.sh`** - Stop all microservices
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 环境检查
+### 1. Environment Check
 
-首次使用或遇到问题时，运行环境检查：
+Run environment check when first using or encountering issues:
 
 ```bash
 ./scripts/setup-env.sh
 ```
 
-这会检查：
-- ✓ 开发工具是否安装
-- ✓ Go 模块是否正常
-- ✓ 基础设施是否运行
-- ✓ 数据库连接是否正常
+This checks:
+- ✓ Development tools installed
+- ✓ Go modules working
+- ✓ Infrastructure running
+- ✓ Database connections healthy
 
-### 2. 启动基础设施
+### 2. Start Infrastructure
 
 ```bash
-# 启动 PostgreSQL, Redis, NATS, MinIO
+# Start PostgreSQL, Redis, NATS, MinIO
 mage docker:up
 
-# 检查容器状态
+# Check container status
 mage docker:ps
 
-# 运行数据库迁移
+# Run database migrations
 mage db:up
 ```
 
-### 3. 启动微服务
+### 3. Start Microservices
 
-使用一键启动脚本，或在不同终端分别启动：
+Use the startup script, or start individually in separate terminals:
 
 ```bash
-# 一键启动所有服务
+# Start all services at once
 ./scripts/start-services.sh
 
-# 或按需单独启动
+# Or start individually as needed
 mage dev:auth
 mage dev:user
 mage dev:friend
@@ -80,122 +80,122 @@ mage dev:sync
 mage dev:admin
 ```
 
-### 4. 健康检查
+### 4. Health Check
 
 ```bash
 ./scripts/health-check.sh
 ```
 
-预期输出：
+Expected output:
 ```
 ========================================
-基础设施服务
+Infrastructure Services
 ========================================
-✓ PostgreSQL - 端口 5432 正在监听
-✓ Redis - 端口 6379 正在监听
-✓ NATS - 端口 4222 正在监听
-✓ MinIO API - 端口 9000 正在监听
-✓ MinIO Console - 端口 9091 正在监听
+✓ PostgreSQL - port 5432 listening
+✓ Redis - port 6379 listening
+✓ NATS - port 4222 listening
+✓ MinIO API - port 9000 listening
+✓ MinIO Console - port 9091 listening
 
 ========================================
-HTTP 服务
+HTTP Services
 ========================================
-✓ Auth Service - 健康 (HTTP 200)
-✓ User Service - 健康 (HTTP 200)
-✓ Friend Service - 健康 (HTTP 200)
-✓ Gateway Service - 健康 (HTTP 200)
+✓ Auth Service - healthy (HTTP 200)
+✓ User Service - healthy (HTTP 200)
+✓ Friend Service - healthy (HTTP 200)
+✓ Gateway Service - healthy (HTTP 200)
 
 ========================================
-健康检查总结
+Health Check Summary
 ========================================
-健康服务: 13 / 13 (100%)
-✓ 所有服务健康!
+Healthy services: 13 / 13 (100%)
+✓ All services healthy!
 ```
 
-## 🔧 常见问题
+## 🔧 Common Issues
 
-### 问题 1: 服务未运行
+### Issue 1: Service Not Running
 
-**错误信息**：
+**Error**:
 ```
-✗ Gateway Service (端口 8080) 未运行
-部分服务未运行，请先启动所有服务
+✗ Gateway Service (port 8080) not running
+Some services are not running, please start all services first
 ```
 
-**解决方法**：
+**Solution**:
 ```bash
-# 检查哪些服务未运行
+# Check which services are not running
 ./scripts/health-check.sh
 
-# 启动缺失的服务
-mage dev:gateway  # 或其他服务
+# Start missing services
+mage dev:gateway  # or other services
 ```
 
-### 问题 2: 基础设施未运行
+### Issue 2: Infrastructure Not Running
 
-**错误信息**：
+**Error**:
 ```
-✗ PostgreSQL - 端口 5432 未监听
+✗ PostgreSQL - port 5432 not listening
 ```
 
-**解决方法**：
+**Solution**:
 ```bash
-# 启动基础设施
+# Start infrastructure
 mage docker:up
 
-# 等待服务就绪（约10秒）
+# Wait for services to be ready (~10 seconds)
 sleep 10
 
-# 运行数据库迁移
+# Run database migrations
 mage db:up
 ```
 
-### 问题 3: 端口冲突
+### Issue 3: Port Conflict
 
-**错误信息**：
+**Error**:
 ```
 bind: address already in use
 ```
 
-**解决方法**：
+**Solution**:
 ```bash
-# 检查端口占用
+# Check port usage
 ./scripts/check-ports.sh
 
-# 或手动检查
+# Or manually check
 lsof -i :8080
 
-# 停止占用端口的进程
+# Kill the process using the port
 kill -9 <PID>
 ```
 
-### 问题 4: 数据库连接失败
+### Issue 4: Database Connection Failed
 
-**错误信息**：
+**Error**:
 ```
 Error: database connection failed
 ```
 
-**解决方法**：
+**Solution**:
 ```bash
-# 检查 PostgreSQL 状态
+# Check PostgreSQL status
 docker ps | grep postgres
 
-# 检查数据库连接
+# Check database connection
 PGPASSWORD=anychat123 psql -h localhost -U anychat -d anychat -c "SELECT 1"
 
-# 如果失败，重启 PostgreSQL
+# If failed, restart PostgreSQL
 docker restart postgres
 ```
 
-### 问题 5: jq 命令未找到
+### Issue 5: jq Command Not Found
 
-**错误信息**：
+**Error**:
 ```
-需要安装 jq 工具
+jq tool needs to be installed
 ```
 
-**解决方法**：
+**Solution**:
 ```bash
 # Ubuntu/Debian
 sudo apt-get install jq
@@ -207,49 +207,49 @@ brew install jq
 sudo yum install jq
 ```
 
-## 🎯 最佳实践
+## 🎯 Best Practices
 
-1. **开发前检查环境**
+1. **Check environment before development**
    ```bash
    ./scripts/setup-env.sh
    ```
 
-2. **定期运行健康检查**
+2. **Run health check regularly**
    ```bash
    ./scripts/health-check.sh
    ```
 
-3. **遇到问题时查看日志**
+3. **Check logs when encountering issues**
    ```bash
-   # 查看基础设施日志
+   # View infrastructure logs
    mage docker:logs
 
-   # 查看特定容器日志
+   # View specific container logs
    docker logs postgres
    docker logs redis
    ```
 
-4. **清理和重启**
+4. **Cleanup and restart**
    ```bash
-   # 停止所有服务
+   # Stop all services
    mage docker:down
 
-   # 清理构建产物
+   # Clean build artifacts
    mage clean
 
-   # 重新启动
+   # Restart
    mage docker:up
    mage db:up
    ```
 
-## 📚 更多资源
+## 📚 More Resources
 
-- [项目 README](../README.md)
-- [API 测试](../tests/README.md)
-- [API 文档](../docs/api/)
-- [开发指南](../docs/development/)
-- [设计文档](../docs/design/)
+- [Project README](../README.md)
+- [API Tests](../tests/README.md)
+- [API Documentation](../docs/api/)
+- [Development Guide](../docs/development/)
+- [Design Documents](../docs/design/)
 
-## 📄 许可证
+## 📄 License
 
 MIT License

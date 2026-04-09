@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Recovery 恢复中间件
+// Recovery recovery middleware
 func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

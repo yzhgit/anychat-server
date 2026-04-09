@@ -14,6 +14,7 @@ import (
 	filegrpc "github.com/anychat/server/internal/file/grpc"
 	"github.com/anychat/server/internal/file/repository"
 	"github.com/anychat/server/internal/file/service"
+	"github.com/anychat/server/pkg/config"
 	"github.com/anychat/server/pkg/database"
 	grpcpkg "github.com/anychat/server/pkg/grpc"
 	"github.com/anychat/server/pkg/logger"
@@ -24,7 +25,6 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/anychat/server/pkg/config"
 )
 
 const (
@@ -35,12 +35,12 @@ const (
 func main() {
 	fmt.Printf("Starting %s %s...\n", serviceName, version)
 
-	// 加载配置
+	// Load config
 	if err := loadConfig(); err != nil {
 		panic(fmt.Sprintf("Failed to load config: %v", err))
 	}
 
-	// 初始化日志
+	// Initialize logger
 	if err := initLogger(); err != nil {
 		panic(fmt.Sprintf("Failed to init logger: %v", err))
 	}
@@ -48,30 +48,30 @@ func main() {
 
 	logger.Info("Starting file-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := initDatabase()
 	if err != nil {
 		logger.Fatal("Failed to connect database", zap.Error(err))
 	}
 	logger.Info("Database connected successfully")
 
-	// 连接MinIO
+	// Connect to MinIO
 	minioClient, err := initMinIO()
 	if err != nil {
 		logger.Fatal("Failed to connect MinIO", zap.Error(err))
 	}
 	logger.Info("MinIO connected successfully")
 
-	// 初始化仓库
+	// Initialize repositories
 	fileRepo := repository.NewFileRepository(db)
 
-	// 初始化服务
+	// Initialize services
 	fileService := service.NewFileService(fileRepo, minioClient, db)
 
-	// 初始化gRPC服务器
+	// Initialize gRPC server
 	grpcServer := initGRPCServer(fileService)
 
-	// 启动gRPC服务器
+	// Start gRPC server
 	go func() {
 		grpcPort := viper.GetInt("server.grpc_port")
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
@@ -84,10 +84,10 @@ func main() {
 		}
 	}()
 
-	// 初始化简化的HTTP服务器（仅健康检查）
+	// Initialize simplified HTTP server (health check only)
 	httpServer := initHTTPServer()
 
-	// 启动HTTP服务器
+	// Start HTTP server
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))
 		logger.Info("HTTP server listening (health check only)", zap.String("addr", addr))
@@ -98,29 +98,29 @@ func main() {
 
 	logger.Info("File service started successfully")
 
-	// 优雅关闭
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Info("Shutting down gracefully...")
 
-	// 关闭gRPC服务器
+	// Stop gRPC server
 	grpcServer.GracefulStop()
 
-	// 关闭HTTP服务器
+	// Stop HTTP server
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
 		logger.Error("HTTP server shutdown error", zap.Error(err))
 	}
 
-	// 关闭数据库
+	// Close database
 	if sqlDB, err := db.DB(); err == nil {
 		sqlDB.Close()
 	}
 
-	// 关闭MinIO客户端
+	// Close MinIO client
 	if err := minioClient.Close(); err != nil {
 		logger.Error("MinIO client close error", zap.Error(err))
 	}
@@ -128,14 +128,14 @@ func main() {
 	logger.Info("Service stopped!")
 }
 
-// loadConfig 加载配置
+// loadConfig loads configuration
 func loadConfig() error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./configs")
 	viper.AddConfigPath(".")
 
-	// 设置默认值
+	// Set default values
 	viper.SetDefault("server.http_port", 8007)
 	viper.SetDefault("server.grpc_port", 9007)
 	viper.SetDefault("database.postgres.host", "localhost")
@@ -151,14 +151,14 @@ func loadConfig() error {
 	viper.SetDefault("minio.use_ssl", false)
 	viper.SetDefault("minio.buckets", []string{"avatar", "group-avatar", "chat-file"})
 
-	// 自动读取环境变量
+	// Auto-read environment variables
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return err
 		}
-		// 配置文件不存在，使用默认值
+		// Config file not found, use defaults
 		fmt.Println("Config file not found, using defaults")
 	}
 	config.ExpandEnvInConfig()
@@ -166,7 +166,7 @@ func loadConfig() error {
 	return nil
 }
 
-// initLogger 初始化日志
+// initLogger initializes logger
 func initLogger() error {
 	return logger.Init(&logger.Config{
 		Level:    viper.GetString("log.level"),
@@ -175,7 +175,7 @@ func initLogger() error {
 	})
 }
 
-// initDatabase 初始化数据库
+// initDatabase initializes database
 func initDatabase() (*gorm.DB, error) {
 	logLevel := gormLogger.Silent
 	if viper.GetString("log.level") == "debug" {
@@ -195,7 +195,7 @@ func initDatabase() (*gorm.DB, error) {
 	})
 }
 
-// initMinIO 初始化MinIO客户端
+// initMinIO initializes MinIO client
 func initMinIO() (*minioclient.Client, error) {
 	return minioclient.NewClient(&minioclient.Config{
 		Endpoint:  viper.GetString("minio.endpoint"),
@@ -206,7 +206,7 @@ func initMinIO() (*minioclient.Client, error) {
 	})
 }
 
-// initGRPCServer 初始化gRPC服务器
+// initGRPCServer initializes gRPC server
 func initGRPCServer(fileService service.FileService) *grpc.Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -220,17 +220,17 @@ func initGRPCServer(fileService service.FileService) *grpc.Server {
 	return grpcServer
 }
 
-// initHTTPServer 初始化HTTP服务器（仅健康检查）
+// initHTTPServer initializes HTTP server (health check only)
 func initHTTPServer() *http.Server {
-	// 设置Gin模式
+	// Set Gin mode
 	if viper.GetString("server.mode") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 创建路由
+	// Create router
 	r := gin.New()
 
-	// 健康检查接口
+	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",

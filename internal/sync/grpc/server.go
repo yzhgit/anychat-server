@@ -11,18 +11,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Server Sync gRPC服务器
+// Server Sync gRPC server
 type Server struct {
 	syncpb.UnimplementedSyncServiceServer
 	syncService service.SyncService
 }
 
-// NewServer 创建gRPC服务器
+// NewServer creates gRPC server
 func NewServer(syncService service.SyncService) *Server {
 	return &Server{syncService: syncService}
 }
 
-// Sync 全量/增量同步
+// Sync full/incremental sync
 func (s *Server) Sync(ctx context.Context, req *syncpb.SyncRequest) (*syncpb.SyncResponse, error) {
 	if req.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
@@ -36,7 +36,7 @@ func (s *Server) Sync(ctx context.Context, req *syncpb.SyncRequest) (*syncpb.Syn
 	return resp, nil
 }
 
-// SyncMessages 消息补齐
+// SyncMessages message backfill
 func (s *Server) SyncMessages(ctx context.Context, req *syncpb.SyncMessagesRequest) (*syncpb.SyncMessagesResponse, error) {
 	if req.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")

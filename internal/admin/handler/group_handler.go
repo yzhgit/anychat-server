@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminGroupHandler 群组管理处理器
+// AdminGroupHandler group management handler
 type AdminGroupHandler struct {
 	svc service.AdminService
 }
@@ -17,13 +17,13 @@ func NewAdminGroupHandler(svc service.AdminService) *AdminGroupHandler {
 	return &AdminGroupHandler{svc: svc}
 }
 
-// GetGroup 获取群组详情
-// @Summary      获取群组详情
-// @Tags         管理后台-群组管理
+// GetGroup get group details
+// @Summary      get group details
+// @Tags         admin-group-management
 // @Security     BearerAuth
 // @Produce      json
-// @Param        groupId  path  string  true  "群组ID"
-// @Success      200  {object}  response.Response{data=object}  "成功"
+// @Param        groupId  path  string  true  "group ID"
+// @Success      200  {object}  response.Response{data=object}  "success"
 // @Router       /admin/groups/{groupId} [get]
 func (h *AdminGroupHandler) GetGroup(c *gin.Context) {
 	groupID := c.Param("groupId")
@@ -35,13 +35,13 @@ func (h *AdminGroupHandler) GetGroup(c *gin.Context) {
 	response.Success(c, group)
 }
 
-// DissolveGroup 解散群组
-// @Summary      解散群组
-// @Tags         管理后台-群组管理
+// DissolveGroup dissolve group
+// @Summary      dissolve group
+// @Tags         admin-group-management
 // @Security     BearerAuth
 // @Produce      json
-// @Param        groupId  path  string  true  "群组ID"
-// @Success      200  {object}  response.Response  "成功"
+// @Param        groupId  path  string  true  "group ID"
+// @Success      200  {object}  response.Response  "success"
 // @Router       /admin/groups/{groupId} [delete]
 func (h *AdminGroupHandler) DissolveGroup(c *gin.Context) {
 	adminID := getAdminID(c)

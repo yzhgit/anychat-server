@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// CallSession 通话会话
+// CallSession represents a call session
 type CallSession struct {
 	ID          int64      `gorm:"primaryKey;autoIncrement"`
 	CallID      string     `gorm:"column:call_id;uniqueIndex;not null"`
@@ -14,14 +14,14 @@ type CallSession struct {
 	StartedAt   time.Time  `gorm:"column:started_at;autoCreateTime"`
 	ConnectedAt *time.Time `gorm:"column:connected_at"`
 	EndedAt     *time.Time `gorm:"column:ended_at"`
-	Duration    int        `gorm:"column:duration;not null;default:0"` // 秒
+	Duration    int        `gorm:"column:duration;not null;default:0"` // seconds
 	CreatedAt   time.Time  `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt   time.Time  `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (CallSession) TableName() string { return "call_sessions" }
 
-// MeetingRoom 会议室
+// MeetingRoom represents a meeting room
 type MeetingRoom struct {
 	ID              int64      `gorm:"primaryKey;autoIncrement"`
 	RoomID          string     `gorm:"column:room_id;uniqueIndex;not null"`

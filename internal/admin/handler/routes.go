@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes 注册管理后台路由
+// RegisterRoutes registers admin dashboard routes
 func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Manager) {
-	// 中间件
+	// Middleware
 	r.Use(middleware.Recovery())
 	r.Use(middleware.Logger())
 	r.Use(middleware.CORS())
 
-	// 处理器
+	// Handlers
 	authHandler := NewAdminAuthHandler(svc, jwtManager)
 	userHandler := NewAdminUserMgmtHandler(svc)
 	groupHandler := NewAdminGroupHandler(svc)
@@ -26,16 +26,16 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 
 	api := r.Group("/api/admin")
 	{
-		// 公开路由（无需认证）
+		// Public routes (no authentication required)
 		api.POST("/auth/login", authHandler.Login)
 
-		// 需要管理员认证的路由
+		// Routes requiring admin authentication
 		auth := api.Group("")
 		auth.Use(AdminAuthMiddleware(jwtManager))
 		{
 			auth.POST("/auth/logout", authHandler.Logout)
 
-			// 用户管理
+			// User management
 			users := auth.Group("/users")
 			{
 				users.GET("", userHandler.ListUsers)
@@ -44,30 +44,30 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 				users.POST("/:userId/unban", userHandler.UnbanUser)
 			}
 
-			// 群组管理
+			// Group management
 			groups := auth.Group("/groups")
 			{
 				groups.GET("/:groupId", groupHandler.GetGroup)
 				groups.DELETE("/:groupId", groupHandler.DissolveGroup)
 			}
 
-			// 统计
+			// Statistics
 			stats := auth.Group("/stats")
 			{
 				stats.GET("/overview", statsHandler.GetOverview)
 			}
 
-			// 审计日志
+			// Audit logs
 			auth.GET("/audit-logs", auditHandler.ListAuditLogs)
 
-			// 系统配置
+			// System config
 			config := auth.Group("/config")
 			{
 				config.GET("", configHandler.ListConfigs)
 				config.PUT("/:key", configHandler.UpdateConfig)
 			}
 
-			// 管理员账号管理
+			// Admin account management
 			admins := auth.Group("/admins")
 			{
 				admins.GET("", adminMgmtHandler.ListAdmins)
@@ -75,7 +75,7 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 				admins.PUT("/:adminId/status", adminMgmtHandler.UpdateAdminStatus)
 			}
 
-			// 客户端日志管理
+			// Client log management
 			logs := auth.Group("/logs")
 			{
 				logs.GET("", logHandler.ListLogs)
@@ -84,7 +84,7 @@ func RegisterRoutes(r *gin.Engine, svc service.AdminService, jwtManager *jwt.Man
 		}
 	}
 
-	// 健康检查
+	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "service": "admin-service"})
 	})

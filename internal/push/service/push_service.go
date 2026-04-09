@@ -14,20 +14,20 @@ import (
 	"go.uber.org/zap"
 )
 
-// pushTypeTitle 各推送类型的默认标题
+// pushTypeTitle default titles for each push type
 var pushTypeTitle = map[string]string{
-	notification.TypeMessageNew:      "新消息",
-	notification.TypeMessageMentioned: "有人@了你",
-	notification.TypeFriendRequest:   "好友申请",
-	notification.TypeGroupInvited:    "群组邀请",
-	notification.TypeLiveKitCallInvite: "来电",
+	notification.TypeMessageNew:        "New Message",
+	notification.TypeMessageMentioned:  "You were mentioned",
+	notification.TypeFriendRequest:     "Friend Request",
+	notification.TypeGroupInvited:      "Group Invitation",
+	notification.TypeLiveKitCallInvite: "Incoming Call",
 }
 
-// PushService 推送服务接口
+// PushService push service interface
 type PushService interface {
-	// SendPush 向指定用户列表发送推送
+	// SendPush sends push to specified user list
 	SendPush(ctx context.Context, userIDs []string, title, content, pushType string, extras map[string]string) (successCount, failureCount int, msgID string, err error)
-	// HandleNotification 处理来自 NATS 的通知事件
+	// HandleNotification handles NATS notification events
 	HandleNotification(msg *nats.Msg)
 }
 
@@ -36,7 +36,7 @@ type pushServiceImpl struct {
 	repo        repository.PushLogRepository
 }
 
-// NewPushService 创建推送服务
+// NewPushService creates push service
 func NewPushService(jpushClient *jpush.Client, repo repository.PushLogRepository) PushService {
 	return &pushServiceImpl{
 		jpushClient: jpushClient,
@@ -44,7 +44,7 @@ func NewPushService(jpushClient *jpush.Client, repo repository.PushLogRepository
 	}
 }
 
-// SendPush 向多个用户发送推送通知
+// SendPush sends push notification to multiple users
 func (s *pushServiceImpl) SendPush(
 	ctx context.Context,
 	userIDs []string,
@@ -55,14 +55,14 @@ func (s *pushServiceImpl) SendPush(
 		return 0, 0, "", nil
 	}
 
-	// 批量查询 push tokens
+	// Batch query push tokens
 	tokenMap, err := s.repo.GetTokensByUserIDs(userIDs)
 	if err != nil {
 		logger.Error("PushService: failed to get push tokens", zap.Error(err))
 		return 0, len(userIDs), "", err
 	}
 
-	// 收集所有 registration_id
+	// Collect all registration_id
 	var regIDs []string
 	for _, rows := range tokenMap {
 		for _, row := range rows {
@@ -73,13 +73,13 @@ func (s *pushServiceImpl) SendPush(
 	}
 
 	if len(regIDs) == 0 {
-		// 所有用户均无推送 token（未注册 JPush 或无设备）
+		// All users have no push tokens (not registered JPush or no device)
 		logger.Info("PushService: no push tokens found, skip push",
 			zap.Strings("userIDs", userIDs))
 		return 0, 0, "", nil
 	}
 
-	// 调用 JPush REST API
+	// Call JPush REST API
 	result, pushErr := s.jpushClient.PushToRegistrationIDs(regIDs, title, content, extras)
 	if pushErr != nil {
 		logger.Error("PushService: JPush request failed", zap.Error(pushErr))
@@ -100,7 +100,7 @@ func (s *pushServiceImpl) SendPush(
 	return successCount, 0, result.MsgID, nil
 }
 
-// HandleNotification 处理 NATS 通知事件，决定是否推送
+// HandleNotification handles NATS notification events, decides whether to push
 func (s *pushServiceImpl) HandleNotification(msg *nats.Msg) {
 	var notif notification.Notification
 	if err := json.Unmarshal(msg.Data, &notif); err != nil {
@@ -108,7 +108,7 @@ func (s *pushServiceImpl) HandleNotification(msg *nats.Msg) {
 		return
 	}
 
-	// 只处理需要离线推送的类型
+	// Only handle types that need offline push
 	title, needPush := s.buildPushContent(notif)
 	if !needPush {
 		return
@@ -128,7 +128,7 @@ func (s *pushServiceImpl) HandleNotification(msg *nats.Msg) {
 	)
 }
 
-// buildPushContent 根据通知类型构建推送标题；返回 (title, needPush)
+// buildPushContent builds push title based on notification type; returns (title, needPush)
 func (s *pushServiceImpl) buildPushContent(notif notification.Notification) (string, bool) {
 	switch notif.Type {
 	case notification.TypeMessageNew,
@@ -138,7 +138,7 @@ func (s *pushServiceImpl) buildPushContent(notif notification.Notification) (str
 		notification.TypeLiveKitCallInvite:
 		title, ok := pushTypeTitle[notif.Type]
 		if !ok {
-			title = "新通知"
+			title = "New Notification"
 		}
 		return title, true
 	default:
@@ -146,16 +146,16 @@ func (s *pushServiceImpl) buildPushContent(notif notification.Notification) (str
 	}
 }
 
-// extractContent 从通知 Payload 中提取推送正文
+// extractContent extracts push body from notification Payload
 func (s *pushServiceImpl) extractContent(notif notification.Notification) string {
 	if notif.Payload == nil {
 		return ""
 	}
-	// 优先使用 content 字段，其次 body
+	// Prefer content field, then body
 	for _, key := range []string{"content", "body", "text"} {
 		if v, ok := notif.Payload[key]; ok {
 			if str, ok := v.(string); ok && str != "" {
-				// 截断过长内容
+				// Truncate too long content
 				if len([]rune(str)) > 80 {
 					str = string([]rune(str)[:80]) + "..."
 				}
@@ -166,17 +166,17 @@ func (s *pushServiceImpl) extractContent(notif notification.Notification) string
 	return ""
 }
 
-// extractExtras 从通知 Payload 中提取字符串附加数据
+// extractExtras extracts string extra data from notification Payload
 func (s *pushServiceImpl) extractExtras(notif notification.Notification) map[string]string {
 	extras := map[string]string{
 		"notification_type": notif.Type,
 	}
-	// 从 type 中解析 service（如 "message.new" → "message"）
+	// Parse service from type (e.g., "message.new" → "message")
 	parts := strings.SplitN(notif.Type, ".", 2)
 	if len(parts) > 0 {
 		extras["service"] = parts[0]
 	}
-	// 复制 Payload 中的字符串字段
+	// Copy string fields from Payload
 	for k, v := range notif.Payload {
 		if str, ok := v.(string); ok {
 			extras[k] = str
@@ -185,7 +185,7 @@ func (s *pushServiceImpl) extractExtras(notif notification.Notification) map[str
 	return extras
 }
 
-// logPush 异步写入推送日志
+// logPush asynchronously writes push log
 func (s *pushServiceImpl) logPush(userID, pushType, title, content string,
 	targetCount, successCount, failureCount int,
 	jpushMsgID, status, errMsg string,

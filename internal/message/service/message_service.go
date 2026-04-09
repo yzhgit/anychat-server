@@ -20,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// MessageService 消息服务接口
+// MessageService message service interface
 type MessageService interface {
 	SendMessage(ctx context.Context, req *messagepb.SendMessageRequest) (*messagepb.SendMessageResponse, error)
 	SendTyping(ctx context.Context, req *messagepb.SendTypingRequest) error
@@ -37,32 +37,32 @@ type MessageService interface {
 	SearchMessages(ctx context.Context, userID string, req *messagepb.SearchMessagesRequest) (*messagepb.SearchMessagesResponse, error)
 }
 
-// MessageRepo 消息仓库接口
+// MessageRepo message repository interface
 type MessageRepo interface {
 	repository.MessageRepository
 }
 
-// ReadReceiptRepo 已读回执仓库接口
+// ReadReceiptRepo read receipt repository interface
 type ReadReceiptRepo interface {
 	repository.ReadReceiptRepository
 }
 
-// SequenceRepo 序列号仓库接口
+// SequenceRepo sequence repository interface
 type SequenceRepo interface {
 	repository.SequenceRepository
 }
 
-// SendIdempotencyRepo 发送幂等仓库接口
+// SendIdempotencyRepo send idempotency repository interface
 type SendIdempotencyRepo interface {
 	repository.SendIdempotencyRepository
 }
 
-// TypingRepo 输入状态仓库接口
+// TypingRepo typing status repository interface
 type TypingRepo interface {
 	repository.TypingRepository
 }
 
-// TypingConfig 输入状态配置
+// TypingConfig typing status configuration
 type TypingConfig struct {
 	DefaultTTL   time.Duration
 	MinTTL       time.Duration
@@ -70,7 +70,7 @@ type TypingConfig struct {
 	EmitDebounce time.Duration
 }
 
-// messageServiceImpl 消息服务实现
+// messageServiceImpl message service implementation
 type messageServiceImpl struct {
 	messageRepo         MessageRepo
 	readReceiptRepo     ReadReceiptRepo
@@ -85,7 +85,7 @@ type messageServiceImpl struct {
 	db                  *gorm.DB
 }
 
-// NewMessageService 创建消息服务
+// NewMessageService creates message service
 func NewMessageService(
 	messageRepo repository.MessageRepository,
 	readReceiptRepo repository.ReadReceiptRepository,
@@ -130,7 +130,7 @@ func NewMessageService(
 	}
 }
 
-// SendMessage 发送消息
+// SendMessage sends a message
 func (s *messageServiceImpl) SendMessage(ctx context.Context, req *messagepb.SendMessageRequest) (*messagepb.SendMessageResponse, error) {
 	conversation, err := s.authorizeSend(ctx, req.SenderId, req.ConversationId)
 	if err != nil {
@@ -166,7 +166,7 @@ func (s *messageServiceImpl) SendMessage(ctx context.Context, req *messagepb.Sen
 			return err
 		}
 
-		// 幂等命中：直接返回既有消息
+		// Idempotency hit: return existing message
 		if idempotencyRecord.MessageID != "" {
 			existing, err := messageRepoTx.GetByMessageID(ctx, idempotencyRecord.MessageID)
 			if err != nil {
@@ -176,7 +176,7 @@ func (s *messageServiceImpl) SendMessage(ctx context.Context, req *messagepb.Sen
 			return nil
 		}
 
-		// 创建新消息（与序列号分配在同一事务中）
+		// Create new message (in same transaction as sequence allocation)
 		sequence, err := sequenceRepoTx.IncrementAndGet(ctx, req.ConversationId)
 		if err != nil {
 			logger.Error("Failed to increment sequence", zap.Error(err))
@@ -257,7 +257,7 @@ func (s *messageServiceImpl) SendMessage(ctx context.Context, req *messagepb.Sen
 	}, nil
 }
 
-// SendTyping 发送正在输入状态
+// SendTyping sends typing status
 func (s *messageServiceImpl) SendTyping(ctx context.Context, req *messagepb.SendTypingRequest) error {
 	if req.FromUserId == "" || req.ConversationId == "" {
 		return errors.NewBusiness(errors.CodeParamError, "from_user_id and conversation_id are required")
@@ -372,18 +372,18 @@ func (s *messageServiceImpl) authorizeSend(ctx context.Context, senderID, conver
 	return conversation, nil
 }
 
-// GetMessages 获取消息列表
+// GetMessages retrieves message list
 func (s *messageServiceImpl) GetMessages(ctx context.Context, req *messagepb.GetMessagesRequest) (*messagepb.GetMessagesResponse, error) {
-	// 参数验证
+	// Parameter validation
 	if req.Limit <= 0 {
-		req.Limit = 20 // 默认20条
+		req.Limit = 20 // default 20
 	}
 	if req.Limit > 100 {
-		req.Limit = 100 // 最多100条
+		req.Limit = 100 // max 100
 	}
 	limit := int(req.Limit)
 
-	// 获取消息列表
+	// Retrieve message list
 	startSeq := int64(0)
 	endSeq := int64(0)
 	if req.StartSeq != nil {
@@ -405,7 +405,7 @@ func (s *messageServiceImpl) GetMessages(ctx context.Context, req *messagepb.Get
 		messages = messages[:limit]
 	}
 
-	// 转换为protobuf消息
+	// Convert to protobuf messages
 	pbMessages := make([]*messagepb.Message, 0, len(messages))
 	for _, msg := range messages {
 		pbMsg := s.modelToProto(msg)
@@ -419,7 +419,7 @@ func (s *messageServiceImpl) GetMessages(ctx context.Context, req *messagepb.Get
 	}, nil
 }
 
-// GetMessageById 根据ID获取消息
+// GetMessageById retrieves message by ID
 func (s *messageServiceImpl) GetMessageById(ctx context.Context, messageID string) (*messagepb.Message, error) {
 	message, err := s.messageRepo.GetByMessageID(ctx, messageID)
 	if err != nil {
@@ -433,9 +433,9 @@ func (s *messageServiceImpl) GetMessageById(ctx context.Context, messageID strin
 	return s.modelToProto(message), nil
 }
 
-// RecallMessage 撤回消息
+// RecallMessage recalls a message
 func (s *messageServiceImpl) RecallMessage(ctx context.Context, messageID, userID string) error {
-	// 1. 获取消息
+	// 1. Retrieve message
 	message, err := s.messageRepo.GetByMessageID(ctx, messageID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -444,23 +444,23 @@ func (s *messageServiceImpl) RecallMessage(ctx context.Context, messageID, userI
 		return errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve message")
 	}
 
-	// 2. 验证权限（只能撤回自己的消息）
+	// 2. Validate permission (can only recall own messages)
 	if message.SenderID != userID {
 		return errors.NewBusiness(errors.CodeMessagePermissionDenied, "Cannot recall other's message")
 	}
 
-	// 3. 检查撤回时间限制（2分钟内）
+	// 3. Check recall time limit (within 2 minutes)
 	if time.Since(message.CreatedAt) > 2*time.Minute {
 		return errors.NewBusiness(errors.CodeMessageRecallTimeLimit, "")
 	}
 
-	// 4. 更新消息状态为撤回
+	// 4. Update message status to recalled
 	if err := s.messageRepo.UpdateStatus(ctx, messageID, model.MessageStatusRecall); err != nil {
 		logger.Error("Failed to recall message", zap.Error(err))
 		return errors.NewBusiness(errors.CodeMessageRecallFailed, "")
 	}
 
-	// 5. 若该消息处于群置顶中，自动取消置顶（失败仅记录日志，不阻塞撤回流程）
+	// 5. If message is pinned in group, auto unpin (failure only logs, does not block recall)
 	if err := s.autoUnpinRecalledGroupMessage(ctx, message); err != nil {
 		logger.Warn("Failed to auto-unpin recalled group message",
 			zap.String("messageID", message.MessageID),
@@ -468,7 +468,7 @@ func (s *messageServiceImpl) RecallMessage(ctx context.Context, messageID, userI
 			zap.Error(err))
 	}
 
-	// 6. 发布撤回通知
+	// 6. Publish recall notification
 	if err := s.publishRecallNotification(ctx, message, userID); err != nil {
 		logger.Error("Failed to publish recall notification", zap.Error(err))
 	}
@@ -496,9 +496,9 @@ func (s *messageServiceImpl) autoUnpinRecalledGroupMessage(ctx context.Context, 
 	return err
 }
 
-// DeleteMessage 删除消息
+// DeleteMessage deletes a message
 func (s *messageServiceImpl) DeleteMessage(ctx context.Context, messageID, userID string) error {
-	// 1. 获取消息
+	// 1. Retrieve message
 	message, err := s.messageRepo.GetByMessageID(ctx, messageID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -507,12 +507,12 @@ func (s *messageServiceImpl) DeleteMessage(ctx context.Context, messageID, userI
 		return errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve message")
 	}
 
-	// 2. 验证权限（只能删除自己的消息）
+	// 2. Validate permission (can only delete own messages)
 	if message.SenderID != userID {
 		return errors.NewBusiness(errors.CodeMessagePermissionDenied, "Cannot delete other's message")
 	}
 
-	// 3. 软删除消息
+	// 3. Soft delete message
 	if err := s.messageRepo.Delete(ctx, messageID); err != nil {
 		logger.Error("Failed to delete message", zap.Error(err))
 		return errors.NewBusiness(errors.CodeMessageDeleteFailed, "")
@@ -521,7 +521,7 @@ func (s *messageServiceImpl) DeleteMessage(ctx context.Context, messageID, userI
 	return nil
 }
 
-// MarkAsRead 标记消息已读
+// MarkAsRead marks messages as read
 func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req *messagepb.MarkAsReadRequest) error {
 	if s.conversationClient == nil {
 		return errors.NewBusiness(errors.CodeInternalError, "conversation client is not initialized")
@@ -554,7 +554,7 @@ func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req 
 		lastReadMessageID = existingReceipt.LastReadMessageID
 	}
 
-	// 创建或更新已读回执
+	// Create or update read receipt
 	receipt := &model.MessageReadReceipt{
 		ConversationID:   req.ConversationId,
 		ConversationType: conversation.ConversationType,
@@ -573,7 +573,7 @@ func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req 
 		return errors.NewBusiness(errors.CodeMarkReadFailed, "")
 	}
 
-	// 发布已读回执通知（单聊时通知对方）
+	// Publish read receipt notification (for single chat, notify the other party)
 	if conversation.ConversationType == model.ConversationTypeSingle {
 		if err := s.publishReadReceiptNotification(receipt); err != nil {
 			logger.Error("Failed to publish read receipt notification", zap.Error(err))
@@ -583,7 +583,7 @@ func (s *messageServiceImpl) MarkAsRead(ctx context.Context, userID string, req 
 	return nil
 }
 
-// MarkMessagesRead 批量按消息ID标记已读
+// MarkMessagesRead marks messages as read by message IDs
 func (s *messageServiceImpl) MarkMessagesRead(ctx context.Context, userID string, req *messagepb.MarkMessagesReadRequest) (*messagepb.MarkMessagesReadResponse, error) {
 	if userID == "" {
 		return nil, errors.NewBusiness(errors.CodeParamError, "user_id is required")
@@ -686,7 +686,7 @@ func (s *messageServiceImpl) MarkMessagesRead(ctx context.Context, userID string
 	}, nil
 }
 
-// AckReadTriggers 批量上报阅后即焚阅读触发
+// AckReadTriggers acknowledges burn-after-reading triggers
 func (s *messageServiceImpl) AckReadTriggers(ctx context.Context, userID string, req *messagepb.AckReadTriggersRequest) (*messagepb.AckReadTriggersResponse, error) {
 	if userID == "" {
 		return nil, errors.NewBusiness(errors.CodeParamError, "user_id is required")
@@ -729,7 +729,7 @@ func (s *messageServiceImpl) AckReadTriggers(ctx context.Context, userID string,
 	}
 
 	for _, msg := range candidates {
-		// 发送方不能触发自己的阅后即焚
+		// Sender cannot trigger their own burn-after-reading
 		if msg.SenderID == userID {
 			continue
 		}
@@ -786,13 +786,13 @@ func (s *messageServiceImpl) AckReadTriggers(ctx context.Context, userID string,
 	}, nil
 }
 
-// GetUnreadCount 获取未读消息数
+// GetUnreadCount retrieves unread message count
 func (s *messageServiceImpl) GetUnreadCount(ctx context.Context, conversationID, userID string, lastReadSeq *int64) (*messagepb.GetUnreadCountResponse, error) {
 	if err := s.ensureConversationAccessible(ctx, userID, conversationID); err != nil {
 		return nil, err
 	}
 
-	// 如果没有提供lastReadSeq，从已读回执中获取
+	// If lastReadSeq not provided, get from read receipt
 	var readSeq int64
 	if lastReadSeq != nil {
 		readSeq = *lastReadSeq
@@ -806,20 +806,20 @@ func (s *messageServiceImpl) GetUnreadCount(ctx context.Context, conversationID,
 		}
 	}
 
-	// 统计未读数
+	// Count unread
 	unreadCount, err := s.messageRepo.CountUnreadByConversation(ctx, conversationID, readSeq)
 	if err != nil {
 		logger.Error("Failed to count unread messages", zap.Error(err))
 		return nil, errors.NewBusiness(errors.CodeGetUnreadCountFailed, "")
 	}
 
-	// 获取最新消息序列号
+	// Get latest message sequence
 	currentSeq, err := s.sequenceRepo.GetCurrentSeq(ctx, conversationID)
 	if err != nil {
 		return nil, errors.NewBusiness(errors.CodeInternalError, "Failed to get current sequence")
 	}
 
-	// 获取最新一条消息
+	// Get latest message
 	var lastMessage *messagepb.Message
 	messages, err := s.messageRepo.GetLatestByConversation(ctx, conversationID, 1)
 	if err == nil && len(messages) > 0 {
@@ -833,7 +833,7 @@ func (s *messageServiceImpl) GetUnreadCount(ctx context.Context, conversationID,
 	}, nil
 }
 
-// GetReadReceipts 获取已读回执列表
+// GetReadReceipts retrieves read receipt list
 func (s *messageServiceImpl) GetReadReceipts(ctx context.Context, conversationID, userID string) (*messagepb.GetReadReceiptsResponse, error) {
 	if err := s.ensureConversationAccessible(ctx, userID, conversationID); err != nil {
 		return nil, err
@@ -863,7 +863,7 @@ func (s *messageServiceImpl) GetReadReceipts(ctx context.Context, conversationID
 	}, nil
 }
 
-// GetConversationSequence 获取会话当前序列号
+// GetConversationSequence retrieves current conversation sequence
 func (s *messageServiceImpl) GetConversationSequence(ctx context.Context, conversationID string) (int64, error) {
 	seq, err := s.sequenceRepo.GetCurrentSeq(ctx, conversationID)
 	if err != nil {
@@ -873,19 +873,9 @@ func (s *messageServiceImpl) GetConversationSequence(ctx context.Context, conver
 	return seq, nil
 }
 
-// SearchMessages 搜索消息
+// SearchMessages searches messages
 func (s *messageServiceImpl) SearchMessages(ctx context.Context, userID string, req *messagepb.SearchMessagesRequest) (*messagepb.SearchMessagesResponse, error) {
-	if userID == "" {
-		return nil, errors.NewBusiness(errors.CodeParamError, "user_id is required")
-	}
-	if req.ConversationId == nil || *req.ConversationId == "" {
-		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id is required")
-	}
-	if err := s.ensureConversationAccessible(ctx, userID, *req.ConversationId); err != nil {
-		return nil, err
-	}
-
-	// 参数验证
+	// Parameter validation
 	if req.Limit <= 0 {
 		req.Limit = 20
 	}
@@ -893,7 +883,7 @@ func (s *messageServiceImpl) SearchMessages(ctx context.Context, userID string, 
 		req.Limit = 100
 	}
 
-	// 搜索消息
+	// Search messages
 	var conversationID *string
 	if req.ConversationId != nil {
 		conversationID = req.ConversationId
@@ -910,7 +900,7 @@ func (s *messageServiceImpl) SearchMessages(ctx context.Context, userID string, 
 		return nil, errors.NewBusiness(errors.CodeSearchMessageFailed, "")
 	}
 
-	// 转换为protobuf消息
+	// Convert to protobuf messages
 	pbMessages := make([]*messagepb.Message, 0, len(messages))
 	for _, msg := range messages {
 		pbMsg := s.modelToProto(msg)
@@ -983,7 +973,7 @@ func (s *messageServiceImpl) publishTypingNotification(toUserID string, req *mes
 	return s.notificationPub.PublishToUser(toUserID, notif)
 }
 
-// modelToProto 将model转换为protobuf消息
+// modelToProto converts model to protobuf message
 func (s *messageServiceImpl) modelToProto(msg *model.Message) *messagepb.Message {
 	pbMsg := &messagepb.Message{
 		MessageId:        msg.MessageID,
@@ -1013,9 +1003,9 @@ func (s *messageServiceImpl) modelToProto(msg *model.Message) *messagepb.Message
 	return pbMsg
 }
 
-// publishNewMessageNotification 发布新消息通知
+// publishNewMessageNotification publishes new message notification
 func (s *messageServiceImpl) publishNewMessageNotification(ctx context.Context, msg *model.Message, atUsers []string) error {
-	// 解析content获取消息摘要
+	// Parse content to get message preview
 	contentPreview := s.getContentPreview(msg.Content, msg.ContentType)
 
 	payload := map[string]interface{}{
@@ -1036,7 +1026,7 @@ func (s *messageServiceImpl) publishNewMessageNotification(ctx context.Context, 
 		notification.PriorityNormal,
 	).WithPayload(payload)
 
-	// 根据会话类型决定推送方式
+	// Determine push method based on conversation type
 	switch msg.ConversationType {
 	case model.ConversationTypeSingle:
 		if msg.TargetID == "" {
@@ -1113,7 +1103,7 @@ func (s *messageServiceImpl) listGroupMemberIDs(ctx context.Context, operatorUse
 	return memberIDs, nil
 }
 
-// publishMentionNotification 发布@提及通知
+// publishMentionNotification publishes @mention notification
 func (s *messageServiceImpl) publishMentionNotification(msg *model.Message) error {
 	if len(msg.AtUsers) == 0 {
 		return nil
@@ -1149,7 +1139,7 @@ func (s *messageServiceImpl) publishMentionNotification(msg *model.Message) erro
 	return nil
 }
 
-// publishRecallNotification 发布撤回通知
+// publishRecallNotification publishes recall notification
 func (s *messageServiceImpl) publishRecallNotification(ctx context.Context, msg *model.Message, operatorUserID string) error {
 	payload := map[string]interface{}{
 		"message_id":        msg.MessageID,
@@ -1206,7 +1196,7 @@ func (s *messageServiceImpl) publishRecallNotification(ctx context.Context, msg 
 	return nil
 }
 
-// publishReadReceiptNotification 发布已读回执通知
+// publishReadReceiptNotification publishes read receipt notification
 func (s *messageServiceImpl) publishReadReceiptNotification(receipt *model.MessageReadReceipt) error {
 	payload := map[string]interface{}{
 		"conversation_id":   receipt.ConversationID,
@@ -1223,7 +1213,7 @@ func (s *messageServiceImpl) publishReadReceiptNotification(receipt *model.Messa
 		notification.PriorityLow,
 	).WithPayload(payload)
 
-	// 单聊已读回执：通知对方用户
+	// Single chat read receipt: notify the other party
 	if receipt.ConversationType == model.ConversationTypeSingle {
 		if receipt.TargetID == "" {
 			logger.Warn("Skip read receipt notification due to empty target_id",
@@ -1237,11 +1227,11 @@ func (s *messageServiceImpl) publishReadReceiptNotification(receipt *model.Messa
 	return nil
 }
 
-// getContentPreview 获取内容预览
+// getContentPreview gets content preview
 func (s *messageServiceImpl) getContentPreview(content, contentType string) string {
 	switch contentType {
 	case model.ContentTypeText:
-		// 解析JSON获取文本内容
+		// Parse JSON to get text content
 		var textContent struct {
 			Text string `json:"text"`
 		}
@@ -1251,20 +1241,20 @@ func (s *messageServiceImpl) getContentPreview(content, contentType string) stri
 			}
 			return textContent.Text
 		}
-		return "[文本消息]"
+		return "[Text Message]"
 	case model.ContentTypeImage:
-		return "[图片]"
+		return "[Image]"
 	case model.ContentTypeVideo:
-		return "[视频]"
+		return "[Video]"
 	case model.ContentTypeAudio:
-		return "[语音]"
+		return "[Voice]"
 	case model.ContentTypeFile:
-		return "[文件]"
+		return "[File]"
 	case model.ContentTypeLocation:
-		return "[位置]"
+		return "[Location]"
 	case model.ContentTypeCard:
-		return "[名片]"
+		return "[Contact]"
 	default:
-		return "[消息]"
+		return "[Message]"
 	}
 }

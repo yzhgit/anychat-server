@@ -10,42 +10,42 @@ import (
 )
 
 const (
-	// UserIDKey 上下文中的用户ID键
+	// UserIDKey user ID key in context
 	UserIDKey = "userID"
-	// DeviceIDKey 上下文中的设备ID键
+	// DeviceIDKey device ID key in context
 	DeviceIDKey = "deviceID"
-	// DeviceTypeKey 上下文中的设备类型键
+	// DeviceTypeKey device type key in context
 	DeviceTypeKey = "deviceType"
 )
 
-// JWTAuth JWT认证中间件
+// JWTAuth JWT authentication middleware
 func JWTAuth(jwtManager *jwt.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从请求头获取Token
+		// Get token from request header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			response.Unauthorized(c, "缺少认证Token")
+			response.Unauthorized(c, "Missing authentication token")
 			c.Abort()
 			return
 		}
 
-		// 检查Bearer前缀
+		// Check Bearer prefix
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			response.Unauthorized(c, "Token格式错误")
+			response.Unauthorized(c, "Invalid token format")
 			c.Abort()
 			return
 		}
 
-		// 验证Token
+		// Validate token
 		claims, err := jwtManager.ValidateAccessToken(parts[1])
 		if err != nil {
-			response.Error(c, errors.CodeTokenInvalid, "Token无效")
+			response.Error(c, errors.CodeTokenInvalid, "Invalid token")
 			c.Abort()
 			return
 		}
 
-		// 将用户信息存入上下文
+		// Store user info in context
 		c.Set(UserIDKey, claims.UserID)
 		c.Set(DeviceIDKey, claims.DeviceID)
 		c.Set(DeviceTypeKey, claims.DeviceType)
@@ -54,7 +54,7 @@ func JWTAuth(jwtManager *jwt.Manager) gin.HandlerFunc {
 	}
 }
 
-// GetUserID 从上下文获取用户ID
+// GetUserID retrieves user ID from context
 func GetUserID(c *gin.Context) string {
 	userID, exists := c.Get(UserIDKey)
 	if !exists {
@@ -63,7 +63,7 @@ func GetUserID(c *gin.Context) string {
 	return userID.(string)
 }
 
-// GetDeviceID 从上下文获取设备ID
+// GetDeviceID retrieves device ID from context
 func GetDeviceID(c *gin.Context) string {
 	deviceID, exists := c.Get(DeviceIDKey)
 	if !exists {
@@ -72,7 +72,7 @@ func GetDeviceID(c *gin.Context) string {
 	return deviceID.(string)
 }
 
-// GetDeviceType 从上下文获取设备类型
+// GetDeviceType retrieves device type from context
 func GetDeviceType(c *gin.Context) string {
 	deviceType, exists := c.Get(DeviceTypeKey)
 	if !exists {

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// SystemConfig 系统配置（键值对）
+// SystemConfig system configuration (key-value pair)
 type SystemConfig struct {
 	Key         string    `gorm:"column:key;primaryKey"`
 	Value       string    `gorm:"column:value;not null;default:''"`

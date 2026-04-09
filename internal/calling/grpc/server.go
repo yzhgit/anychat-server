@@ -12,13 +12,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Server Calling gRPC 服务器（实现 CallingService 接口）
+// Server is the Calling gRPC server (implements CallingService interface)
 type Server struct {
 	callingpb.UnimplementedCallingServiceServer
 	svc service.CallingService
 }
 
-// NewServer 创建 gRPC 服务器
+// NewServer creates a gRPC server
 func NewServer(svc service.CallingService) *Server {
 	return &Server{svc: svc}
 }

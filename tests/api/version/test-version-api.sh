@@ -1,30 +1,30 @@
 #!/bin/bash
 #
-# Version Service HTTP API 测试脚本
-# 用于测试客户端版本升级相关的 HTTP 接口
+# Version Service HTTP API Test Script
+# Tests client version upgrade related HTTP APIs
 #
 
 set -e
 
-# 加载公共函数
+# Load common functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 source "${PARENT_DIR}/common.sh"
 
-# 配置
+# Configuration
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:8080}"
 API_BASE="${GATEWAY_URL}/api/v1"
 
-# 测试数据
+# Test data
 TIMESTAMP=$(date +%s)
 TEST_PLATFORM="android"
 TEST_VERSION="1.0.0"
 TEST_BUILD_NUMBER=100
 
-# 全局变量
+# Global variables
 ACCESS_TOKEN=""
 
-# 打印函数
+# Print functions
 print_header() {
     echo -e "\n${BLUE}========================================${NC}"
     echo -e "${BLUE}$1${NC}"
@@ -43,7 +43,7 @@ print_info() {
     echo -e "  $1"
 }
 
-# HTTP 请求函数
+# HTTP request functions
 http_get() {
     local url=$1
     local token=$2
@@ -73,7 +73,7 @@ http_post() {
     fi
 }
 
-# 检查响应
+# Check response
 check_response() {
     local response=$1
     local code=$(echo "$response" | jq -r '.code // -1')
@@ -87,25 +87,25 @@ check_response() {
     fi
 }
 
-# 测试1: 版本检测 - 无需更新
+# Test 1: Version check - no update needed
 test_check_version_no_update() {
-    print_header "测试1: 版本检测 - 无需更新"
+    print_header "Test 1: Version Check - No Update Needed"
 
     local response=$(http_get "${API_BASE}/versions/check?platform=${TEST_PLATFORM}&version=99.0.0")
     echo "Response: $response"
 
     local hasUpdate=$(echo "$response" | jq -r '.data.hasUpdate // false')
     if [ "$hasUpdate" = "false" ]; then
-        print_success "版本检测成功 - 无需更新"
+        print_success "Version check successful - no update needed"
     else
-        print_error "版本检测失败"
+        print_error "Version check failed"
         exit 1
     fi
 }
 
-# 测试2: 版本检测 - 有更新
+# Test 2: Version check - has update
 test_check_version_has_update() {
-    print_header "测试2: 版本检测 - 有更新"
+    print_header "Test 2: Version Check - Has Update"
 
     local response=$(http_get "${API_BASE}/versions/check?platform=${TEST_PLATFORM}&version=1.0.0")
     echo "Response: $response"
@@ -113,41 +113,41 @@ test_check_version_has_update() {
     local hasUpdate=$(echo "$response" | jq -r '.data.hasUpdate // false')
     if [ "$hasUpdate" = "true" ]; then
         local version=$(echo "$response" | jq -r '.data.latestVersion // ""')
-        print_success "版本检测成功 - 有新版本: $version"
+        print_success "Version check successful - has new version: $version"
     else
-        print_info "当前无新版本，跳过此测试"
+        print_info "No new version available, skip this test"
     fi
 }
 
-# 测试3: 获取最新版本
+# Test 3: Get latest version
 test_get_latest_version() {
-    print_header "测试3: 获取最新版本"
+    print_header "Test 3: Get Latest Version"
 
     local response=$(http_get "${API_BASE}/versions/latest?platform=${TEST_PLATFORM}")
     echo "Response: $response"
 
     local version=$(echo "$response" | jq -r '.data.version.version // ""')
     if [ -n "$version" ]; then
-        print_success "获取最新版本成功: $version"
+        print_success "Get latest version successful: $version"
     else
-        print_info "当前无发布版本，跳过此测试"
+        print_info "No released version available, skip this test"
     fi
 }
 
-# 测试4: 获取版本列表
+# Test 4: Get version list
 test_list_versions() {
-    print_header "测试4: 获取版本列表"
+    print_header "Test 4: Get Version List"
 
     local response=$(http_get "${API_BASE}/versions/list?platform=${TEST_PLATFORM}&page=1&pageSize=10")
     echo "Response: $response"
 
     local total=$(echo "$response" | jq -r '.data.total // 0')
-    print_success "获取版本列表成功 - 总数: $total"
+    print_success "Get version list successful - Total: $total"
 }
 
-# 测试5: 版本上报
+# Test 5: Version report
 test_report_version() {
-    print_header "测试5: 版本上报"
+    print_header "Test 5: Version Report"
 
     local response=$(http_post "${API_BASE}/versions/report" \
         "{\"platform\":\"${TEST_PLATFORM}\",\"version\":\"1.0.0\",\"buildNumber\":${TEST_BUILD_NUMBER},\"deviceId\":\"test-device-001\"}")
@@ -155,22 +155,22 @@ test_report_version() {
 
     local code=$(echo "$response" | jq -r '.code // -1')
     if [ "$code" = "0" ]; then
-        print_success "版本上报成功"
+        print_success "Version report successful"
     else
-        print_info "版本上报完成 (code: $code)"
+        print_info "Version report completed (code: $code)"
     fi
 }
 
-# 测试6: 创建版本（管理后台）
+# Test 6: Create version (admin panel)
 test_create_version() {
-    print_header "测试6: 创建版本（管理后台）"
+    print_header "Test 6: Create Version (Admin Panel)"
 
-    # 管理后台API在单独端口
+    # Admin API is on separate port
     ADMIN_API="${ADMIN_URL:-http://localhost:8011}/api/v1"
 
-    # 如果没有admin token，跳过此测试
+    # If no admin token, skip this test
     if [ -z "$ACCESS_TOKEN" ]; then
-        print_info "需要先登录获取token，跳过创建版本测试"
+        print_info "Need to login first to get token, skip create version test"
         return 0
     fi
 
@@ -183,8 +183,8 @@ test_create_version() {
             \"minBuildNumber\": 100,
             \"forceUpdate\": false,
             \"releaseType\": \"stable\",
-            \"title\": \"测试版本 v2.0.0\",
-            \"content\": \"## 更新内容\\n- 新功能测试\\n- Bug修复\",
+            \"title\": \"Test Version v2.0.0\",
+            \"content\": \"## Update Content\\n- New Feature Test\\n- Bug Fix\",
             \"downloadUrl\": \"https://example.com/app/android/v2.0.0.apk\",
             \"fileSize\": 52428800,
             \"fileHash\": \"sha256:test-hash\"
@@ -194,22 +194,22 @@ test_create_version() {
     local code=$(echo "$response" | jq -r '.code // -1')
     if [ "$code" = "0" ]; then
         local versionId=$(echo "$response" | jq -r '.data.id // 0')
-        print_success "创建版本成功 - ID: $versionId"
+        print_success "Create version successful - ID: $versionId"
         echo "$versionId" > /tmp/version_test_id.txt
     else
-        print_info "创建版本完成 (code: $code)"
+        print_info "Create version completed (code: $code)"
     fi
 }
 
-# 测试7: 获取版本详情
+# Test 7: Get version detail
 test_get_version() {
-    print_header "测试7: 获取版本详情"
+    print_header "Test 7: Get Version Detail"
 
     ADMIN_API="${ADMIN_URL:-http://localhost:8011}/api/v1"
     local versionId=$(cat /tmp/version_test_id.txt 2>/dev/null || echo "1")
 
     if [ -z "$ACCESS_TOKEN" ]; then
-        print_info "需要先登录获取token，跳过获取版本详情测试"
+        print_info "Need to login first to get token, skip get version detail test"
         return 0
     fi
 
@@ -218,45 +218,45 @@ test_get_version() {
 
     local version=$(echo "$response" | jq -r '.data.version.version // ""')
     if [ -n "$version" ]; then
-        print_success "获取版本详情成功: $version"
+        print_success "Get version detail successful: $version"
     else
-        print_info "版本详情获取完成"
+        print_info "Version detail retrieval completed"
     fi
 }
 
-# 测试8: 强制更新检测
+# Test 8: Force update check
 test_force_update() {
-    print_header "测试8: 强制更新检测"
+    print_header "Test 8: Force Update Check"
 
     local response=$(http_get "${API_BASE}/versions/check?platform=${TEST_PLATFORM}&version=0.1.0")
     echo "Response: $response"
 
     local forceUpdate=$(echo "$response" | jq -r '.data.forceUpdate // false')
     if [ "$forceUpdate" = "true" ]; then
-        print_success "强制更新检测成功"
+        print_success "Force update check successful"
     else
-        print_info "无需强制更新"
+        print_info "No force update needed"
     fi
 }
 
-# 清理测试数据
+# Cleanup test data
 cleanup() {
-    print_header "清理测试数据"
+    print_header "Cleanup test data"
     rm -f /tmp/version_test_id.txt
-    print_success "清理完成"
+    print_success "Cleanup completed"
 }
 
-# 主函数
+# Main function
 main() {
     echo -e "${GREEN}"
     echo "╔═══════════════════════════════════════════╗"
-    echo "║   Version Service API 测试脚本           ║"
+    echo "║   Version Service API Test Script        ║"
     echo "╚═══════════════════════════════════════════╝"
     echo -e "${NC}"
 
     check_dependencies
 
-    # 执行测试用例
+    # Execute test cases
     test_check_version_no_update
     test_check_version_has_update
     test_get_latest_version
@@ -268,7 +268,7 @@ main() {
 
     cleanup
 
-    echo -e "\n${GREEN}✓ 所有测试完成！${NC}\n"
+    echo -e "\n${GREEN}✓ All tests completed!${NC}\n"
 }
 
 main "$@"

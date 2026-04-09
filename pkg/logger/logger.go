@@ -9,20 +9,20 @@ import (
 
 var Log *zap.Logger
 
-// Config 日志配置
+// Config log configuration
 type Config struct {
 	Level      string // debug, info, warn, error
 	Output     string // stdout, file
 	FilePath   string
-	MaxSize    int  // MB
+	MaxSize    int // MB
 	MaxBackups int
-	MaxAge     int  // days
+	MaxAge     int // days
 	Compress   bool
 }
 
-// Init 初始化日志
+// Init initializes the logger
 func Init(config *Config) error {
-	// 解析日志级别
+	// Parse log level
 	level := zapcore.InfoLevel
 	switch config.Level {
 	case "debug":
@@ -35,7 +35,7 @@ func Init(config *Config) error {
 		level = zapcore.ErrorLevel
 	}
 
-	// 编码器配置
+	// Encoder config
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -50,7 +50,7 @@ func Init(config *Config) error {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// 创建核心
+	// Create core
 	var core zapcore.Core
 	if config.Output == "stdout" || config.Output == "" {
 		core = zapcore.NewCore(
@@ -70,38 +70,38 @@ func Init(config *Config) error {
 		)
 	}
 
-	// 创建Logger
+	// Create Logger
 	Log = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	return nil
 }
 
-// Debug 调试日志
+// Debug logs debug message
 func Debug(msg string, fields ...zap.Field) {
 	Log.Debug(msg, fields...)
 }
 
-// Info 信息日志
+// Info logs info message
 func Info(msg string, fields ...zap.Field) {
 	Log.Info(msg, fields...)
 }
 
-// Warn 警告日志
+// Warn logs warning message
 func Warn(msg string, fields ...zap.Field) {
 	Log.Warn(msg, fields...)
 }
 
-// Error 错误日志
+// Error logs error message
 func Error(msg string, fields ...zap.Field) {
 	Log.Error(msg, fields...)
 }
 
-// Fatal 致命错误日志
+// Fatal logs fatal error message
 func Fatal(msg string, fields ...zap.Field) {
 	Log.Fatal(msg, fields...)
 }
 
-// Sync 同步日志
+// Sync syncs the logger
 func Sync() error {
 	if Log != nil {
 		return Log.Sync()

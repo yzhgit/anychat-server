@@ -1,17 +1,17 @@
 #!/bin/bash
 #
-# 共享函数库 - HTTP API 测试工具
-# 用于所有 API 测试脚本的公共函数
+# Shared function library - HTTP API testing utilities
+# Common functions for all API test scripts
 #
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 打印函数
+# Print functions
 print_header() {
     echo -e "\n${YELLOW}========================================${NC}"
     echo -e "${YELLOW}$1${NC}"
@@ -30,7 +30,7 @@ print_info() {
     echo -e "  $1"
 }
 
-# HTTP 请求函数
+# HTTP request functions
 http_post() {
     local url=$1
     local data=$2
@@ -79,7 +79,7 @@ http_delete() {
         -H "Authorization: Bearer ${token}"
 }
 
-# 检查 JSON 响应中的 code 字段
+# Check code field in JSON response
 check_response() {
     local response=$1
     local code=$(echo "$response" | jq -r '.code // -1')
@@ -93,7 +93,7 @@ check_response() {
     fi
 }
 
-# 检查响应为失败（code != 0）
+# Check response is a failure (code != 0)
 check_response_fail() {
     local response=$1
     local code
@@ -102,12 +102,12 @@ check_response_fail() {
     if [ "$code" != "0" ]; then
         return 0
     else
-        print_error "期望请求失败，但返回成功"
+        print_error "Expected request to fail, but returned success"
         return 1
     fi
 }
 
-# 检查失败响应码是否符合预期
+# Check if failure response code matches expected
 check_fail_code() {
     local response=$1
     local expected_code=$2
@@ -123,12 +123,12 @@ check_fail_code() {
         else
             message="Unknown error"
         fi
-        print_error "失败码不符合预期: got=${code}, expected=${expected_code}, message=${message}"
+        print_error "Failure code does not match: got=${code}, expected=${expected_code}, message=${message}"
         return 1
     fi
 }
 
-# 解析标准响应 code（优先 jq，缺失时回退 grep）
+# Parse standard response code (prefer jq, fallback to grep)
 json_code() {
     local response=$1
     if command -v jq &> /dev/null; then
@@ -138,7 +138,7 @@ json_code() {
     fi
 }
 
-# 从响应提取 userId
+# Extract userId from response
 extract_user_id() {
     local response=$1
     if command -v jq &> /dev/null; then
@@ -148,7 +148,7 @@ extract_user_id() {
     fi
 }
 
-# 从响应提取 accessToken
+# Extract accessToken from response
 extract_access_token() {
     local response=$1
     if command -v jq &> /dev/null; then
@@ -158,7 +158,7 @@ extract_access_token() {
     fi
 }
 
-# 注册测试用户，返回注册接口原始响应
+# Register test user, returns raw response
 register_test_user() {
     local api_base=$1
     local email=$2
@@ -185,7 +185,7 @@ EOF
     http_post "${api_base}/auth/register" "$data"
 }
 
-# 登录测试用户，返回登录接口原始响应
+# Login test user, returns raw response
 login_test_user() {
     local api_base=$1
     local account=$2
@@ -208,7 +208,7 @@ EOF
     http_post "${api_base}/auth/login" "$data"
 }
 
-# 注册并登录测试用户（注册失败不影响登录），输出 accessToken
+# Register and login test user (registration failure doesn't affect login), outputs accessToken
 register_and_login_test_user() {
     local api_base=$1
     local email=$2
@@ -225,7 +225,7 @@ register_and_login_test_user() {
     extract_access_token "$login_resp"
 }
 
-# 通过 token 获取当前用户 ID
+# Get current user ID by token
 get_user_id_by_token() {
     local api_base=$1
     local token=$2
@@ -234,15 +234,15 @@ get_user_id_by_token() {
     extract_user_id "$resp"
 }
 
-# 检查依赖工具
+# Check dependency tools
 check_dependencies() {
     if ! command -v jq &> /dev/null; then
-        print_error "需要安装 jq 工具: apt-get install jq 或 brew install jq"
+        print_error "jq tool needs to be installed: apt-get install jq or brew install jq"
         exit 1
     fi
 
     if ! command -v curl &> /dev/null; then
-        print_error "需要安装 curl 工具"
+        print_error "curl tool needs to be installed"
         exit 1
     fi
 }

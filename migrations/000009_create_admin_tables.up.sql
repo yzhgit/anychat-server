@@ -1,4 +1,4 @@
--- 管理员用户表
+-- Admin users table
 CREATE TABLE IF NOT EXISTS admin_users (
     id            VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     username      VARCHAR(50) UNIQUE NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 审计日志表
+-- Audit logs table
 CREATE TABLE IF NOT EXISTS audit_logs (
     id            BIGSERIAL PRIMARY KEY,
     admin_id      VARCHAR(36),
@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_id   ON audit_logs(admin_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action     ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 
--- 系统配置表
+-- System configs table
 CREATE TABLE IF NOT EXISTS system_configs (
     key         VARCHAR(100) PRIMARY KEY,
     value       TEXT NOT NULL DEFAULT '',
@@ -36,16 +36,16 @@ CREATE TABLE IF NOT EXISTS system_configs (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 初始管理员账户 (username: admin, password: Admin@123456)
+-- Initial admin account (username: admin, password: Admin@123456)
 INSERT INTO admin_users (username, password_hash, role)
 VALUES ('admin', '$2a$10$AN7p9wUwBMIHWhFsw6h8ouO41ZtoK7XG9ddCZSqQH6pcTZ12v1tPu', 'superadmin')
 ON CONFLICT (username) DO NOTHING;
 
--- 初始系统配置
+-- Initial system configs
 INSERT INTO system_configs (key, value, description) VALUES
-    ('site.name',           'AnyChat', '网站名称'),
-    ('site.description',    'AnyChat即时通讯系统', '网站描述'),
-    ('user.max_friends',    '1000', '最大好友数'),
-    ('group.max_members',   '500', '群组最大成员数'),
-    ('message.max_recall',  '120', '消息可撤回时间(秒)')
+    ('site.name',           'AnyChat', 'Site name'),
+    ('site.description',    'AnyChat instant messaging system', 'Site description'),
+    ('user.max_friends',    '1000', 'Maximum number of friends'),
+    ('group.max_members',   '500', 'Maximum group members'),
+    ('message.max_recall',  '120', 'Message recall time limit (seconds)')
 ON CONFLICT (key) DO NOTHING;

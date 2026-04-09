@@ -12,20 +12,20 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// AuthServer auth gRPC服务器
+// AuthServer auth gRPC server
 type AuthServer struct {
 	authpb.UnimplementedAuthServiceServer
 	authService service.AuthService
 }
 
-// NewAuthServer 创建auth gRPC服务器
+// NewAuthServer creates auth gRPC server
 func NewAuthServer(authService service.AuthService) *AuthServer {
 	return &AuthServer{
 		authService: authService,
 	}
 }
 
-// SendVerificationCode 发送验证码
+// SendVerificationCode sends verification code
 func (s *AuthServer) SendVerificationCode(ctx context.Context, req *authpb.SendVerificationCodeRequest) (*authpb.SendVerificationCodeResponse, error) {
 	dtoReq := &dto.SendVerificationCodeRequest{
 		Target:     req.Target,
@@ -46,9 +46,9 @@ func (s *AuthServer) SendVerificationCode(ctx context.Context, req *authpb.SendV
 	}, nil
 }
 
-// Register 用户注册
+// Register user registration
 func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.RegisterRequest{
 		Password:      req.Password,
 		VerifyCode:    req.VerifyCode,
@@ -66,13 +66,13 @@ func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) 
 		dtoReq.Nickname = *req.Nickname
 	}
 
-	// 调用service层
+	// call service layer
 	resp, err := s.authService.Register(ctx, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	return &authpb.RegisterResponse{
 		UserId:       resp.UserID,
 		AccessToken:  resp.AccessToken,
@@ -81,9 +81,9 @@ func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) 
 	}, nil
 }
 
-// Login 用户登录
+// Login user login
 func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.LoginRequest{
 		Account:       req.Account,
 		Password:      req.Password,
@@ -93,13 +93,13 @@ func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*auth
 		IpAddress:     req.IpAddress,
 	}
 
-	// 调用service层
+	// call service layer
 	resp, err := s.authService.Login(ctx, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	pbResp := &authpb.LoginResponse{
 		UserId:       resp.UserID,
 		AccessToken:  resp.AccessToken,
@@ -124,14 +124,14 @@ func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*auth
 	return pbResp, nil
 }
 
-// Logout 用户登出
+// Logout user logout
 func (s *AuthServer) Logout(ctx context.Context, req *authpb.LogoutRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.LogoutRequest{
 		DeviceID: req.DeviceId,
 	}
 
-	// 调用service层
+	// call service layer
 	err := s.authService.Logout(ctx, req.UserId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -140,20 +140,20 @@ func (s *AuthServer) Logout(ctx context.Context, req *authpb.LogoutRequest) (*co
 	return &commonpb.Empty{}, nil
 }
 
-// RefreshToken 刷新访问令牌
+// RefreshToken refresh access token
 func (s *AuthServer) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.RefreshTokenRequest{
 		RefreshToken: req.RefreshToken,
 	}
 
-	// 调用service层
+	// call service layer
 	resp, err := s.authService.RefreshToken(ctx, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	return &authpb.RefreshTokenResponse{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
@@ -161,16 +161,16 @@ func (s *AuthServer) RefreshToken(ctx context.Context, req *authpb.RefreshTokenR
 	}, nil
 }
 
-// ChangePassword 修改密码
+// ChangePassword change password
 func (s *AuthServer) ChangePassword(ctx context.Context, req *authpb.ChangePasswordRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.ChangePasswordRequest{
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 		DeviceID:    req.DeviceId,
 	}
 
-	// 调用service层
+	// call service layer
 	err := s.authService.ChangePassword(ctx, req.UserId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -179,7 +179,7 @@ func (s *AuthServer) ChangePassword(ctx context.Context, req *authpb.ChangePassw
 	return &commonpb.Empty{}, nil
 }
 
-// ResetPassword 重置密码（忘记密码）
+// ResetPassword reset password (forgot password)
 func (s *AuthServer) ResetPassword(ctx context.Context, req *authpb.ResetPasswordRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.ResetPasswordRequest{
 		Account:     req.Account,
@@ -195,9 +195,9 @@ func (s *AuthServer) ResetPassword(ctx context.Context, req *authpb.ResetPasswor
 	return &commonpb.Empty{}, nil
 }
 
-// ValidateToken 验证Token（供gateway调用）
+// ValidateToken validates token (called by gateway)
 func (s *AuthServer) ValidateToken(ctx context.Context, req *authpb.ValidateTokenRequest) (*authpb.ValidateTokenResponse, error) {
-	// 调用service层
+	// call service layer
 	claims, err := s.authService.ValidateToken(ctx, req.AccessToken)
 	if err != nil {
 		return &authpb.ValidateTokenResponse{
@@ -205,7 +205,7 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *authpb.ValidateToke
 		}, nil
 	}
 
-	// 返回验证结果
+	// return validation result
 	return &authpb.ValidateTokenResponse{
 		Valid:      true,
 		UserId:     claims.UserID,
@@ -214,7 +214,7 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *authpb.ValidateToke
 	}, nil
 }
 
-// convertError 将业务错误转换为gRPC错误
+// convertError converts business errors to gRPC errors
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
 		switch bizErr.Code {

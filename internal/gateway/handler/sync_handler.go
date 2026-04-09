@@ -10,17 +10,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SyncHandler sync HTTP处理器
+// SyncHandler sync HTTP handler
 type SyncHandler struct {
 	clientManager *client.Manager
 }
 
-// NewSyncHandler 创建sync处理器
+// NewSyncHandler creates sync handler
 func NewSyncHandler(clientManager *client.Manager) *SyncHandler {
 	return &SyncHandler{clientManager: clientManager}
 }
 
-// syncRequest 全量/增量同步请求体
+// syncRequest full/incremental sync request body
 type syncRequest struct {
 	LastSyncTime     int64                  `json:"lastSyncTime"`
 	ConversationSeqs []*conversationSeqItem `json:"conversationSeqs"`
@@ -32,18 +32,18 @@ type conversationSeqItem struct {
 	LastSeq          int64  `json:"lastSeq"`
 }
 
-// Sync 全量/增量数据同步
-// @Summary      数据同步
-// @Description  客户端登录或从后台恢复时调用，返回自 lastSyncTime 后的好友、群组、会话变更，以及各会话的离线消息。lastSyncTime=0 表示全量同步。
-// @Tags         同步
+// Sync full/incremental data sync
+// @Summary      data sync
+// @Description  Called when client logs in or resumes from background. Returns friends, groups, conversation changes since lastSyncTime, and offline messages for each conversation. lastSyncTime=0 means full sync.
+// @Tags         sync
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      syncRequest  true  "同步请求"
-// @Success      200      {object}  response.Response{data=object}  "同步成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      syncRequest  true  "sync request"
+// @Success      200      {object}  response.Response{data=object}  "sync success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /sync [post]
 func (h *SyncHandler) Sync(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -74,25 +74,25 @@ func (h *SyncHandler) Sync(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// syncMessagesRequest 消息补齐请求体
+// syncMessagesRequest message sync request body
 type syncMessagesRequest struct {
-	ConversationSeqs    []*conversationSeqItem `json:"conversationSeqs"`
-	LimitPerConversation int32                 `json:"limitPerConversation"`
+	ConversationSeqs     []*conversationSeqItem `json:"conversationSeqs"`
+	LimitPerConversation int32                  `json:"limitPerConversation"`
 }
 
-// SyncMessages 消息补齐
-// @Summary      消息补齐
-// @Description  按照每个会话的最新已知序列号，拉取离线消息
-// @Tags         同步
+// SyncMessages message sync
+// @Summary      message sync
+// @Description  Pull offline messages based on the latest known sequence number for each conversation
+// @Tags         sync
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        limit  query  int  false  "每个会话最多返回的消息数（默认50）"
-// @Param        request  body  syncMessagesRequest  true  "消息补齐请求"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        limit  query  int  false  "max messages per conversation (default 50)"
+// @Param        request  body  syncMessagesRequest  true  "message sync request"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /sync/messages [post]
 func (h *SyncHandler) SyncMessages(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

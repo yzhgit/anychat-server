@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Subscriber NATS订阅管理器，负责订阅用户通知并推送给WebSocket客户端
+// Subscriber NATS subscription manager, subscribes to user notifications and pushes to WebSocket clients
 type Subscriber struct {
 	nc      *nats.Conn
 	manager *websocket.Manager
@@ -20,7 +20,7 @@ type Subscriber struct {
 	mu      sync.RWMutex
 }
 
-// NewSubscriber 创建NATS订阅管理器
+// NewSubscriber creates NATS subscription manager
 func NewSubscriber(nc *nats.Conn, manager *websocket.Manager) *Subscriber {
 	return &Subscriber{
 		nc:      nc,
@@ -29,8 +29,8 @@ func NewSubscriber(nc *nats.Conn, manager *websocket.Manager) *Subscriber {
 	}
 }
 
-// SubscribeUser 为用户订阅NATS通知（幂等，已订阅则跳过）
-// 订阅主题: notification.*.*.{userID}，匹配该用户的所有服务通知
+// SubscribeUser subscribe to NATS notifications for user (idempotent, skip if already subscribed)
+// Subscribes to subject: notification.*.*.{userID}, matches all service notifications for this user
 func (s *Subscriber) SubscribeUser(userID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -54,7 +54,7 @@ func (s *Subscriber) SubscribeUser(userID string) error {
 	return nil
 }
 
-// UnsubscribeUser 取消用户的NATS通知订阅
+// UnsubscribeUser unsubscribe user's NATS notification subscription
 func (s *Subscriber) UnsubscribeUser(userID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -70,7 +70,7 @@ func (s *Subscriber) UnsubscribeUser(userID string) {
 	}
 }
 
-// handleNotification 处理收到的NATS通知，序列化后推送给WebSocket客户端
+// handleNotification handle received NATS notifications, serialize and push to WebSocket client
 func (s *Subscriber) handleNotification(userID string, data []byte) {
 	var notif pkgnotification.Notification
 	if err := json.Unmarshal(data, &notif); err != nil {

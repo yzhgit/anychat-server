@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// LoggingInterceptor 日志拦截器，记录所有gRPC请求
+// LoggingInterceptor logs all gRPC requests
 func LoggingInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -22,10 +22,10 @@ func LoggingInterceptor() grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		startTime := time.Now()
 
-		// 调用实际的处理方法
+		// Call actual handler
 		resp, err := handler(ctx, req)
 
-		// 记录请求日志
+		// Log request
 		duration := time.Since(startTime)
 		statusCode := codes.OK
 		if err != nil {
@@ -48,7 +48,7 @@ func LoggingInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
-// RecoveryInterceptor 恢复拦截器，捕获panic防止服务崩溃
+// RecoveryInterceptor recovers from panic to prevent service crash
 func RecoveryInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,

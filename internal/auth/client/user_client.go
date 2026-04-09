@@ -11,13 +11,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// UserClient user服务gRPC客户端
+// UserClient user service gRPC client
 type UserClient struct {
 	conn   *grpc.ClientConn
 	client userpb.UserServiceClient
 }
 
-// NewUserClient 创建user客户端
+// NewUserClient creates user client
 func NewUserClient(addr string) (*UserClient, error) {
 	conn, err := grpc.NewClient(
 		addr,
@@ -35,7 +35,7 @@ func NewUserClient(addr string) (*UserClient, error) {
 	}, nil
 }
 
-// Close 关闭连接
+// Close closes connection
 func (c *UserClient) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()
@@ -43,7 +43,7 @@ func (c *UserClient) Close() error {
 	return nil
 }
 
-// InitUserData 初始化用户数据（注册后调用）
+// InitUserData initializes user data (called after registration)
 func (c *UserClient) InitUserData(ctx context.Context, userID, nickname string) error {
 	req := &userpb.InitUserDataRequest{
 		UserId:   userID,

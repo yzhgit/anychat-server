@@ -1,4 +1,4 @@
--- 验证码记录表
+-- Verification codes table
 CREATE TABLE IF NOT EXISTS verification_codes (
     id              BIGSERIAL    PRIMARY KEY,
     code_id         VARCHAR(64)  NOT NULL UNIQUE,
@@ -22,7 +22,7 @@ CREATE INDEX idx_verification_codes_target ON verification_codes (target, target
 CREATE INDEX idx_verification_codes_code_id ON verification_codes (code_id);
 CREATE INDEX idx_verification_codes_expires_at ON verification_codes (expires_at);
 
--- 频率限制表
+-- Rate limits table
 CREATE TABLE IF NOT EXISTS rate_limits (
     id              BIGSERIAL    PRIMARY KEY,
     target          VARCHAR(128) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 
 CREATE INDEX idx_rate_limits_target ON rate_limits (target, target_type, action);
 
--- 验证码模板表
+-- Verification templates table
 CREATE TABLE IF NOT EXISTS verification_templates (
     id              BIGSERIAL    PRIMARY KEY,
     purpose         VARCHAR(32)  NOT NULL UNIQUE,
@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS verification_templates (
     updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 插入默认模板
+-- Insert default templates
 INSERT INTO verification_templates (purpose, name, sms_template_id, sms_content, email_subject, email_content) VALUES
-('register', '注册', 'SMS_123456', '【AnyChat】您的验证码为 {code}，5分钟内有效，请勿泄露。', 'AnyChat 邮箱验证', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 邮箱验证</h2><p>您好，</p><p>您的邮箱验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p><p style="color: #999; font-size: 12px;">如果这不是您的操作，请忽略此邮件。</p></div></body></html>'),
-('login', '登录', 'SMS_123457', '【AnyChat】您的登录验证码为 {code}，5分钟内有效，请勿泄露。', 'AnyChat 登录验证码', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 登录验证</h2><p>您好，</p><p>您的登录验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>'),
-('reset_password', '重置密码', 'SMS_123458', '【AnyChat】您正在重置密码，验证码为 {code}，5分钟内有效。', 'AnyChat 重置密码', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 重置密码</h2><p>您好，</p><p>您正在重置密码，验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>'),
-('bind_phone', '绑定手机', 'SMS_123459', '【AnyChat】您正在绑定手机号，验证码为 {code}，5分钟内有效。', 'AnyChat 绑定手机', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 绑定手机</h2><p>您好，</p><p>您正在绑定手机号，验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>'),
-('change_phone', '修改手机', 'SMS_123460', '【AnyChat】您正在修改手机号，验证码为 {code}，5分钟内有效。', 'AnyChat 修改手机', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 修改手机号</h2><p>您好，</p><p>您正在修改手机号，验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>'),
-('bind_email', '绑定邮箱', 'SMS_123461', '【AnyChat】您正在绑定邮箱，验证码为 {code}，5分钟内有效。', 'AnyChat 绑定邮箱', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 绑定邮箱</h2><p>您好，</p><p>您正在绑定邮箱，验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>'),
-('change_email', '修改邮箱', 'SMS_123462', '【AnyChat】您正在修改邮箱，验证码为 {code}，5分钟内有效。', 'AnyChat 修改邮箱', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat 修改邮箱</h2><p>您好，</p><p>您正在修改邮箱，验证码为：<strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>验证码有效期为 5 分钟，请勿泄露给他人。</p></div></body></html>');
+('register', 'Register', 'SMS_123456', '【AnyChat】Your verification code is {code}, valid for 5 minutes. Do not share.', 'AnyChat Email Verification', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Email Verification</h2><p>Hello,</p><p>Your email verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p><p style="color: #999; font-size: 12px;">If this was not your operation, please ignore this email.</p></div></body></html>'),
+('login', 'Login', 'SMS_123457', '【AnyChat】Your login verification code is {code}, valid for 5 minutes. Do not share.', 'AnyChat Login Verification', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Login Verification</h2><p>Hello,</p><p>Your login verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>'),
+('reset_password', 'Reset Password', 'SMS_123458', '【AnyChat】You are resetting your password, verification code is {code}, valid for 5 minutes.', 'AnyChat Reset Password', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Reset Password</h2><p>Hello,</p><p>You are resetting your password, verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>'),
+('bind_phone', 'Bind Phone', 'SMS_123459', '【AnyChat】You are binding your phone number, verification code is {code}, valid for 5 minutes.', 'AnyChat Bind Phone', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Bind Phone</h2><p>Hello,</p><p>You are binding your phone number, verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>'),
+('change_phone', 'Change Phone', 'SMS_123460', '【AnyChat】You are changing your phone number, verification code is {code}, valid for 5 minutes.', 'AnyChat Change Phone', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Change Phone Number</h2><p>Hello,</p><p>You are changing your phone number, verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>'),
+('bind_email', 'Bind Email', 'SMS_123461', '【AnyChat】You are binding your email, verification code is {code}, valid for 5 minutes.', 'AnyChat Bind Email', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Bind Email</h2><p>Hello,</p><p>You are binding your email, verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>'),
+('change_email', 'Change Email', 'SMS_123462', '【AnyChat】You are changing your email, verification code is {code}, valid for 5 minutes.', 'AnyChat Change Email', '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #333;">AnyChat Change Email</h2><p>Hello,</p><p>You are changing your email, verification code is: <strong style="font-size: 24px; color: #1890ff;">{code}</strong></p><p>The code is valid for 5 minutes, please do not share with others.</p></div></body></html>');

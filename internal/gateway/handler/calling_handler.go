@@ -11,36 +11,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CallingHandler 音视频通话 HTTP 处理器
+// CallingHandler audio/video call HTTP handler
 type CallingHandler struct {
 	clientManager *client.Manager
 }
 
-// NewCallingHandler 创建 Calling 处理器
+// NewCallingHandler creates Calling handler
 func NewCallingHandler(clientManager *client.Manager) *CallingHandler {
 	return &CallingHandler{clientManager: clientManager}
 }
 
-// ── 一对一通话 ────────────────────────────────────────────
+// ── One-on-one call ────────────────────────────────────────────
 
-// initiateCallRequest 发起通话请求体
+// initiateCallRequest initiate call request body
 type initiateCallRequest struct {
 	CalleeID string `json:"calleeId" binding:"required"`
-	CallType string `json:"callType"` // audio/video（默认 audio）
+	CallType string `json:"callType"` // audio/video (default: audio)
 }
 
-// InitiateCall 发起音视频通话
-// @Summary      发起通话
-// @Description  向指定用户发起音视频通话，返回 Calling Room 名称和 JWT Token
+// InitiateCall initiate audio/video call
+// @Summary      initiate call
+// @Description  Initiate audio/video call to specified user, returns Calling Room name and JWT Token
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      initiateCallRequest  true  "通话请求"
-// @Success      200      {object}  response.Response{data=object}  "通话发起成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      initiateCallRequest  true  "call request"
+// @Success      200      {object}  response.Response{data=object}  "call initiated successfully"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /calling/calls [post]
 func (h *CallingHandler) InitiateCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -71,19 +71,19 @@ func (h *CallingHandler) InitiateCall(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// JoinCall 接听通话（被叫方接受）
-// @Summary      接听通话
-// @Description  被叫方接受通话邀请，返回 Calling Room 名称和 JWT Token
+// JoinCall answer call (callee accepts)
+// @Summary      answer call
+// @Description  Callee accepts call invitation, returns Calling Room name and JWT Token
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        callId  path  string  true  "通话ID"
-// @Success      200     {object}  response.Response{data=object}  "接听成功"
-// @Failure      400     {object}  response.Response  "参数错误"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "通话不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        callId  path  string  true  "call ID"
+// @Success      200     {object}  response.Response{data=object}  "answer success"
+// @Failure      400     {object}  response.Response  "parameter error"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "call not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/calls/{callId}/join [post]
 func (h *CallingHandler) JoinCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -100,18 +100,18 @@ func (h *CallingHandler) JoinCall(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// RejectCall 拒绝通话
-// @Summary      拒绝通话
-// @Description  被叫方拒绝通话邀请
+// RejectCall reject call
+// @Summary      reject call
+// @Description  Callee rejects call invitation
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        callId  path  string  true  "通话ID"
-// @Success      200     {object}  response.Response  "拒绝成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "通话不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        callId  path  string  true  "call ID"
+// @Success      200     {object}  response.Response  "reject success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "call not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/calls/{callId}/reject [post]
 func (h *CallingHandler) RejectCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -128,18 +128,18 @@ func (h *CallingHandler) RejectCall(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// EndCall 挂断通话
-// @Summary      挂断通话
-// @Description  主叫方或被叫方挂断通话
+// EndCall end call
+// @Summary      end call
+// @Description  Caller or callee ends the call
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        callId  path  string  true  "通话ID"
-// @Success      200     {object}  response.Response  "挂断成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "通话不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        callId  path  string  true  "call ID"
+// @Success      200     {object}  response.Response  "end success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "call not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/calls/{callId}/end [post]
 func (h *CallingHandler) EndCall(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -156,18 +156,18 @@ func (h *CallingHandler) EndCall(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetCallSession 获取通话会话详情
-// @Summary      获取通话详情
-// @Description  获取指定通话会话的详细信息
+// GetCallSession get call session details
+// @Summary      get call details
+// @Description  Get detailed info of specified call session
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        callId  path  string  true  "通话ID"
-// @Success      200     {object}  response.Response{data=object}  "成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "通话不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        callId  path  string  true  "call ID"
+// @Success      200     {object}  response.Response{data=object}  "success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "call not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/calls/{callId} [get]
 func (h *CallingHandler) GetCallSession(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -184,18 +184,18 @@ func (h *CallingHandler) GetCallSession(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// ListCallLogs 获取通话记录
-// @Summary      通话记录
-// @Description  获取当前用户的通话历史记录
+// ListCallLogs get call logs
+// @Summary      call logs
+// @Description  Get current user's call history
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        page      query  int  false  "页码（默认1）"
-// @Param        pageSize  query  int  false  "每页数量（默认20）"
-// @Success      200       {object}  response.Response{data=object}  "成功"
-// @Failure      401       {object}  response.Response  "未授权"
-// @Failure      500       {object}  response.Response  "服务器错误"
+// @Param        page      query  int  false  "page number (default 1)"
+// @Param        pageSize  query  int  false  "page size (default 20)"
+// @Success      200       {object}  response.Response{data=object}  "success"
+// @Failure      401       {object}  response.Response  "unauthorized"
+// @Failure      500       {object}  response.Response  "server error"
 // @Router       /calling/calls [get]
 func (h *CallingHandler) ListCallLogs(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -220,27 +220,27 @@ func (h *CallingHandler) ListCallLogs(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// ── 会议室 ────────────────────────────────────────────────
+// ── Meeting room ────────────────────────────────────────────────
 
-// createMeetingRequest 创建会议室请求体
+// createMeetingRequest create meeting room request body
 type createMeetingRequest struct {
 	Title           string `json:"title" binding:"required"`
 	Password        string `json:"password"`
 	MaxParticipants int32  `json:"maxParticipants"`
 }
 
-// CreateMeeting 创建会议室
-// @Summary      创建会议室
-// @Description  创建新的音视频会议室，返回会议信息和 Calling Token
+// CreateMeeting create meeting room
+// @Summary      create meeting room
+// @Description  Create new audio/video meeting room, returns meeting info and Calling Token
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      createMeetingRequest  true  "会议室信息"
-// @Success      200      {object}  response.Response{data=object}  "创建成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      createMeetingRequest  true  "meeting room info"
+// @Success      200      {object}  response.Response{data=object}  "create success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /calling/meetings [post]
 func (h *CallingHandler) CreateMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -264,18 +264,18 @@ func (h *CallingHandler) CreateMeeting(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// ListMeetings 列举活跃会议室
-// @Summary      会议室列表
-// @Description  获取当前活跃的会议室列表
+// ListMeetings list active meeting rooms
+// @Summary      meeting room list
+// @Description  Get list of currently active meeting rooms
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        page      query  int  false  "页码（默认1）"
-// @Param        pageSize  query  int  false  "每页数量（默认20）"
-// @Success      200       {object}  response.Response{data=object}  "成功"
-// @Failure      401       {object}  response.Response  "未授权"
-// @Failure      500       {object}  response.Response  "服务器错误"
+// @Param        page      query  int  false  "page number (default 1)"
+// @Param        pageSize  query  int  false  "page size (default 20)"
+// @Success      200       {object}  response.Response{data=object}  "success"
+// @Failure      401       {object}  response.Response  "unauthorized"
+// @Failure      500       {object}  response.Response  "server error"
 // @Router       /calling/meetings [get]
 func (h *CallingHandler) ListMeetings(c *gin.Context) {
 	req := &callingpb.ListMeetingsRequest{Page: 1, PageSize: 20}
@@ -298,18 +298,18 @@ func (h *CallingHandler) ListMeetings(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMeeting 获取会议室详情
-// @Summary      获取会议室
-// @Description  获取指定会议室的详细信息
+// GetMeeting get meeting room details
+// @Summary      get meeting room
+// @Description  Get detailed info of specified meeting room
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        roomId  path  string  true  "会议室ID"
-// @Success      200     {object}  response.Response{data=object}  "成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "会议室不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        roomId  path  string  true  "meeting room ID"
+// @Success      200     {object}  response.Response{data=object}  "success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "meeting room not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/meetings/{roomId} [get]
 func (h *CallingHandler) GetMeeting(c *gin.Context) {
 	roomID := c.Param("roomId")
@@ -324,26 +324,26 @@ func (h *CallingHandler) GetMeeting(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// joinMeetingRequest 加入会议室请求体
+// joinMeetingRequest join meeting room request body
 type joinMeetingRequest struct {
 	Password string `json:"password"`
 }
 
-// JoinMeeting 加入会议室
-// @Summary      加入会议室
-// @Description  加入指定会议室，返回 Calling Token
+// JoinMeeting join meeting room
+// @Summary      join meeting room
+// @Description  Join specified meeting room, returns Calling Token
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        roomId   path  string              true  "会议室ID"
-// @Param        request  body  joinMeetingRequest  false "会议室密码（若有）"
-// @Success      200      {object}  response.Response{data=object}  "加入成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "密码错误"
-// @Failure      404      {object}  response.Response  "会议室不存在"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        roomId   path  string              true  "meeting room ID"
+// @Param        request  body  joinMeetingRequest  false "meeting room password (if any)"
+// @Success      200      {object}  response.Response{data=object}  "join success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "wrong password"
+// @Failure      404      {object}  response.Response  "meeting room not found"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /calling/meetings/{roomId}/join [post]
 func (h *CallingHandler) JoinMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -364,19 +364,19 @@ func (h *CallingHandler) JoinMeeting(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// EndMeeting 结束会议室
-// @Summary      结束会议室
-// @Description  创建者结束会议室，会议室关闭后所有参与者将被移出
+// EndMeeting end meeting room
+// @Summary      end meeting room
+// @Description  Creator ends meeting room, all participants will be removed after room closes
 // @Tags         Calling
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        roomId  path  string  true  "会议室ID"
-// @Success      200     {object}  response.Response  "成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      403     {object}  response.Response  "无权限"
-// @Failure      404     {object}  response.Response  "会议室不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        roomId  path  string  true  "meeting room ID"
+// @Success      200     {object}  response.Response  "success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      403     {object}  response.Response  "no permission"
+// @Failure      404     {object}  response.Response  "meeting room not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /calling/meetings/{roomId}/end [post]
 func (h *CallingHandler) EndMeeting(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

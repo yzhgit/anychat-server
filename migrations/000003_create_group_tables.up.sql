@@ -1,4 +1,4 @@
--- 创建群组表
+-- Create groups table
 CREATE TABLE IF NOT EXISTS groups (
     id BIGSERIAL PRIMARY KEY,
     group_id VARCHAR(36) NOT NULL UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS groups (
     max_members INT DEFAULT 500,
     is_muted BOOLEAN DEFAULT FALSE,
     description TEXT,
-    status SMALLINT DEFAULT 1,  -- 0-已解散 1-正常
+    status SMALLINT DEFAULT 1,  -- 0-dissolved, 1-normal
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -19,13 +19,13 @@ CREATE INDEX idx_groups_owner_id ON groups(owner_id);
 CREATE INDEX idx_groups_status ON groups(status);
 CREATE INDEX idx_groups_created_at ON groups(created_at);
 
--- 创建群成员表
+-- Create group members table
 CREATE TABLE IF NOT EXISTS group_members (
     id BIGSERIAL PRIMARY KEY,
     group_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(36) NOT NULL,
     group_nickname VARCHAR(50),
-    group_remark VARCHAR(20),           -- 用户为该群设置的备注名，仅对本人可见
+    group_remark VARCHAR(20),           -- Custom remark name for this group, visible only to the user
     role VARCHAR(20) DEFAULT 'member',  -- owner/admin/member
     muted_until TIMESTAMP,
     joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -37,7 +37,7 @@ CREATE INDEX idx_group_members_user_id ON group_members(user_id);
 CREATE INDEX idx_group_members_role ON group_members(role);
 CREATE INDEX idx_group_members_joined_at ON group_members(joined_at);
 
--- 创建群组设置表
+-- Create group settings table
 CREATE TABLE IF NOT EXISTS group_settings (
     group_id VARCHAR(36) PRIMARY KEY,
     join_verify BOOLEAN DEFAULT TRUE,
@@ -50,12 +50,12 @@ CREATE TABLE IF NOT EXISTS group_settings (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 创建入群申请表
+-- Create group join requests table
 CREATE TABLE IF NOT EXISTS group_join_requests (
     id BIGSERIAL PRIMARY KEY,
     group_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(36) NOT NULL,
-    inviter_id VARCHAR(36),  -- 邀请人ID（NULL表示主动申请）
+    inviter_id VARCHAR(36),  -- Inviter ID (NULL means active application)
     message VARCHAR(200),
     status VARCHAR(20) DEFAULT 'pending',  -- pending/accepted/rejected
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -66,7 +66,7 @@ CREATE INDEX idx_group_join_requests_group_id ON group_join_requests(group_id);
 CREATE INDEX idx_group_join_requests_user_id ON group_join_requests(user_id);
 CREATE INDEX idx_group_join_requests_status ON group_join_requests(status);
 
--- 创建群置顶消息表
+-- Create group pinned messages table
 CREATE TABLE IF NOT EXISTS group_pinned_messages (
     id BIGSERIAL PRIMARY KEY,
     group_id VARCHAR(36) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS group_pinned_messages (
 CREATE INDEX idx_group_pinned_messages_group_id ON group_pinned_messages(group_id);
 CREATE INDEX idx_group_pinned_messages_group_updated_at ON group_pinned_messages(group_id, updated_at DESC);
 
--- 创建群二维码表
+-- Create group qrcode table
 CREATE TABLE IF NOT EXISTS group_qrcodes (
     id         BIGSERIAL    PRIMARY KEY,
     group_id   VARCHAR(36)  NOT NULL,

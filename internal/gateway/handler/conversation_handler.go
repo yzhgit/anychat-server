@@ -13,12 +13,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// ConversationHandler conversation HTTP处理器
+// ConversationHandler conversation HTTP handler
 type ConversationHandler struct {
 	clientManager *client.Manager
 }
 
-// NewConversationHandler 创建conversation处理器
+// NewConversationHandler creates conversation handler
 func NewConversationHandler(clientManager *client.Manager) *ConversationHandler {
 	return &ConversationHandler{clientManager: clientManager}
 }
@@ -35,18 +35,18 @@ func (h *ConversationHandler) ensureConversationAccessible(c *gin.Context, userI
 	return true
 }
 
-// GetConversations 获取会话列表
-// @Summary      获取会话列表
-// @Description  获取当前用户的会话列表，支持增量同步（通过updatedBefore参数）
-// @Tags         会话
+// GetConversations get conversation list
+// @Summary      get conversation list
+// @Description  Get current user's conversation list, supports incremental sync (via updatedBefore parameter)
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        limit          query  int    false  "返回数量（默认20，最大100）"
-// @Param        updatedBefore  query  int64  false  "Unix时间戳，仅返回此时间之前更新的会话（增量同步）"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        limit          query  int    false  "return count (default 20, max 100)"
+// @Param        updatedBefore  query  int64  false  "Unix timestamp, only return conversations updated before this time (incremental sync)"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations [get]
 func (h *ConversationHandler) GetConversations(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -72,18 +72,18 @@ func (h *ConversationHandler) GetConversations(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetConversation 获取单个会话
-// @Summary      获取单个会话
-// @Description  获取指定会话的详情
-// @Tags         会话
+// GetConversation get single conversation
+// @Summary      get single conversation
+// @Description  Get details of specified conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string  true  "会话ID"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      404  {object}  response.Response  "会话不存在"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string  true  "conversation ID"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      404  {object}  response.Response  "conversation not found"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId} [get]
 func (h *ConversationHandler) GetConversation(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -100,17 +100,17 @@ func (h *ConversationHandler) GetConversation(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// DeleteConversation 删除会话
-// @Summary      删除会话
-// @Description  删除指定会话（不影响消息，仅从会话列表中移除）
-// @Tags         会话
+// DeleteConversation delete conversation
+// @Summary      delete conversation
+// @Description  Delete specified conversation (doesn't affect messages, only removes from conversation list)
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string  true  "会话ID"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string  true  "conversation ID"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId} [delete]
 func (h *ConversationHandler) DeleteConversation(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -127,24 +127,24 @@ func (h *ConversationHandler) DeleteConversation(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// setPinnedRequest 置顶请求体
+// setPinnedRequest pin request body
 type setPinnedRequest struct {
 	Pinned bool `json:"pinned"`
 }
 
-// SetPinned 设置会话置顶
-// @Summary      设置会话置顶
-// @Description  置顶或取消置顶指定会话
-// @Tags         会话
+// SetPinned set conversation pin
+// @Summary      set conversation pin
+// @Description  Pin or unpin specified conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string           true  "会话ID"
-// @Param        request    body  setPinnedRequest  true  "置顶状态"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string           true  "conversation ID"
+// @Param        request    body  setPinnedRequest  true  "pin status"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/pin [put]
 func (h *ConversationHandler) SetPinned(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -168,24 +168,24 @@ func (h *ConversationHandler) SetPinned(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// setMutedRequest 免打扰请求体
+// setMutedRequest mute request body
 type setMutedRequest struct {
 	Muted bool `json:"muted"`
 }
 
-// SetMuted 设置会话免打扰
-// @Summary      设置会话免打扰
-// @Description  开启或关闭指定会话的免打扰
-// @Tags         会话
+// SetMuted set conversation mute
+// @Summary      set conversation mute
+// @Description  Enable or disable mute for specified conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string          true  "会话ID"
-// @Param        request    body  setMutedRequest  true  "免打扰状态"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string          true  "conversation ID"
+// @Param        request    body  setMutedRequest  true  "mute status"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/mute [put]
 func (h *ConversationHandler) SetMuted(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -209,17 +209,17 @@ func (h *ConversationHandler) SetMuted(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// MarkRead 标记会话已读（清除未读数）
-// @Summary      标记会话已读
-// @Description  清除指定会话未读数，并同步推进消息已读游标到当前最新序列
-// @Tags         会话
+// MarkRead mark conversation as read (clear unread count)
+// @Summary      mark conversation as read
+// @Description  Clear unread count for specified conversation and advance message read cursor to latest sequence
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string  true  "会话ID"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string  true  "conversation ID"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/read-all [post]
 func (h *ConversationHandler) MarkRead(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -264,19 +264,19 @@ type markMessagesReadRequest struct {
 	IdempotencyKey *string  `json:"idempotency_key,omitempty"`
 }
 
-// MarkMessagesRead 批量按消息ID标记已读
-// @Summary      按消息ID标记已读
-// @Description  用于滚动列表等场景，批量上报可见消息ID并推进会话已读游标
-// @Tags         会话
+// MarkMessagesRead batch mark read by message ID
+// @Summary      mark read by message ID
+// @Description  Used in scrolling list scenarios, batch report visible message IDs and advance conversation read cursor
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string                   true  "会话ID"
-// @Param        request         body  markMessagesReadRequest  true  "消息已读列表"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string                   true  "conversation ID"
+// @Param        request         body  markMessagesReadRequest  true  "message read list"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/messages/read [post]
 func (h *ConversationHandler) MarkMessagesRead(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -313,19 +313,19 @@ func (h *ConversationHandler) MarkMessagesRead(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessageUnreadCount 获取会话未读数
-// @Summary      获取会话未读数
-// @Description  查询当前用户在指定会话的未读消息数
-// @Tags         会话
+// GetMessageUnreadCount get conversation unread count
+// @Summary      get conversation unread count
+// @Description  Query unread message count for current user in specified conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path      string  true   "会话ID"
-// @Param        last_read_seq   query     int64   false  "可选，客户端已读序列号"
-// @Success      200             {object}  response.Response{data=object}  "成功"
-// @Failure      400             {object}  response.Response  "参数错误"
-// @Failure      401             {object}  response.Response  "未授权"
-// @Failure      500             {object}  response.Response  "服务器错误"
+// @Param        conversationId  path      string  true   "conversation ID"
+// @Param        last_read_seq   query     int64   false  "optional, client read sequence"
+// @Success      200             {object}  response.Response{data=object}  "success"
+// @Failure      400             {object}  response.Response  "parameter error"
+// @Failure      401             {object}  response.Response  "unauthorized"
+// @Failure      500             {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/messages/unread-count [get]
 func (h *ConversationHandler) GetMessageUnreadCount(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -357,18 +357,18 @@ func (h *ConversationHandler) GetMessageUnreadCount(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessageReadReceipts 获取会话消息已读回执
-// @Summary      获取消息已读回执
-// @Description  返回会话中成员的最后已读序列
-// @Tags         会话
+// GetMessageReadReceipts get conversation message read receipts
+// @Summary      get message read receipts
+// @Description  Return last read sequence for members in conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path      string  true  "会话ID"
-// @Success      200             {object}  response.Response{data=object}  "成功"
-// @Failure      400             {object}  response.Response  "参数错误"
-// @Failure      401             {object}  response.Response  "未授权"
-// @Failure      500             {object}  response.Response  "服务器错误"
+// @Param        conversationId  path      string  true  "conversation ID"
+// @Success      200             {object}  response.Response{data=object}  "success"
+// @Failure      400             {object}  response.Response  "parameter error"
+// @Failure      401             {object}  response.Response  "unauthorized"
+// @Failure      500             {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/messages/read-receipts [get]
 func (h *ConversationHandler) GetMessageReadReceipts(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -390,18 +390,18 @@ func (h *ConversationHandler) GetMessageReadReceipts(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessageSequence 获取会话消息序列号
-// @Summary      获取会话消息序列号
-// @Description  获取会话中当前最新消息序列号
-// @Tags         会话
+// GetMessageSequence get conversation message sequence
+// @Summary      get conversation message sequence
+// @Description  Get latest message sequence in conversation
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path      string  true  "会话ID"
-// @Success      200             {object}  response.Response{data=object}  "成功"
-// @Failure      400             {object}  response.Response  "参数错误"
-// @Failure      401             {object}  response.Response  "未授权"
-// @Failure      500             {object}  response.Response  "服务器错误"
+// @Param        conversationId  path      string  true  "conversation ID"
+// @Success      200             {object}  response.Response{data=object}  "success"
+// @Failure      400             {object}  response.Response  "parameter error"
+// @Failure      401             {object}  response.Response  "unauthorized"
+// @Failure      500             {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/messages/sequence [get]
 func (h *ConversationHandler) GetMessageSequence(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -425,16 +425,16 @@ func (h *ConversationHandler) GetMessageSequence(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetTotalUnread 获取总未读数
-// @Summary      获取总未读数
-// @Description  获取当前用户所有会话的总未读消息数（免打扰会话不计入）
-// @Tags         会话
+// GetTotalUnread get total unread count
+// @Summary      get total unread count
+// @Description  Get total unread message count for all conversations of current user (muted conversations excluded)
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/unread/total [get]
 func (h *ConversationHandler) GetTotalUnread(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -449,24 +449,24 @@ func (h *ConversationHandler) GetTotalUnread(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// setBurnAfterReadingRequest 阅后即焚请求体
+// setBurnAfterReadingRequest burn after reading request body
 type setBurnAfterReadingRequest struct {
-	Duration int32 `json:"duration"` // 秒,0表示取消
+	Duration int32 `json:"duration"` // seconds, 0 means cancel
 }
 
-// SetBurnAfterReading 设置阅后即焚
-// @Summary      设置阅后即焚
-// @Description  设置会话阅后即焚时长，0表示取消
-// @Tags         会话
+// SetBurnAfterReading set burn after reading
+// @Summary      set burn after reading
+// @Description  Set conversation burn after reading duration, 0 means cancel
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string                     true  "会话ID"
-// @Param        request    body  setBurnAfterReadingRequest  true  "阅后即焚时长(秒)"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string                     true  "conversation ID"
+// @Param        request    body  setBurnAfterReadingRequest  true  "burn after reading duration (seconds)"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/burn [put]
 func (h *ConversationHandler) SetBurnAfterReading(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -491,22 +491,22 @@ func (h *ConversationHandler) SetBurnAfterReading(c *gin.Context) {
 }
 
 type setAutoDeleteRequest struct {
-	Duration int32 `json:"duration"` // 秒,0表示取消
+	Duration int32 `json:"duration"` // seconds, 0 means cancel
 }
 
-// SetAutoDelete 设置自动删除
-// @Summary      设置自动删除
-// @Description  设置会话自动删除时长，0表示取消
-// @Tags         会话
+// SetAutoDelete set auto delete
+// @Summary      set auto delete
+// @Description  Set conversation auto delete duration, 0 means cancel
+// @Tags         conversation
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversationId  path  string                  true  "会话ID"
-// @Param        request    body  setAutoDeleteRequest   true  "自动删除时长(秒)"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        conversationId  path  string                  true  "conversation ID"
+// @Param        request    body  setAutoDeleteRequest   true  "auto delete duration (seconds)"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /conversations/{conversationId}/auto_delete [put]
 func (h *ConversationHandler) SetAutoDelete(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

@@ -11,18 +11,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Server Push gRPC 服务器
+// Server Push gRPC server
 type Server struct {
 	pushpb.UnimplementedPushServiceServer
 	pushService service.PushService
 }
 
-// NewServer 创建 gRPC 服务器
+// NewServer creates gRPC server
 func NewServer(pushService service.PushService) *Server {
 	return &Server{pushService: pushService}
 }
 
-// SendPush 向指定用户列表发送推送通知
+// SendPush sends push notification to specified user list
 func (s *Server) SendPush(ctx context.Context, req *pushpb.SendPushRequest) (*pushpb.SendPushResponse, error) {
 	if len(req.UserIds) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "user_ids is required")

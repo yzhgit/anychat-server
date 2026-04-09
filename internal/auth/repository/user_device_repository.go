@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserDeviceRepository 用户设备仓库接口
+// UserDeviceRepository user device repository interface
 type UserDeviceRepository interface {
 	Create(ctx context.Context, device *model.UserDevice) error
 	GetByUserIDAndDeviceID(ctx context.Context, userID, deviceID string) (*model.UserDevice, error)
@@ -17,22 +17,22 @@ type UserDeviceRepository interface {
 	UpdateLastLogin(ctx context.Context, userID, deviceID, ip string) error
 }
 
-// userDeviceRepositoryImpl 用户设备仓库实现
+// userDeviceRepositoryImpl user device repository implementation
 type userDeviceRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewUserDeviceRepository 创建用户设备仓库
+// NewUserDeviceRepository creates user device repository
 func NewUserDeviceRepository(db *gorm.DB) UserDeviceRepository {
 	return &userDeviceRepositoryImpl{db: db}
 }
 
-// Create 创建设备记录
+// Create creates device record
 func (r *userDeviceRepositoryImpl) Create(ctx context.Context, device *model.UserDevice) error {
 	return r.db.WithContext(ctx).Create(device).Error
 }
 
-// GetByUserIDAndDeviceID 根据用户ID和设备ID获取设备
+// GetByUserIDAndDeviceID gets device by user ID and device ID
 func (r *userDeviceRepositoryImpl) GetByUserIDAndDeviceID(ctx context.Context, userID, deviceID string) (*model.UserDevice, error) {
 	var device model.UserDevice
 	err := r.db.WithContext(ctx).
@@ -44,7 +44,7 @@ func (r *userDeviceRepositoryImpl) GetByUserIDAndDeviceID(ctx context.Context, u
 	return &device, nil
 }
 
-// GetByUserID 获取用户的所有设备
+// GetByUserID gets all devices for user
 func (r *userDeviceRepositoryImpl) GetByUserID(ctx context.Context, userID string) ([]*model.UserDevice, error) {
 	var devices []*model.UserDevice
 	err := r.db.WithContext(ctx).
@@ -57,7 +57,7 @@ func (r *userDeviceRepositoryImpl) GetByUserID(ctx context.Context, userID strin
 	return devices, nil
 }
 
-// GetByUserIDAndDeviceType 根据用户ID和设备类型获取设备
+// GetByUserIDAndDeviceType gets devices by user ID and device type
 func (r *userDeviceRepositoryImpl) GetByUserIDAndDeviceType(ctx context.Context, userID, deviceType string) ([]*model.UserDevice, error) {
 	var devices []*model.UserDevice
 	err := r.db.WithContext(ctx).
@@ -70,12 +70,12 @@ func (r *userDeviceRepositoryImpl) GetByUserIDAndDeviceType(ctx context.Context,
 	return devices, nil
 }
 
-// Update 更新设备记录
+// Update updates device record
 func (r *userDeviceRepositoryImpl) Update(ctx context.Context, device *model.UserDevice) error {
 	return r.db.WithContext(ctx).Save(device).Error
 }
 
-// UpdateLastLogin 更新最后登录信息
+// UpdateLastLogin updates last login info
 func (r *userDeviceRepositoryImpl) UpdateLastLogin(ctx context.Context, userID, deviceID, ip string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.UserDevice{}).

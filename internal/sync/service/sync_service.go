@@ -16,13 +16,13 @@ import (
 
 const defaultMsgLimit = 50
 
-// SyncService 数据同步服务接口
+// SyncService data sync service interface
 type SyncService interface {
 	Sync(ctx context.Context, req *syncpb.SyncRequest) (*syncpb.SyncResponse, error)
 	SyncMessages(ctx context.Context, req *syncpb.SyncMessagesRequest) (*syncpb.SyncMessagesResponse, error)
 }
 
-// syncServiceImpl 同步服务实现（聚合各服务增量数据）
+// syncServiceImpl sync service implementation (aggregates incremental data from each service)
 type syncServiceImpl struct {
 	friendClient       friendpb.FriendServiceClient
 	groupClient        grouppb.GroupServiceClient
@@ -31,7 +31,7 @@ type syncServiceImpl struct {
 	notificationPub    notification.Publisher
 }
 
-// NewSyncService 创建同步服务
+// NewSyncService creates sync service
 func NewSyncService(
 	friendClient friendpb.FriendServiceClient,
 	groupClient grouppb.GroupServiceClient,
@@ -48,12 +48,12 @@ func NewSyncService(
 	}
 }
 
-// Sync 全量/增量同步：聚合 friend / group / conversation / message 数据
+// Sync full/incremental sync: aggregates friend/group/conversation/message data
 func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*syncpb.SyncResponse, error) {
 	userID := req.UserId
 	syncTime := time.Now().Unix()
 
-	// 转换 last_sync_time：0 表示全量同步，传 nil 给下游
+	// Convert last_sync_time: 0 means full sync, pass nil to downstream
 	var lastSyncTime *int64
 	if req.LastSyncTime > 0 {
 		lastSyncTime = &req.LastSyncTime
@@ -61,7 +61,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 
 	resp := &syncpb.SyncResponse{SyncTime: syncTime}
 
-	// ── 1. 好友增量同步 ──────────────────────────────────────
+	// ── 1. Friend incremental sync ──────────────────────────────────────
 	friendResp, err := s.friendClient.GetFriendList(ctx, &friendpb.GetFriendListRequest{
 		UserId:         userID,
 		LastUpdateTime: lastSyncTime,
@@ -75,7 +75,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 		}
 	}
 
-	// ── 2. 群组增量同步 ──────────────────────────────────────
+	// ── 2. Group incremental sync ──────────────────────────────────────
 	groupResp, err := s.groupClient.GetUserGroups(ctx, &grouppb.GetUserGroupsRequest{
 		UserId:         userID,
 		LastUpdateTime: lastSyncTime,
@@ -89,7 +89,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 		}
 	}
 
-	// ── 3. 会话增量同步 ──────────────────────────────────────
+	// ── 3. Conversation incremental sync ──────────────────────────────────────
 	conversationReq := &conversationpb.GetConversationsRequest{
 		UserId: userID,
 		Limit:  100,
@@ -107,7 +107,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 		}
 	}
 
-	// ── 4. 消息补齐（按会话序列号） ───────────────────────────
+	// ── 4. Message backfill (by conversation sequence) ───────────────────────────
 	if len(req.ConversationSeqs) > 0 {
 		convMsgs, err := s.fetchConversationMessages(ctx, req.ConversationSeqs, defaultMsgLimit)
 		if err != nil {
@@ -117,7 +117,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 		}
 	}
 
-	// ── 5. 发布同步完成通知（通知其他端） ────────────────────
+	// ── 5. Publish sync completed notification (notify other devices) ────────────────────
 	notif := notification.NewNotification(notification.TypeSyncCompleted, userID, notification.PriorityNormal).
 		AddPayloadField("sync_time", syncTime)
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
@@ -128,7 +128,7 @@ func (s *syncServiceImpl) Sync(ctx context.Context, req *syncpb.SyncRequest) (*s
 	return resp, nil
 }
 
-// SyncMessages 仅补齐各会话的离线消息
+// SyncMessages only backfills offline messages for each conversation
 func (s *syncServiceImpl) SyncMessages(ctx context.Context, req *syncpb.SyncMessagesRequest) (*syncpb.SyncMessagesResponse, error) {
 	limit := int(req.LimitPerConversation)
 	if limit <= 0 {
@@ -143,7 +143,7 @@ func (s *syncServiceImpl) SyncMessages(ctx context.Context, req *syncpb.SyncMess
 	return &syncpb.SyncMessagesResponse{Conversations: convMsgs}, nil
 }
 
-// fetchConversationMessages 并发拉取多个会话的新消息
+// fetchConversationMessages concurrently fetches new messages for multiple conversations
 func (s *syncServiceImpl) fetchConversationMessages(
 	ctx context.Context,
 	seqs []*syncpb.ConversationSeq,
@@ -157,7 +157,7 @@ func (s *syncServiceImpl) fetchConversationMessages(
 			ConversationId: seq.ConversationId,
 			StartSeq:       &startSeq,
 			Limit:          int32(limit),
-			Reverse:        false, // 从旧到新
+			Reverse:        false, // from old to new
 		})
 		if err != nil {
 			logger.Warn("SyncMessages: failed to get messages",

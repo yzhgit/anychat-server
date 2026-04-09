@@ -1,226 +1,223 @@
-# AnyChat - 即时通讯后端系统
+# AnyChat - Instant Messaging Backend System
 
-基于Go语言开发的微服务架构IM系统。
+A microservice-based IM system built with Go.
 
-## 功能特性
+## Features
 
-- 🚀 私聊、群聊
-- 📞 音视频通话
-- 📁 文件传输
-- ✅ 消息已读回执
-- 🔄 多端同步
-- 📱 离线推送
+- 🚀 Private & Group Chat
+- 📞 Audio/Video Calls
+- 📁 File Transfer
+- ✅ Message Read Receipts
+- 🔄 Multi-device Sync
+- 📱 Offline Push Notifications
 
-## 技术栈
+## Tech Stack
 
-- **开发语言**: Go 1.24.9+
-- **数据库**: PostgreSQL 18+
-- **缓存**: Redis 7.0+
-- **消息队列**: NATS
-- **对象存储**: MinIO
-- **音视频**: LiveKit
-- **监控**: Prometheus + Grafana
-- **链路追踪**: Jaeger
-- **构建工具**: Mage
+- **Language**: Go 1.24.9+
+- **Database**: PostgreSQL 18+
+- **Cache**: Redis 7.0+
+- **Message Queue**: NATS
+- **Object Storage**: MinIO
+- **Audio/Video**: LiveKit
+- **Monitoring**: Prometheus + Grafana
+- **Tracing**: Jaeger
+- **Build Tool**: Mage
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Requirements
 
 - Go 1.24.9+
 - Docker 28.1.1+ & Docker Compose 2.35.1+
-- protoc 3.12.4+（用于生成 gRPC 代码，需开启 `--experimental_allow_proto3_optional`）
-- Mage（构建工具）
+- protoc 3.12.4+ (for gRPC code generation, requires `--experimental_allow_proto3_optional`)
+- Mage (build tool)
 
-### 安装 Mage
+### Install Mage
 
 ```bash
 go install github.com/magefile/mage@latest
 ```
 
-### 本地开发
+### Local Development
 
 ```bash
-# 1. 克隆代码
+# 1. Clone the repository
 git clone https://github.com/yzhgit/anychat-server
 cd server
 
-# 2. 安装依赖
+# 2. Install dependencies
 mage deps
 
-# 3. 安装开发工具（可选）
+# 3. Install development tools (optional)
 mage install
 
-# 4. 启动基础设施
+# 4. Start infrastructure services
 mage docker:up
 
-# 5. 运行数据库迁移
+# 5. Run database migrations
 mage db:up
 
-# 6. 启动服务
+# 6. Start services
 mage dev:auth
 mage dev:gateway
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 anychat_server/
-├── api/                    # API定义
-│   └── proto/             # gRPC定义
-├── cmd/                    # 应用入口
-├── internal/               # 私有代码
-├── pkg/                    # 公共库
-├── deployments/            # 部署配置
-├── configs/                # 配置文件
-├── migrations/             # 数据库迁移
-├── docs/                   # 文档
-│   └── api/swagger/       # OpenAPI规范（自动生成）
-├── tests/                  # 测试
-└── magefile.go            # Mage构建脚本
+├── api/                    # API definitions
+│   └── proto/             # gRPC definitions
+├── cmd/                    # Application entry points
+├── internal/               # Private code
+├── pkg/                    # Shared libraries
+├── deployments/            # Deployment configurations
+├── configs/                # Configuration files
+├── migrations/             # Database migrations
+├── docs/                   # Documentation
+│   └── api/swagger/       # OpenAPI specifications (auto-generated)
+├── tests/                  # Tests
+└── magefile.go            # Mage build scripts
 ```
 
-## 构建
+## Build
 
 ```bash
-# 查看所有可用命令
+# List all available commands
 mage -l
 
-# 构建所有服务
+# Build all services
 mage build:all
 
-# 构建特定服务
+# Build specific service
 mage build:auth
 mage build:gateway
 
-# 构建Docker镜像
+# Build Docker images
 mage docker:build
 ```
 
-## 测试
+## Test
 
 ```bash
-# 运行所有测试
+# Run all tests
 mage test:all
 
-# 运行单元测试
+# Run unit tests
 mage test:unit
 
-# 生成覆盖率报告
+# Generate coverage report
 mage test:coverage
 
-# 代码检查
+# Code linting
 mage lint
 
-# 代码格式化
+# Code formatting
 mage fmt
 ```
 
-## Mage 常用命令
+## Common Mage Commands
 
-### 构建相关
-- `mage build:all` - 构建所有服务
-- `mage build:auth` - 构建认证服务
-- `mage build:user` - 构建用户服务
-- `mage build:gateway` - 构建网关服务
-- `mage build:message` - 构建消息服务
+### Build
+- `mage build:all` - Build all services
+- `mage build:auth` - Build auth service
+- `mage build:user` - Build user service
+- `mage build:gateway` - Build gateway service
+- `mage build:message` - Build message service
 
-### 开发相关
-- `mage dev:auth` - 运行认证服务
-- `mage dev:gateway` - 运行网关服务
-- `mage dev:message` - 运行消息服务
-- `mage proto` - 生成protobuf代码
+### Development
+- `mage dev:auth` - Run auth service
+- `mage dev:gateway` - Run gateway service
+- `mage dev:message` - Run message service
+- `mage proto` - Generate protobuf code
 
-### Docker相关
-- `mage docker:up` - 启动所有容器
-- `mage docker:down` - 停止所有容器
-- `mage docker:build` - 构建Docker镜像
-- `mage docker:logs` - 查看日志
-- `mage docker:ps` - 查看容器状态
+### Docker
+- `mage docker:up` - Start all containers
+- `mage docker:down` - Stop all containers
+- `mage docker:build` - Build Docker images
+- `mage docker:logs` - View logs
+- `mage docker:ps` - View container status
 
-### 数据库相关
-- `mage db:up` - 运行数据库迁移
-- `mage db:down` - 回滚数据库迁移
-- `mage db:create <name>` - 创建新的迁移文件
+### Database
+- `mage db:up` - Run database migrations
+- `mage db:down` - Rollback database migrations
+- `mage db:create <name>` - Create new migration file
 
-### 文档相关
-- `mage docs:generate` - 生成 API 文档
-- `mage docs:serve` - 启动文档服务器（http://localhost:3000）
-- `mage docs:build` - 构建文档站点
-- `mage docs:validate` - 验证 API 文档
+### Documentation
+- `mage docs:generate` - Generate API documentation
+- `mage docs:serve` - Start documentation server (http://localhost:3000)
+- `mage docs:build` - Build documentation site
+- `mage docs:validate` - Validate API documentation
 
-### 其他
-- `mage deps` - 安装依赖
-- `mage install` - 安装开发工具
-- `mage clean` - 清理构建产物
-- `mage mock` - 生成Mock代码
+### Other
+- `mage deps` - Install dependencies
+- `mage install` - Install development tools
+- `mage clean` - Clean build artifacts
+- `mage mock` - Generate mock code
 
-## 文档
+## Documentation
 
-### 在线文档
+### Online Documentation
 
-- **完整文档站点**: [GitHub Pages](https://yzhgit.github.io/anychat-server/) (自动部署)
-- **本地预览**: 运行 `mage docs:serve` 后访问 http://localhost:3000
+- **Full Documentation Site**: [GitHub Pages](https://yzhgit.github.io/anychat-server/) (auto-deployed)
+- **Local Preview**: Run `mage docs:serve` and visit http://localhost:3000
 
-### 文档内容
+### Documentation Content
 
-- [快速开始](docs/development/getting-started.md) - 新手入门指南
-- [API 文档](docs/api/gateway-http-api.md) - 交互式 HTTP API 文档
-- [系统设计](docs/design/backend-design.md) - 架构设计文档
-- [API 文档编写](docs/development/writing-api-docs.md) - 如何编写 API 文档
+- [Getting Started](docs/development/getting-started.md) - Beginner guide
+- [API Documentation](docs/api/gateway-http-api.md) - Interactive HTTP API documentation
+- [System Design](docs/design/backend-design.md) - Architecture design document
+- [Writing API Documentation](docs/development/writing-api-docs.md) - How to write API documentation
 
-### 生成和部署文档
+### Generate and Deploy Documentation
 
-#### 本地生成
+#### Local Generation
 
 ```bash
-# 生成 API 文档
-mage docs:generate
-
-# 本地预览文档站点
+# Generate API documentation
 mage docs:serve
 
-# 构建静态文档（用于部署）
+# Preview documentation site locally
 mage docs:build
 ```
 
-#### 自动部署
+#### Auto Deployment
 
-- **触发条件**: 推送到 main 分支或创建 Pull Request
-- **部署目标**: GitHub Pages
-- **文档地址**: https://yzhgit.github.io/anychat-server/
+- **Trigger**: Push to main branch or create Pull Request
+- **Deployment Target**: GitHub Pages
+- **Documentation URL**: https://yzhgit.github.io/anychat-server/
 
-文档会在以下情况自动更新：
-1. Gateway 服务代码变更
-2. 文档文件变更
-3. CI 配置变更
+Documentation is automatically updated when:
+1. Gateway service code changes
+2. Documentation files change
+3. CI configuration changes
 
-#### 编写 API 文档
+#### Writing API Documentation
 
-为 Gateway HTTP 接口添加 Swagger 注释：
+Add Swagger annotations for Gateway HTTP endpoints:
 
 ```go
-// Login 用户登录
-// @Summary      用户登录
-// @Description  用户通过账号密码登录
-// @Tags         认证
+// Login user login
+// @Summary      User login
+// @Description  User login with username and password
+// @Tags         Authentication
 // @Accept       json
 // @Produce      json
-// @Param        request  body      LoginRequest  true  "登录信息"
-// @Success      200      {object}  response.Response{data=AuthResponse}  "登录成功"
-// @Failure      400      {object}  response.Response  "参数错误"
+// @Param        request  body      LoginRequest  true  "Login information"
+// @Success      200      {object}  response.Response{data=AuthResponse}  "Login successful"
+// @Failure      400      {object}  response.Response  "Invalid parameters"
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
     // ...
 }
 ```
 
-详细说明请参考 [API 文档编写指南](docs/development/writing-api-docs.md)。
+See [Writing API Documentation Guide](docs/development/writing-api-docs.md) for details.
 
-### 其他
+### Other
 
-欢迎提交 Pull Request 和 Issue。
+Pull Requests and Issues are welcome.
 
-## 许可证
+## License
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MIT License - See [LICENSE](LICENSE) file

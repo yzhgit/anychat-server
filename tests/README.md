@@ -1,53 +1,53 @@
-# AnyChat API 测试
+# AnyChat API Tests
 
-本目录包含 AnyChat 项目的 HTTP API 测试脚本，通过 Gateway Service 的 HTTP 接口验证对外 API 的功能完整性和正确性。
+This directory contains HTTP API test scripts for the AnyChat project, which verify the functionality and correctness of external APIs through the Gateway Service HTTP interfaces.
 
-## 📁 目录结构
+## 📁 Directory Structure
 
 ```
 tests/
-├── api/                    # HTTP API 测试
-│   ├── README.md          # API测试详细说明
-│   ├── common.sh          # 共享函数库
-│   ├── test-all.sh        # 运行所有API测试
+├── api/                    # HTTP API tests
+│   ├── README.md          # API test detailed documentation
+│   ├── common.sh          # Shared function library
+│   ├── test-all.sh        # Run all API tests
 │   ├── auth/
-│   │   └── test-auth-api.sh      # Auth Service API测试
+│   │   └── test-auth-api.sh      # Auth Service API tests
 │   ├── user/
-│   │   └── test-user-api.sh      # User Service API测试
+│   │   └── test-user-api.sh      # User Service API tests
 │   ├── friend/
-│   │   └── test-friend-api.sh    # Friend Service API测试
+│   │   └── test-friend-api.sh    # Friend Service API tests
 │   ├── group/
-│   │   └── test-group-api.sh     # Group Service API测试
+│   │   └── test-group-api.sh     # Group Service API tests
 │   ├── file/
-│   │   └── test-file-api.sh      # File Service API测试
+│   │   └── test-file-api.sh      # File Service API tests
 │   ├── conversation/
-│   │   └── test-conversation-api.sh   # Conversation Service API测试
+│   │   └── test-conversation-api.sh   # Conversation Service API tests
 │   ├── sync/
-│   │   └── test-sync-api.sh      # Sync Service API测试
+│   │   └── test-sync-api.sh      # Sync Service API tests
 │   ├── push/
-│   │   └── test-push-api.sh      # Push Service API测试
+│   │   └── test-push-api.sh      # Push Service API tests
 │   ├── calling/
-│   │   └── test-calling-api.sh      # Calling Service API测试
+│   │   └── test-calling-api.sh      # Calling Service API tests
 │   └── admin/
-│       └── test-admin-api.sh     # Admin Service API测试
-└── README.md              # 本文件
+│       └── test-admin-api.sh     # Admin Service API tests
+└── README.md              # This file
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-前置条件：启动所有服务
+Prerequisite: Start all services
 
 ```bash
 ./scripts/start-services.sh
 ```
 
-运行所有测试：
+Run all tests:
 
 ```bash
 ./tests/api/test-all.sh
 ```
 
-运行单个服务测试：
+Run single service tests:
 
 ```bash
 ./tests/api/auth/test-auth-api.sh
@@ -62,15 +62,15 @@ tests/
 ADMIN_URL=http://localhost:8011 ./tests/api/admin/test-admin-api.sh
 ```
 
-详细说明参见 [api/README.md](./api/README.md)。
+For detailed documentation, see [api/README.md](./api/README.md).
 
-## 📚 相关文档
+## 📚 Related Documentation
 
-- [API测试详细说明](./api/README.md)
-- [脚本使用指南](../scripts/README.md)
-- [API 文档](../docs/api/)
-- [开发指南](../docs/development/)
+- [API Test Detailed Documentation](./api/README.md)
+- [Script Usage Guide](../scripts/README.md)
+- [API Documentation](../docs/api/)
+- [Development Guide](../docs/development/)
 
-## 📄 许可证
+## 📄 License
 
 MIT License

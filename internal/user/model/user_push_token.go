@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// UserPushToken 推送Token模型
+// UserPushToken push token model
 type UserPushToken struct {
 	ID        int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	UserID    string    `gorm:"column:user_id;not null" json:"userId"`
@@ -15,7 +15,7 @@ type UserPushToken struct {
 	UpdatedAt time.Time `gorm:"column:updated_at" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (UserPushToken) TableName() string {
 	return "user_push_tokens"
 }

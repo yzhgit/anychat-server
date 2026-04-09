@@ -9,47 +9,47 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// ConversationRepository 会话仓库接口
+// ConversationRepository is the conversation repository interface
 type ConversationRepository interface {
-	// Upsert 创建或更新会话
+	// Upsert creates or updates a conversation
 	Upsert(ctx context.Context, conversation *model.Conversation) error
-	// GetByID 根据会话ID获取会话
+	// GetByID retrieves a conversation by conversation ID
 	GetByID(ctx context.Context, conversationID string) (*model.Conversation, error)
-	// GetByUserAndTarget 根据用户ID和目标ID获取会话
+	// GetByUserAndTarget retrieves a conversation by user ID and target ID
 	GetByUserAndTarget(ctx context.Context, userID, conversationType, targetID string) (*model.Conversation, error)
-	// ListByUser 获取用户的会话列表
+	// ListByUser retrieves the user's conversation list
 	ListByUser(ctx context.Context, userID string, limit int, updatedBefore *time.Time) ([]*model.Conversation, error)
-	// Delete 删除会话
+	// Delete deletes a conversation
 	Delete(ctx context.Context, userID, conversationID string) error
-	// SetPinned 设置置顶状态
+	// SetPinned sets pinned status
 	SetPinned(ctx context.Context, userID, conversationID string, pinned bool, pinTime *time.Time) error
-	// SetMuted 设置免打扰状态
+	// SetMuted sets muted status
 	SetMuted(ctx context.Context, userID, conversationID string, muted bool) error
-	// SetBurnAfterReading 设置阅后即焚时长
+	// SetBurnAfterReading sets burn after reading duration
 	SetBurnAfterReading(ctx context.Context, userID, conversationID string, duration int32) error
-	// SetAutoDelete 设置自动删除时长
+	// SetAutoDelete sets auto delete duration
 	SetAutoDelete(ctx context.Context, userID, conversationID string, duration int32) error
-	// ClearUnread 清除未读数
+	// ClearUnread clears unread count
 	ClearUnread(ctx context.Context, userID, conversationID string) error
-	// IncrUnread 增加未读数
+	// IncrUnread increments unread count
 	IncrUnread(ctx context.Context, userID, conversationID string, count int32) error
-	// SumUnread 统计用户总未读数
+	// SumUnread counts user's total unread count
 	SumUnread(ctx context.Context, userID string) (int32, error)
-	// WithTx 使用事务
+	// WithTx uses transaction
 	WithTx(tx *gorm.DB) ConversationRepository
 }
 
-// conversationRepositoryImpl 会话仓库实现
+// conversationRepositoryImpl is the conversation repository implementation
 type conversationRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewConversationRepository 创建会话仓库
+// NewConversationRepository creates a new conversation repository
 func NewConversationRepository(db *gorm.DB) ConversationRepository {
 	return &conversationRepositoryImpl{db: db}
 }
 
-// Upsert 创建或更新会话（冲突时更新最后消息信息）
+// Upsert creates or updates a conversation (updates last message info on conflict)
 func (r *conversationRepositoryImpl) Upsert(ctx context.Context, conversation *model.Conversation) error {
 	return r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{
@@ -64,7 +64,7 @@ func (r *conversationRepositoryImpl) Upsert(ctx context.Context, conversation *m
 		Create(conversation).Error
 }
 
-// GetByID 根据会话ID获取会话
+// GetByID retrieves a conversation by conversation ID
 func (r *conversationRepositoryImpl) GetByID(ctx context.Context, conversationID string) (*model.Conversation, error) {
 	var conversation model.Conversation
 	err := r.db.WithContext(ctx).
@@ -76,7 +76,7 @@ func (r *conversationRepositoryImpl) GetByID(ctx context.Context, conversationID
 	return &conversation, nil
 }
 
-// GetByUserAndTarget 根据用户ID和目标ID获取会话
+// GetByUserAndTarget retrieves a conversation by user ID and target ID
 func (r *conversationRepositoryImpl) GetByUserAndTarget(ctx context.Context, userID, conversationType, targetID string) (*model.Conversation, error) {
 	var conversation model.Conversation
 	err := r.db.WithContext(ctx).
@@ -88,7 +88,7 @@ func (r *conversationRepositoryImpl) GetByUserAndTarget(ctx context.Context, use
 	return &conversation, nil
 }
 
-// ListByUser 获取用户会话列表（按置顶+最后消息时间排序）
+// ListByUser retrieves user conversation list (sorted by pinned + last message time)
 func (r *conversationRepositoryImpl) ListByUser(ctx context.Context, userID string, limit int, updatedBefore *time.Time) ([]*model.Conversation, error) {
 	q := r.db.WithContext(ctx).Where("user_id = ?", userID)
 	if updatedBefore != nil {
@@ -104,14 +104,14 @@ func (r *conversationRepositoryImpl) ListByUser(ctx context.Context, userID stri
 	return conversations, err
 }
 
-// Delete 删除会话（仅删除属于该用户的会话）
+// Delete deletes a conversation (only deletes conversation belonging to the user)
 func (r *conversationRepositoryImpl) Delete(ctx context.Context, userID, conversationID string) error {
 	return r.db.WithContext(ctx).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Delete(&model.Conversation{}).Error
 }
 
-// SetPinned 设置置顶状态
+// SetPinned sets pinned status
 func (r *conversationRepositoryImpl) SetPinned(ctx context.Context, userID, conversationID string, pinned bool, pinTime *time.Time) error {
 	updates := map[string]interface{}{
 		"is_pinned": pinned,
@@ -122,42 +122,42 @@ func (r *conversationRepositoryImpl) SetPinned(ctx context.Context, userID, conv
 		Updates(updates).Error
 }
 
-// SetMuted 设置免打扰状态
+// SetMuted sets muted status
 func (r *conversationRepositoryImpl) SetMuted(ctx context.Context, userID, conversationID string, muted bool) error {
 	return r.db.WithContext(ctx).Model(&model.Conversation{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Update("is_muted", muted).Error
 }
 
-// SetBurnAfterReading 设置阅后即焚时长
+// SetBurnAfterReading sets burn after reading duration
 func (r *conversationRepositoryImpl) SetBurnAfterReading(ctx context.Context, userID, conversationID string, duration int32) error {
 	return r.db.WithContext(ctx).Model(&model.Conversation{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Update("burn_after_reading", duration).Error
 }
 
-// SetAutoDelete 设置自动删除时长
+// SetAutoDelete sets auto delete duration
 func (r *conversationRepositoryImpl) SetAutoDelete(ctx context.Context, userID, conversationID string, duration int32) error {
 	return r.db.WithContext(ctx).Model(&model.Conversation{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Update("auto_delete_duration", duration).Error
 }
 
-// ClearUnread 清除未读数
+// ClearUnread clears unread count
 func (r *conversationRepositoryImpl) ClearUnread(ctx context.Context, userID, conversationID string) error {
 	return r.db.WithContext(ctx).Model(&model.Conversation{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Update("unread_count", 0).Error
 }
 
-// IncrUnread 增加未读数
+// IncrUnread increments unread count
 func (r *conversationRepositoryImpl) IncrUnread(ctx context.Context, userID, conversationID string, count int32) error {
 	return r.db.WithContext(ctx).Model(&model.Conversation{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		UpdateColumn("unread_count", gorm.Expr("unread_count + ?", count)).Error
 }
 
-// SumUnread 统计用户所有未读数之和（免打扰会话不计入）
+// SumUnread counts all unread counts for user (muted conversations are not included)
 func (r *conversationRepositoryImpl) SumUnread(ctx context.Context, userID string) (int32, error) {
 	var total int64
 	err := r.db.WithContext(ctx).Model(&model.Conversation{}).
@@ -167,7 +167,7 @@ func (r *conversationRepositoryImpl) SumUnread(ctx context.Context, userID strin
 	return int32(total), err
 }
 
-// WithTx 返回使用事务的仓库实例
+// WithTx returns a repository instance using transaction
 func (r *conversationRepositoryImpl) WithTx(tx *gorm.DB) ConversationRepository {
 	return &conversationRepositoryImpl{db: tx}
 }

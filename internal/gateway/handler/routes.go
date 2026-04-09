@@ -9,10 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes 注册所有路由
+// RegisterRoutes registers all routes
 func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jwt.Manager,
 	wsManager *websocket.Manager, subscriber *gwnotification.Subscriber) {
-	// 创建处理器
+	// create handlers
 	authHandler := NewAuthHandler(clientManager)
 	userHandler := NewUserHandler(clientManager)
 	friendHandler := NewFriendHandler(clientManager)
@@ -28,9 +28,9 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
-		// WebSocket接入点（token通过query参数认证）
+		// WebSocket endpoint (token authenticated via query parameter)
 		v1.GET("/ws", wsHandler.HandleWebSocket)
-		// 公开路由（无需认证）
+		// public routes (no auth required)
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/send-code", authHandler.SendCode)
@@ -40,22 +40,22 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			auth.POST("/password/reset", authHandler.ResetPassword)
 		}
 
-		// 群二维码预览（无需鉴权）
+		// group QR code preview (no auth required)
 		v1.GET("/groups/preview", groupHandler.GetGroupPreviewByQRCode)
-		v1.GET("/group/preview", groupHandler.GetGroupPreviewByQRCode) // 兼容设计文档单数路径
+		v1.GET("/group/preview", groupHandler.GetGroupPreviewByQRCode) // compatible with singular path in design doc
 
-		// 需要认证的路由
+		// routes requiring authentication
 		authorized := v1.Group("")
 		authorized.Use(gwmiddleware.JWTAuth(jwtManager))
 		{
-			// Auth路由
+			// Auth routes
 			authGroup := authorized.Group("/auth")
 			{
 				authGroup.POST("/logout", authHandler.Logout)
 				authGroup.POST("/password/change", authHandler.ChangePassword)
 			}
 
-			// Version 路由（客户端版本检测 - 公开）
+			// Version routes (client version check - public)
 			versions := v1.Group("/versions")
 			{
 				versions.GET("/check", versionHandler.CheckVersion)
@@ -63,16 +63,16 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				versions.GET("/list", versionHandler.ListVersions)
 			}
 
-			// 需要认证的Version路由
+			// Version routes requiring auth
 			authorizedVersions := authorized.Group("/versions")
 			{
 				authorizedVersions.POST("/report", versionHandler.ReportVersion)
 			}
 
-			// User路由
+			// User routes
 			users := authorized.Group("/users")
 			{
-				// 个人资料
+				// personal profile
 				users.GET("/me", userHandler.GetProfile)
 				users.PUT("/me", userHandler.UpdateProfile)
 				users.POST("/me/phone/bind", userHandler.BindPhone)
@@ -80,47 +80,47 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				users.POST("/me/email/bind", userHandler.BindEmail)
 				users.POST("/me/email/change", userHandler.ChangeEmail)
 
-				// 用户查询
+				// user search
 				users.GET("/:userId", userHandler.GetUserInfo)
 				users.GET("/search", userHandler.SearchUsers)
 
-				// 设置
+				// settings
 				users.GET("/me/settings", userHandler.GetSettings)
 				users.PUT("/me/settings", userHandler.UpdateSettings)
 
-				// 二维码
+				// QR code
 				users.POST("/me/qrcode/refresh", userHandler.RefreshQRCode)
 				users.GET("/qrcode", userHandler.GetUserByQRCode)
 
-				// 推送Token
+				// push token
 				users.POST("/me/push-token", userHandler.UpdatePushToken)
 			}
 
-			// Friend路由
+			// Friend routes
 			friends := authorized.Group("/friends")
 			{
-				// 好友列表
+				// friend list
 				friends.GET("", friendHandler.GetFriends)
 
-				// 好友申请
+				// friend requests
 				friends.GET("/requests", friendHandler.GetFriendRequests)
 				friends.POST("/requests", friendHandler.SendFriendRequest)
 				friends.PUT("/requests/:id", friendHandler.HandleFriendRequest)
 
-				// 好友操作
+				// friend operations
 				friends.DELETE("/:id", friendHandler.DeleteFriend)
 				friends.PUT("/:id/remark", friendHandler.UpdateRemark)
 
-				// 黑名单
+				// blacklist
 				friends.GET("/blacklist", friendHandler.GetBlacklist)
 				friends.POST("/blacklist", friendHandler.AddToBlacklist)
 				friends.DELETE("/blacklist/:id", friendHandler.RemoveFromBlacklist)
 			}
 
-			// Group路由
+			// Group routes
 			groups := authorized.Group("/groups")
 			{
-				// 群组管理
+				// group management
 				groups.POST("", groupHandler.CreateGroup)
 				groups.GET("", groupHandler.GetMyGroups)
 				groups.POST("/join-by-qrcode", groupHandler.JoinGroupByQRCode)
@@ -128,7 +128,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groups.PUT("/:id", groupHandler.UpdateGroup)
 				groups.DELETE("/:id", groupHandler.DissolveGroup)
 
-				// 成员管理
+				// member management
 				groups.GET("/:id/members", groupHandler.GetGroupMembers)
 				groups.POST("/:id/members", groupHandler.InviteMembers)
 				groups.DELETE("/:id/members/:userId", groupHandler.RemoveMember)
@@ -146,17 +146,17 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groups.DELETE("/:id/pin/:messageId", groupHandler.UnpinGroupMessage)
 				groups.GET("/:id/pins", groupHandler.GetPinnedMessages)
 
-				// 二维码
+				// QR code
 				groups.GET("/:id/qrcode", groupHandler.GetGroupQRCode)
 				groups.POST("/:id/qrcode/refresh", groupHandler.RefreshGroupQRCode)
 
-				// 入群申请
+				// join requests
 				groups.POST("/:id/join", groupHandler.JoinGroup)
 				groups.GET("/:id/requests", groupHandler.GetJoinRequests)
 				groups.PUT("/:id/requests/:requestId", groupHandler.HandleJoinRequest)
 			}
 
-			// 兼容设计文档单数路径
+			// compatible with singular path in design doc
 			groupAlias := authorized.Group("/group")
 			{
 				groupAlias.GET("/list", groupHandler.GetMyGroups)
@@ -167,7 +167,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groupAlias.POST("/:id/qrcode/refresh", groupHandler.RefreshGroupQRCode)
 			}
 
-			// File路由
+			// File routes
 			files := authorized.Group("/files")
 			{
 				files.POST("/upload-token", fileHandler.GenerateUploadToken)
@@ -178,7 +178,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				files.GET("", fileHandler.ListFiles)
 			}
 
-			// Log路由
+			// Log routes
 			logs := authorized.Group("/logs")
 			{
 				logs.POST("/upload", logHandler.UploadLog)
@@ -188,7 +188,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				logs.DELETE("/:logId", logHandler.DeleteLog)
 			}
 
-			// Message路由
+			// Message routes
 			messages := authorized.Group("/messages")
 			{
 				messages.POST("", messageHandler.SendMessage)
@@ -200,7 +200,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				messages.DELETE("/:messageId", messageHandler.DeleteMessage)
 			}
 
-			// Conversation路由
+			// Conversation routes
 			conversations := authorized.Group("/conversations")
 			{
 				conversations.GET("", conversationHandler.GetConversations)
@@ -218,19 +218,19 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				conversations.POST("/:conversationId/read-all", conversationHandler.MarkRead)
 			}
 
-			// Sync路由
+			// Sync routes
 			sync := authorized.Group("/sync")
 			{
 				sync.POST("", syncHandler.Sync)
 				sync.POST("/messages", syncHandler.SyncMessages)
 			}
 
-			// Calling 路由（推荐）
+			// Calling routes (recommended)
 			registerCallingRoutes(authorized.Group("/calling"), callingHandler)
 		}
 	}
 
-	// 健康检查
+	// health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
@@ -240,7 +240,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 }
 
 func registerCallingRoutes(group *gin.RouterGroup, handler *CallingHandler) {
-	// 一对一通话
+	// one-on-one calls
 	group.POST("/calls", handler.InitiateCall)
 	group.GET("/calls", handler.ListCallLogs)
 	group.GET("/calls/:callId", handler.GetCallSession)
@@ -248,7 +248,7 @@ func registerCallingRoutes(group *gin.RouterGroup, handler *CallingHandler) {
 	group.POST("/calls/:callId/reject", handler.RejectCall)
 	group.POST("/calls/:callId/end", handler.EndCall)
 
-	// 会议室
+	// meeting rooms
 	group.POST("/meetings", handler.CreateMeeting)
 	group.GET("/meetings", handler.ListMeetings)
 	group.GET("/meetings/:roomId", handler.GetMeeting)

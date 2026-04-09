@@ -21,7 +21,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// AuthService 认证服务接口
+// AuthService authentication service interface
 type AuthService interface {
 	SendVerificationCode(ctx context.Context, req *dto.SendVerificationCodeRequest) (*dto.SendVerificationCodeResponse, error)
 	Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error)
@@ -33,7 +33,7 @@ type AuthService interface {
 	ValidateToken(ctx context.Context, token string) (*jwt.Claims, error)
 }
 
-// authServiceImpl 认证服务实现
+// authServiceImpl authentication service implementation
 type authServiceImpl struct {
 	userRepo        repository.UserRepository
 	deviceRepo      repository.UserDeviceRepository
@@ -44,7 +44,7 @@ type authServiceImpl struct {
 	notificationPub notification.Publisher
 }
 
-// NewAuthService 创建认证服务
+// NewAuthService creates authentication service
 func NewAuthService(
 	userRepo repository.UserRepository,
 	deviceRepo repository.UserDeviceRepository,
@@ -65,10 +65,10 @@ func NewAuthService(
 	}
 }
 
-// SendVerificationCode 发送验证码
+// SendVerificationCode sends verification code
 func (s *authServiceImpl) SendVerificationCode(ctx context.Context, req *dto.SendVerificationCodeRequest) (*dto.SendVerificationCodeResponse, error) {
 	if s.verifySvc == nil {
-		return nil, errors.NewBusiness(errors.CodeInternalError, "验证码模块未初始化")
+		return nil, errors.NewBusiness(errors.CodeInternalError, "verification service not initialized")
 	}
 
 	resp, err := s.verifySvc.SendCode(ctx, &dto.SendCodeRequest{
@@ -87,34 +87,34 @@ func (s *authServiceImpl) SendVerificationCode(ctx context.Context, req *dto.Sen
 	}, nil
 }
 
-// Register 用户注册
+// Register user registration
 func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
-	// 验证参数
+	// validate parameters
 	if req.PhoneNumber == "" && req.Email == "" {
-		return nil, errors.NewBusiness(errors.CodeParamError, "手机号或邮箱至少填写一个")
+		return nil, errors.NewBusiness(errors.CodeParamError, "phone or email required")
 	}
 
-	// 验证手机号格式
+	// validate phone number format
 	if req.PhoneNumber != "" && !validator.ValidatePhone(req.PhoneNumber) {
-		return nil, errors.NewBusiness(errors.CodeParamError, "手机号格式错误")
+		return nil, errors.NewBusiness(errors.CodeParamError, "invalid phone number format")
 	}
 
-	// 验证邮箱格式
+	// validate email format
 	if req.Email != "" && !validator.ValidateEmail(req.Email) {
-		return nil, errors.NewBusiness(errors.CodeParamError, "邮箱格式错误")
+		return nil, errors.NewBusiness(errors.CodeParamError, "invalid email format")
 	}
 
-	// 验证密码强度
+	// validate password strength
 	if !crypto.ValidatePasswordStrength(req.Password) {
 		return nil, errors.NewBusiness(errors.CodePasswordWeak, "")
 	}
 
-	// 验证设备类型
+	// validate device type
 	if !validator.ValidateDeviceType(req.DeviceType) {
-		return nil, errors.NewBusiness(errors.CodeParamError, "设备类型无效")
+		return nil, errors.NewBusiness(errors.CodeParamError, "invalid device type")
 	}
 
-	// 检查用户是否已存在
+	// check if user already exists
 	if req.PhoneNumber != "" {
 		if _, err := s.userRepo.GetByPhone(ctx, req.PhoneNumber); err == nil {
 			return nil, errors.NewBusiness(errors.CodeUserExists, "")
@@ -132,7 +132,7 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 	}
 
 	if s.verifySvc == nil {
-		return nil, errors.NewBusiness(errors.CodeInternalError, "验证码模块未初始化")
+		return nil, errors.NewBusiness(errors.CodeInternalError, "verification service not initialized")
 	}
 
 	target, targetType := s.resolveVerificationTarget(req)
@@ -145,13 +145,13 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		return nil, err
 	}
 
-	// 生成密码哈希
+	// generate password hash
 	passwordHash, err := crypto.HashPassword(req.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// 创建用户
+	// create user
 	userID := uuid.New().String()
 	user := &model.User{
 		ID:           userID,
@@ -170,7 +170,7 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		return nil, err
 	}
 
-	// 创建设备记录
+	// create device record
 	device := &model.UserDevice{
 		UserID:     userID,
 		DeviceID:   req.DeviceID,
@@ -182,7 +182,7 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		return nil, err
 	}
 
-	// 生成Token
+	// generate tokens
 	accessToken, err := s.jwtManager.GenerateAccessToken(userID, req.DeviceID, req.DeviceType)
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		return nil, err
 	}
 
-	// 保存会话
+	// save session
 	session := &model.UserSession{
 		UserID:                userID,
 		DeviceID:              req.DeviceID,
@@ -206,10 +206,10 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		return nil, err
 	}
 
-	// 调用user-service初始化用户数据
+	// call user-service to initialize user data
 	if s.userClient != nil {
 		if err := s.userClient.InitUserData(ctx, userID, req.Nickname); err != nil {
-			// 初始化失败不影响注册，记录错误即可
+			// init failure should not block registration, just log error
 			logger.Error("Failed to init user data", zap.Error(err), zap.String("userID", userID))
 		}
 	}
@@ -218,18 +218,18 @@ func (s *authServiceImpl) Register(ctx context.Context, req *dto.RegisterRequest
 		UserID:       userID,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    7200, // 2小时
+		ExpiresIn:    7200, // 2 hours
 	}, nil
 }
 
-// Login 用户登录
+// Login user login
 func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
-	// 验证设备类型
+	// validate device type
 	if !validator.ValidateDeviceType(req.DeviceType) {
-		return nil, errors.NewBusiness(errors.CodeParamError, "设备类型无效")
+		return nil, errors.NewBusiness(errors.CodeParamError, "invalid device type")
 	}
 
-	// 查找用户
+	// find user
 	user, err := s.userRepo.GetByAccount(ctx, req.Account)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -238,22 +238,22 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 		return nil, err
 	}
 
-	// 验证密码
+	// verify password
 	if !crypto.CheckPassword(req.Password, user.PasswordHash) {
 		return nil, errors.NewBusiness(errors.CodePasswordError, "")
 	}
 
-	// 检查用户状态
+	// check user status
 	if !user.IsActive() {
 		return nil, errors.NewBusiness(errors.CodeAccountDisabled, "")
 	}
 
-	// 处理同类型设备登录，强制下线旧设备
+	// handle same type device login, force logout old devices
 	if err := s.handleSameTypeDeviceKick(ctx, user.ID, req.DeviceID, req.DeviceType); err != nil {
 		logger.Warn("Failed to handle same type device kick", zap.Error(err))
 	}
 
-	// 更新或创建设备记录
+	// update or create device record
 	device, err := s.deviceRepo.GetByUserIDAndDeviceID(ctx, user.ID, req.DeviceID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -277,7 +277,7 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 		}
 	}
 
-	// 生成Token
+	// generate tokens
 	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, req.DeviceID, req.DeviceType)
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 		return nil, err
 	}
 
-	// 更新或创建会话
+	// update or create session
 	session, err := s.sessionRepo.GetByUserIDAndDeviceID(ctx, user.ID, req.DeviceID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -329,7 +329,7 @@ func (s *authServiceImpl) Login(ctx context.Context, req *dto.LoginRequest) (*dt
 	}, nil
 }
 
-// handleSameTypeDeviceKick 处理同类型设备登录，强制下线旧设备
+// handleSameTypeDeviceKick handles same type device login, forces logout of old devices
 func (s *authServiceImpl) handleSameTypeDeviceKick(ctx context.Context, userID, deviceID, deviceType string) error {
 	devices, err := s.deviceRepo.GetByUserIDAndDeviceType(ctx, userID, deviceType)
 	if err != nil {
@@ -365,7 +365,7 @@ func (s *authServiceImpl) handleSameTypeDeviceKick(ctx context.Context, userID, 
 	return nil
 }
 
-// forceLogoutOtherDevices 强制下线其他设备
+// forceLogoutOtherDevices forces logout of other devices
 func (s *authServiceImpl) forceLogoutOtherDevices(ctx context.Context, userID, excludeDeviceID, reason string) error {
 	devices, err := s.deviceRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -402,21 +402,21 @@ func (s *authServiceImpl) forceLogoutOtherDevices(ctx context.Context, userID, e
 	return nil
 }
 
-// Logout 用户登出
+// Logout user logout
 func (s *authServiceImpl) Logout(ctx context.Context, userID string, req *dto.LogoutRequest) error {
-	// 删除会话
+	// delete session
 	return s.sessionRepo.DeleteByUserIDAndDeviceID(ctx, userID, req.DeviceID)
 }
 
-// RefreshToken 刷新Token
+// RefreshToken refresh token
 func (s *authServiceImpl) RefreshToken(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.RefreshTokenResponse, error) {
-	// 验证RefreshToken
+	// validate refresh token
 	claims, err := s.jwtManager.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
 		return nil, errors.NewBusiness(errors.CodeRefreshTokenInvalid, "")
 	}
 
-	// 查找会话
+	// find session
 	session, err := s.sessionRepo.GetByRefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -425,12 +425,12 @@ func (s *authServiceImpl) RefreshToken(ctx context.Context, req *dto.RefreshToke
 		return nil, err
 	}
 
-	// 检查过期时间
+	// check expiration
 	if session.IsRefreshTokenExpired() {
 		return nil, errors.NewBusiness(errors.CodeRefreshTokenExpired, "")
 	}
 
-	// 生成新Token
+	// generate new tokens
 	accessToken, err := s.jwtManager.GenerateAccessToken(claims.UserID, claims.DeviceID, claims.DeviceType)
 	if err != nil {
 		return nil, err
@@ -441,7 +441,7 @@ func (s *authServiceImpl) RefreshToken(ctx context.Context, req *dto.RefreshToke
 		return nil, err
 	}
 
-	// 更新会话
+	// update session
 	session.AccessToken = accessToken
 	session.RefreshToken = refreshToken
 	session.AccessTokenExpiresAt = time.Now().Add(2 * time.Hour)
@@ -457,48 +457,48 @@ func (s *authServiceImpl) RefreshToken(ctx context.Context, req *dto.RefreshToke
 	}, nil
 }
 
-// ChangePassword 修改密码
+// ChangePassword change password
 func (s *authServiceImpl) ChangePassword(ctx context.Context, userID string, req *dto.ChangePasswordRequest) error {
-	// 获取用户
+	// get user
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	// 验证旧密码
+	// verify old password
 	if !crypto.CheckPassword(req.OldPassword, user.PasswordHash) {
-		return errors.NewBusiness(errors.CodePasswordError, "旧密码错误")
+		return errors.NewBusiness(errors.CodePasswordError, "incorrect old password")
 	}
 
-	// 验证新密码强度
+	// validate new password strength
 	if !crypto.ValidatePasswordStrength(req.NewPassword) {
 		return errors.NewBusiness(errors.CodePasswordWeak, "")
 	}
 
-	// 生成新密码哈希
+	// generate new password hash
 	passwordHash, err := crypto.HashPassword(req.NewPassword)
 	if err != nil {
 		return err
 	}
 
-	// 更新密码
+	// update password
 	if err := s.userRepo.UpdatePassword(ctx, userID, passwordHash); err != nil {
 		return err
 	}
 
-	// 强制下线其他设备（排除当前设备）
+	// force logout other devices (excluding current device)
 	return s.forceLogoutOtherDevices(ctx, userID, req.DeviceID, "password_changed")
 }
 
-// ResetPassword 重置密码（忘记密码）
+// ResetPassword reset password (forgot password)
 func (s *authServiceImpl) ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error {
-	// 判断账号类型
+	// determine account type
 	targetType := model.TargetTypeSMS
 	if isEmail(req.Account) {
 		targetType = model.TargetTypeEmail
 	}
 
-	// 验证验证码
+	// verify verification code
 	_, err := s.verifySvc.VerifyCode(ctx, &dto.VerifyCodeRequest{
 		Target:     req.Account,
 		TargetType: targetType,
@@ -509,37 +509,37 @@ func (s *authServiceImpl) ResetPassword(ctx context.Context, req *dto.ResetPassw
 		return err
 	}
 
-	// 获取用户
+	// get user
 	user, err := s.userRepo.GetByAccount(ctx, req.Account)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeUserNotFound, "用户不存在")
+			return errors.NewBusiness(errors.CodeUserNotFound, "user not found")
 		}
 		return err
 	}
 
-	// 验证新密码强度
+	// validate new password strength
 	if !crypto.ValidatePasswordStrength(req.NewPassword) {
-		return errors.NewBusiness(errors.CodePasswordWeak, "密码强度不足")
+		return errors.NewBusiness(errors.CodePasswordWeak, "password too weak")
 	}
 
-	// 生成新密码哈希
+	// generate new password hash
 	passwordHash, err := crypto.HashPassword(req.NewPassword)
 	if err != nil {
 		return err
 	}
 
-	// 更新密码
+	// update password
 	err = s.userRepo.UpdatePassword(ctx, user.ID, passwordHash)
 	if err != nil {
 		return err
 	}
 
-	// 使该用户所有会话失效（强制下线）
+	// invalidate all user sessions (force logout)
 	return s.forceLogoutAllDevices(ctx, user.ID, "password_reset")
 }
 
-// forceLogoutAllDevices 强制下线所有设备
+// forceLogoutAllDevices forces logout of all devices
 func (s *authServiceImpl) forceLogoutAllDevices(ctx context.Context, userID, reason string) error {
 	devices, err := s.deviceRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -572,7 +572,7 @@ func (s *authServiceImpl) forceLogoutAllDevices(ctx context.Context, userID, rea
 	return nil
 }
 
-// ValidateToken 验证Token
+// ValidateToken validates token
 func (s *authServiceImpl) ValidateToken(ctx context.Context, token string) (*jwt.Claims, error) {
 	claims, err := s.jwtManager.ValidateAccessToken(token)
 	if err != nil {

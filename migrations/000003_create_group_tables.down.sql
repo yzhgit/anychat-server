@@ -1,4 +1,4 @@
--- 删除群组相关表
+-- Drop group-related tables
 DROP TABLE IF EXISTS group_qrcodes;
 DROP TABLE IF EXISTS group_join_requests;
 DROP TABLE IF EXISTS group_pinned_messages;

@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ReadReceiptRepository 已读回执仓库接口
+// ReadReceiptRepository read receipt repository interface
 type ReadReceiptRepository interface {
 	Upsert(ctx context.Context, receipt *model.MessageReadReceipt) error
 	GetByConversationAndUser(ctx context.Context, conversationID, userID string) (*model.MessageReadReceipt, error)
@@ -17,29 +17,29 @@ type ReadReceiptRepository interface {
 	WithTx(tx *gorm.DB) ReadReceiptRepository
 }
 
-// readReceiptRepositoryImpl 已读回执仓库实现
+// readReceiptRepositoryImpl read receipt repository implementation
 type readReceiptRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewReadReceiptRepository 创建已读回执仓库
+// NewReadReceiptRepository creates read receipt repository
 func NewReadReceiptRepository(db *gorm.DB) ReadReceiptRepository {
 	return &readReceiptRepositoryImpl{db: db}
 }
 
-// Upsert 创建或更新已读回执
+// Upsert creates or updates read receipt
 func (r *readReceiptRepositoryImpl) Upsert(ctx context.Context, receipt *model.MessageReadReceipt) error {
-	// 使用ON CONFLICT更新
+	// Use ON CONFLICT to update
 	return r.db.WithContext(ctx).
 		Clauses(
-			// PostgreSQL upsert语法
+			// PostgreSQL upsert syntax
 			gorm.Expr("ON CONFLICT (conversation_id, user_id) DO UPDATE SET conversation_type = ?, target_id = ?, last_read_seq = ?, last_read_message_id = ?, read_at = ?",
 				receipt.ConversationType, receipt.TargetID, receipt.LastReadSeq, receipt.LastReadMessageID, receipt.ReadAt),
 		).
 		Create(receipt).Error
 }
 
-// GetByConversationAndUser 根据会话和用户获取已读回执
+// GetByConversationAndUser retrieves read receipt by conversation and user
 func (r *readReceiptRepositoryImpl) GetByConversationAndUser(ctx context.Context, conversationID, userID string) (*model.MessageReadReceipt, error) {
 	var receipt model.MessageReadReceipt
 	err := r.db.WithContext(ctx).
@@ -51,7 +51,7 @@ func (r *readReceiptRepositoryImpl) GetByConversationAndUser(ctx context.Context
 	return &receipt, nil
 }
 
-// GetByConversation 获取会话的所有已读回执
+// GetByConversation retrieves all read receipts for a conversation
 func (r *readReceiptRepositoryImpl) GetByConversation(ctx context.Context, conversationID string) ([]*model.MessageReadReceipt, error) {
 	var receipts []*model.MessageReadReceipt
 	err := r.db.WithContext(ctx).
@@ -61,7 +61,7 @@ func (r *readReceiptRepositoryImpl) GetByConversation(ctx context.Context, conve
 	return receipts, err
 }
 
-// GetByUser 获取用户的所有已读回执
+// GetByUser retrieves all read receipts for a user
 func (r *readReceiptRepositoryImpl) GetByUser(ctx context.Context, userID string) ([]*model.MessageReadReceipt, error) {
 	var receipts []*model.MessageReadReceipt
 	err := r.db.WithContext(ctx).
@@ -71,14 +71,14 @@ func (r *readReceiptRepositoryImpl) GetByUser(ctx context.Context, userID string
 	return receipts, err
 }
 
-// Delete 删除已读回执
+// Delete deletes read receipt
 func (r *readReceiptRepositoryImpl) Delete(ctx context.Context, conversationID, userID string) error {
 	return r.db.WithContext(ctx).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
 		Delete(&model.MessageReadReceipt{}).Error
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *readReceiptRepositoryImpl) WithTx(tx *gorm.DB) ReadReceiptRepository {
 	return &readReceiptRepositoryImpl{db: tx}
 }

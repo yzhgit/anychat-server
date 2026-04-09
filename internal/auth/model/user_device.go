@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// UserDevice 用户设备模型
+// UserDevice user device model
 type UserDevice struct {
 	ID            int64      `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	UserID        string     `gorm:"column:user_id;not null" json:"userId"`
@@ -17,7 +17,7 @@ type UserDevice struct {
 	UpdatedAt     time.Time  `gorm:"column:updated_at" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (UserDevice) TableName() string {
 	return "user_devices"
 }

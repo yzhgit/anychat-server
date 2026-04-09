@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// AdminService 管理后台业务服务
+// AdminService admin dashboard business service
 type AdminService interface {
 	// Auth
 	Login(ctx context.Context, username, password, ip string) (token string, admin *model.AdminUser, err error)
@@ -65,7 +65,7 @@ type adminServiceImpl struct {
 	fileClient  filepb.FileServiceClient
 }
 
-// NewAdminService 创建管理服务
+// NewAdminService creates admin service
 func NewAdminService(
 	jwtManager *jwt.Manager,
 	adminRepo repository.AdminUserRepository,

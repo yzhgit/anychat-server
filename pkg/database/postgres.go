@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Config 数据库配置
+// Config database configuration
 type Config struct {
 	Host            string
 	Port            int
@@ -22,7 +22,7 @@ type Config struct {
 	LogLevel        logger.LogLevel
 }
 
-// NewPostgresDB 创建PostgreSQL连接
+// NewPostgresDB creates a new PostgreSQL connection
 func NewPostgresDB(config *Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Shanghai",
@@ -49,12 +49,12 @@ func NewPostgresDB(config *Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// 设置连接池
+	// Set connection pool
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Second)
 
-	// 测试连接
+	// Test connection
 	if err := sqlDB.Ping(); err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func NewPostgresDB(config *Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-// Close 关闭数据库连接
+// Close closes the database connection
 func Close(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {

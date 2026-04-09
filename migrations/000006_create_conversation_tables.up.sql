@@ -1,9 +1,9 @@
--- 会话表
+-- Conversations table
 CREATE TABLE conversations (
     conversation_id      VARCHAR(100) PRIMARY KEY,
     conversation_type    VARCHAR(20)  NOT NULL,                -- single/group/system
     user_id         VARCHAR(100) NOT NULL,
-    target_id       VARCHAR(100) NOT NULL,                -- 单聊为对方用户ID，群聊为群ID
+    target_id       VARCHAR(100) NOT NULL,                -- For private chat: peer user ID, for group chat: group ID
     last_message_id VARCHAR(100),
     last_message_content TEXT,
     last_message_time    TIMESTAMPTZ,
@@ -11,8 +11,8 @@ CREATE TABLE conversations (
     is_pinned       BOOLEAN      NOT NULL DEFAULT FALSE,
     is_muted        BOOLEAN      NOT NULL DEFAULT FALSE,
     pin_time        TIMESTAMPTZ,
-    burn_after_reading INT       NOT NULL DEFAULT 0,       -- 阅后即焚时长(秒),0表示关闭
-    auto_delete_duration INT     NOT NULL DEFAULT 0,       -- 自动删除时长(秒),0表示未启用
+    burn_after_reading INT       NOT NULL DEFAULT 0,       -- Burn-after-reading duration in seconds, 0 means disabled
+    auto_delete_duration INT     NOT NULL DEFAULT 0,       -- Auto-delete duration in seconds, 0 means disabled
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -21,7 +21,7 @@ CREATE UNIQUE INDEX uk_conversation_user_target ON conversations (user_id, conve
 CREATE INDEX idx_conversations_user_id      ON conversations (user_id);
 CREATE INDEX idx_conversations_updated_at   ON conversations (updated_at);
 
--- 消息发送幂等表
+-- Message send idempotency table
 CREATE TABLE IF NOT EXISTS message_send_idempotency (
     id BIGSERIAL PRIMARY KEY,
     sender_id VARCHAR(36) NOT NULL,

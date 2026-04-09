@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// UserQRCode 用户二维码模型
+// UserQRCode user QR code model
 type UserQRCode struct {
 	ID          int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	UserID      string    `gorm:"column:user_id;not null" json:"userId"`
@@ -14,12 +14,12 @@ type UserQRCode struct {
 	CreatedAt   time.Time `gorm:"column:created_at" json:"createdAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (UserQRCode) TableName() string {
 	return "user_qrcodes"
 }
 
-// IsExpired 是否过期
+// IsExpired checks if QR code is expired
 func (q *UserQRCode) IsExpired() bool {
 	return time.Now().After(q.ExpiresAt)
 }

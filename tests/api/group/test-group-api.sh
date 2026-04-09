@@ -1,22 +1,22 @@
 #!/bin/bash
 #
-# Group Service HTTP API 测试脚本
-# 用于测试群组管理相关的 HTTP 接口
+# Group Service HTTP API Test Script
+# Tests group management related HTTP APIs
 #
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 配置
+# Configuration
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:8080}"
 API_BASE="${GATEWAY_URL}/api/v1"
 
-# 测试数据
+# Test data
 TIMESTAMP=$(date +%s)
 TEST_PHONE_1="138${TIMESTAMP:(-8)}"
 TEST_PHONE_2="139${TIMESTAMP:(-8)}"
@@ -26,9 +26,9 @@ TEST_EMAIL_2="user2_${TIMESTAMP}@example.com"
 TEST_EMAIL_3="user3_${TIMESTAMP}@example.com"
 TEST_PASSWORD="Test@123456"
 TEST_DEVICE_ID="test-device-${TIMESTAMP}"
-GROUP_NAME="测试群组_${TIMESTAMP}"
+GROUP_NAME="TestGroup_${TIMESTAMP}"
 
-# 全局变量
+# Global variables
 USER1_TOKEN=""
 USER2_TOKEN=""
 USER3_TOKEN=""
@@ -42,7 +42,7 @@ TEST_PASSED=0
 TEST_FAILED=0
 TEST_PIN_MESSAGE_ID="test-pin-msg-${TIMESTAMP}"
 
-# 打印函数
+# Print functions
 print_header() {
     echo -e "\n${YELLOW}========================================${NC}"
     echo -e "${YELLOW}$1${NC}"
@@ -63,7 +63,7 @@ print_info() {
     echo -e "  $1"
 }
 
-# HTTP 请求函数
+# HTTP request functions
 http_post() {
     local url=$1
     local data=$2
@@ -112,7 +112,7 @@ http_delete() {
         -H "Authorization: Bearer ${token}"
 }
 
-# 从群会话中查找一个真实存在的消息ID（用于置顶测试）
+# Find an existing message ID from group conversation (for pin test)
 resolve_group_message_id_for_pin() {
     local retries=5
     local i
@@ -143,7 +143,7 @@ resolve_group_message_id_for_pin() {
     return 1
 }
 
-# 检查 JSON 响应状态
+# Check JSON response status
 check_response() {
     local response=$1
     local expected_code=$2
@@ -161,78 +161,78 @@ check_response() {
     fi
 }
 
-# 前置准备：创建测试用户
+# Setup: Create test users
 setup_test_users() {
-    print_header "前置准备：创建测试用户"
+    print_header "Setup: Create Test Users"
 
-    # 注册用户1（注册成功后会自动登录返回token）
-    print_info "注册用户1: ${TEST_EMAIL_1}"
-    local data1="{\"email\":\"${TEST_EMAIL_1}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"测试用户1_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_1\",\"clientVersion\":\"1.0.0\"}"
+    # Register user 1 (auto login after registration returns token)
+    print_info "Registering user 1: ${TEST_EMAIL_1}"
+    local data1="{\"email\":\"${TEST_EMAIL_1}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"TestUser1_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_1\",\"clientVersion\":\"1.0.0\"}"
     local response1=$(http_post "${API_BASE}/auth/register" "$data1")
 
     USER1_ID=$(echo "$response1" | jq -r '.data.userId // empty')
     USER1_TOKEN=$(echo "$response1" | jq -r '.data.accessToken // empty')
 
     if [ -z "$USER1_TOKEN" ] || [ "$USER1_TOKEN" = "null" ]; then
-        print_error "用户1注册失败"
+        print_error "User 1 registration failed"
         print_info "Response: $response1"
         exit 1
     fi
-    print_success "用户1注册成功 (ID: ${USER1_ID})"
+    print_success "User 1 registered successfully (ID: ${USER1_ID})"
 
-    # 注册用户2
-    print_info "注册用户2: ${TEST_EMAIL_2}"
-    local data2="{\"email\":\"${TEST_EMAIL_2}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"测试用户2_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_2\",\"clientVersion\":\"1.0.0\"}"
+    # Register user 2
+    print_info "Registering user 2: ${TEST_EMAIL_2}"
+    local data2="{\"email\":\"${TEST_EMAIL_2}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"TestUser2_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_2\",\"clientVersion\":\"1.0.0\"}"
     local response2=$(http_post "${API_BASE}/auth/register" "$data2")
 
     USER2_ID=$(echo "$response2" | jq -r '.data.userId // empty')
     USER2_TOKEN=$(echo "$response2" | jq -r '.data.accessToken // empty')
 
     if [ -z "$USER2_TOKEN" ] || [ "$USER2_TOKEN" = "null" ]; then
-        print_error "用户2注册失败"
+        print_error "User 2 registration failed"
         print_info "Response: $response2"
         exit 1
     fi
-    print_success "用户2注册成功 (ID: ${USER2_ID})"
+    print_success "User 2 registered successfully (ID: ${USER2_ID})"
 
-    # 注册用户3
-    print_info "注册用户3: ${TEST_EMAIL_3}"
-    local data3="{\"email\":\"${TEST_EMAIL_3}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"测试用户3_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_3\",\"clientVersion\":\"1.0.0\"}"
+    # Register user 3
+    print_info "Registering user 3: ${TEST_EMAIL_3}"
+    local data3="{\"email\":\"${TEST_EMAIL_3}\",\"password\":\"${TEST_PASSWORD}\",\"verifyCode\":\"123456\",\"nickname\":\"TestUser3_${TIMESTAMP}\",\"deviceType\":\"Web\",\"deviceId\":\"${TEST_DEVICE_ID}_3\",\"clientVersion\":\"1.0.0\"}"
     local response3=$(http_post "${API_BASE}/auth/register" "$data3")
 
     USER3_ID=$(echo "$response3" | jq -r '.data.userId // empty')
     USER3_TOKEN=$(echo "$response3" | jq -r '.data.accessToken // empty')
 
     if [ -z "$USER3_TOKEN" ] || [ "$USER3_TOKEN" = "null" ]; then
-        print_error "用户3注册失败"
+        print_error "User 3 registration failed"
         print_info "Response: $response3"
         exit 1
     fi
-    print_success "用户3注册成功 (ID: ${USER3_ID})"
+    print_success "User 3 registered successfully (ID: ${USER3_ID})"
 
-    print_success "3个测试用户创建成功"
+    print_success "3 test users created successfully"
     print_info "User1 ID: $USER1_ID"
     print_info "User2 ID: $USER2_ID"
     print_info "User3 ID: $USER3_ID"
 }
 
-# 测试1：健康检查
+# Test 1: Health check
 test_health_check() {
-    print_header "测试1：健康检查"
+    print_header "Test 1: Health Check"
 
     local response=$(http_get "${GATEWAY_URL}/health")
     local status=$(echo "$response" | jq -r '.status // empty')
 
     if [ "$status" = "ok" ]; then
-        print_success "健康检查通过"
+        print_success "Health check passed"
     else
-        print_error "健康检查失败"
+        print_error "Health check failed"
     fi
 }
 
-# 测试2：创建群组
+# Test 2: Create group
 test_create_group() {
-    print_header "测试2：创建群组"
+    print_header "Test 2: Create Group"
 
     local data="{\"name\":\"${GROUP_NAME}\",\"memberIds\":[\"${USER2_ID}\"],\"joinVerify\":true}"
     local response=$(http_post "${API_BASE}/groups" "$data" "$USER1_TOKEN")
@@ -244,20 +244,20 @@ test_create_group() {
         if [ -z "$GROUP_CURRENT_NAME" ] || [ "$GROUP_CURRENT_NAME" = "null" ]; then
             GROUP_CURRENT_NAME="$GROUP_NAME"
         fi
-        check_response "$response" "0" "创建群组"
-        print_info "群组ID: $GROUP_ID"
+        check_response "$response" "0" "Create group"
+        print_info "Group ID: $GROUP_ID"
     else
-        print_error "创建群组失败 - 未获取到群组ID"
+        print_error "Create group failed - cannot get group ID"
         print_info "Response: $response"
     fi
 }
 
-# 测试3：获取群组信息
+# Test 3: Get group info
 test_get_group_info() {
-    print_header "测试3：获取群组信息"
+    print_header "Test 3: Get Group Info"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
@@ -265,22 +265,22 @@ test_get_group_info() {
     local name=$(echo "$response" | jq -r '.data.name // empty')
 
     if [ "$name" = "$GROUP_CURRENT_NAME" ]; then
-        check_response "$response" "0" "获取群组信息"
-        print_info "群名称: $name"
-        print_info "群主ID: $(echo "$response" | jq -r '.data.ownerId')"
-        print_info "成员数: $(echo "$response" | jq -r '.data.memberCount')"
-        print_info "我的角色: $(echo "$response" | jq -r '.data.myRole')"
+        check_response "$response" "0" "Get group info"
+        print_info "Group name: $name"
+        print_info "Owner ID: $(echo "$response" | jq -r '.data.ownerId')"
+        print_info "Member count: $(echo "$response" | jq -r '.data.memberCount')"
+        print_info "My role: $(echo "$response" | jq -r '.data.myRole')"
     else
-        print_error "获取群组信息失败"
+        print_error "Get group info failed"
     fi
 }
 
-# 测试4：获取群成员列表
+# Test 4: Get group members
 test_get_group_members() {
-    print_header "测试4：获取群成员列表"
+    print_header "Test 4: Get Group Members"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
@@ -288,165 +288,165 @@ test_get_group_members() {
     local total=$(echo "$response" | jq -r '.data.total // 0')
 
     if [ "$total" -ge "2" ]; then
-        check_response "$response" "0" "获取群成员列表"
-        print_info "成员总数: $total"
+        check_response "$response" "0" "Get group members"
+        print_info "Total members: $total"
     else
-        print_error "获取群成员列表失败 - 成员数不正确"
+        print_error "Get group members failed - incorrect member count"
     fi
 }
 
-# 测试5：更新群信息
+# Test 5: Update group info
 test_update_group() {
-    print_header "测试5：更新群信息"
+    print_header "Test 5: Update Group Info"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     local new_name="${GROUP_NAME}_updated"
-    local data="{\"name\":\"${new_name}\",\"announcement\":\"这是测试公告\"}"
+    local data="{\"name\":\"${new_name}\",\"announcement\":\"This is test announcement\"}"
     local response=$(http_put "${API_BASE}/groups/${GROUP_ID}" "$data" "$USER1_TOKEN")
 
-    if check_response "$response" "0" "更新群信息"; then
+    if check_response "$response" "0" "Update group info"; then
         GROUP_CURRENT_NAME="$new_name"
     fi
 }
 
-# 测试6：邀请成员（需要验证）
+# Test 6: Invite members (requires verification)
 test_invite_members() {
-    print_header "测试6：邀请成员加入（需验证）"
+    print_header "Test 6: Invite Members (Requires Verification)"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     local data="{\"userIds\":[\"${USER3_ID}\"]}"
     local response=$(http_post "${API_BASE}/groups/${GROUP_ID}/members" "$data" "$USER1_TOKEN")
 
-    check_response "$response" "0" "邀请成员"
-    print_info "已邀请用户3加入群组（需要验证）"
+    check_response "$response" "0" "Invite members"
+    print_info "Invited user 3 to join group (requires verification)"
 }
 
-# 测试7：获取入群申请列表
+# Test 7: Get join request list
 test_get_join_requests() {
-    print_header "测试7：获取入群申请列表"
+    print_header "Test 7: Get Join Request List"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
-    # 稍等片刻确保申请已创建
+    # Wait a moment to ensure request is created
     sleep 1
 
     local response=$(http_get "${API_BASE}/groups/${GROUP_ID}/requests?status=pending" "$USER1_TOKEN")
     local total=$(echo "$response" | jq -r '.data.total // 0')
 
     if [ "$total" -gt "0" ]; then
-        check_response "$response" "0" "获取入群申请列表"
+        check_response "$response" "0" "Get join request list"
         JOIN_REQUEST_ID=$(echo "$response" | jq -r '.data.requests[0].id // empty')
-        print_info "待处理申请数: $total"
-        print_info "申请ID: $JOIN_REQUEST_ID"
+        print_info "Pending requests: $total"
+        print_info "Request ID: $JOIN_REQUEST_ID"
     else
-        print_error "获取入群申请列表失败 - 没有待处理的申请"
+        print_error "Get join request list failed - no pending requests"
     fi
 }
 
-# 测试8：处理入群申请（接受）
+# Test 8: Process join request (accept)
 test_accept_join_request() {
-    print_header "测试8：处理入群申请（接受）"
+    print_header "Test 8: Process Join Request (Accept)"
 
     if [ -z "$GROUP_ID" ] || [ -z "$JOIN_REQUEST_ID" ]; then
-        print_error "跳过测试 - 群组ID或申请ID为空"
+        print_error "Skip test - group ID or request ID is empty"
         return 1
     fi
 
     local data="{\"accept\":true}"
     local response=$(http_put "${API_BASE}/groups/${GROUP_ID}/requests/${JOIN_REQUEST_ID}" "$data" "$USER1_TOKEN")
 
-    check_response "$response" "0" "接受入群申请"
+    check_response "$response" "0" "Accept join request"
 }
 
-# 测试9：验证成员已加入
+# Test 9: Verify member joined
 test_verify_member_joined() {
-    print_header "测试9：验证成员已加入"
+    print_header "Test 9: Verify Member Joined"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
-    # 稍等片刻确保成员已添加
+    # Wait a moment to ensure member is added
     sleep 1
 
     local response=$(http_get "${API_BASE}/groups/${GROUP_ID}/members" "$USER1_TOKEN")
     local total=$(echo "$response" | jq -r '.data.total // 0')
 
     if [ "$total" -ge "3" ]; then
-        check_response "$response" "0" "验证成员已加入"
-        print_info "当前成员总数: $total"
+        check_response "$response" "0" "Verify member joined"
+        print_info "Current member count: $total"
     else
-        print_error "验证失败 - 成员数不正确（期望>=3，实际: $total）"
+        print_error "Verification failed - incorrect member count (expected >=3, actual: $total)"
     fi
 }
 
-# 测试10：更新成员角色
+# Test 10: Update member role
 test_update_member_role() {
-    print_header "测试10：更新成员角色为管理员"
+    print_header "Test 10: Update Member Role to Admin"
 
     if [ -z "$GROUP_ID" ] || [ -z "$USER2_ID" ]; then
-        print_error "跳过测试 - 群组ID或用户ID为空"
+        print_error "Skip test - group ID or user ID is empty"
         return 1
     fi
 
     local data="{\"role\":\"admin\"}"
     local response=$(http_put "${API_BASE}/groups/${GROUP_ID}/members/${USER2_ID}/role" "$data" "$USER1_TOKEN")
 
-    check_response "$response" "0" "设置成员为管理员"
+    check_response "$response" "0" "Set member as admin"
 }
 
-# 测试11：更新群昵称
+# Test 11: Update member nickname
 test_update_member_nickname() {
-    print_header "测试11：更新群昵称"
+    print_header "Test 11: Update Member Nickname"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
-    local data="{\"nickname\":\"我的群昵称\"}"
+    local data="{\"nickname\":\"My group nickname\"}"
     local response=$(http_put "${API_BASE}/groups/${GROUP_ID}/nickname" "$data" "$USER1_TOKEN")
 
-    check_response "$response" "0" "更新群昵称"
+    check_response "$response" "0" "Update group nickname"
 }
 
-# 测试12：设置/清空群备注并验证展示名
+# Test 12: Set/Clear group remark and verify display name
 test_update_group_remark() {
-    print_header "测试12：设置/清空群备注并验证展示名"
+    print_header "Test 12: Set/Clear Group Remark and Verify Display Name"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
-    local remark="产品讨论群_${TIMESTAMP}"
+    local remark="Product Discussion Group_${TIMESTAMP}"
     local set_data="{\"remark\":\"${remark}\"}"
     local set_response=$(http_put "${API_BASE}/group/${GROUP_ID}/remark" "$set_data" "$USER1_TOKEN")
-    check_response "$set_response" "0" "设置群备注"
+    check_response "$set_response" "0" "Set group remark"
 
-    # 验证：当前用户在群详情中看到备注名
+    # Verify: current user sees remark in group details
     local detail_with_remark=$(http_get "${API_BASE}/group/${GROUP_ID}" "$USER1_TOKEN")
     local my_display_name=$(echo "$detail_with_remark" | jq -r '.data.displayName // empty')
     if [ "$my_display_name" = "$remark" ]; then
-        print_success "群详情展示名使用备注（当前用户）"
+        print_success "Group detail display name uses remark (current user)"
     else
-        print_error "群详情展示名未使用备注（当前用户）"
+        print_error "Group detail display name does not use remark (current user)"
         print_info "Response: $detail_with_remark"
     fi
 
-    # 验证：当前用户在群列表中看到备注名（使用设计文档单数路径）
+    # Verify: current user sees remark in group list (using singular path per design doc)
     local list_with_remark=$(http_get "${API_BASE}/group/list" "$USER1_TOKEN")
     local my_list_display_name=$(echo "$list_with_remark" | jq -r --arg gid "$GROUP_ID" '
         (.data.groups // [])[]?
@@ -454,196 +454,196 @@ test_update_group_remark() {
         | (.displayName // .display_name // empty)
     ' | head -n 1)
     if [ "$my_list_display_name" = "$remark" ]; then
-        print_success "群列表展示名使用备注（当前用户）"
+        print_success "Group list display name uses remark (current user)"
     else
-        print_error "群列表展示名未使用备注（当前用户）"
+        print_error "Group list display name does not use remark (current user)"
         print_info "Response: $list_with_remark"
     fi
 
-    # 验证：其他成员不受影响，看到真实群名
+    # Verify: other members unaffected, see real group name
     local detail_other_user=$(http_get "${API_BASE}/group/${GROUP_ID}" "$USER2_TOKEN")
     local other_display_name=$(echo "$detail_other_user" | jq -r '.data.displayName // empty')
     if [ "$other_display_name" = "$GROUP_CURRENT_NAME" ]; then
-        print_success "备注仅对本人可见（其他成员看到真实群名）"
+        print_success "Remark only visible to self (other members see real group name)"
     else
-        print_error "备注可见性异常（其他成员展示名不正确）"
+        print_error "Remark visibility issue (other member display name incorrect)"
         print_info "Response: $detail_other_user"
     fi
 
-    # 清空备注
+    # Clear remark
     local clear_data='{"remark":""}'
     local clear_response=$(http_put "${API_BASE}/group/${GROUP_ID}/remark" "$clear_data" "$USER1_TOKEN")
-    check_response "$clear_response" "0" "清空群备注"
+    check_response "$clear_response" "0" "Clear group remark"
 
-    # 验证：清空后恢复真实群名
+    # Verify: after clearing, real group name restored
     local detail_after_clear=$(http_get "${API_BASE}/group/${GROUP_ID}" "$USER1_TOKEN")
     local display_after_clear=$(echo "$detail_after_clear" | jq -r '.data.displayName // empty')
     if [ "$display_after_clear" = "$GROUP_CURRENT_NAME" ]; then
-        print_success "清空备注后展示名恢复真实群名"
+        print_success "After clearing remark, display name restored to real group name"
     else
-        print_error "清空备注后展示名未恢复真实群名"
+        print_error "After clearing remark, display name not restored to real group name"
         print_info "Response: $detail_after_clear"
     fi
 }
 
-# 测试13：移除群成员
+# Test 13: Remove group member
 test_remove_member() {
-    print_header "测试13：移除群成员"
+    print_header "Test 13: Remove Group Member"
 
     if [ -z "$GROUP_ID" ] || [ -z "$USER3_ID" ]; then
-        print_error "跳过测试 - 群组ID或用户ID为空"
+        print_error "Skip test - group ID or user ID is empty"
         return 1
     fi
 
     local response=$(http_delete "${API_BASE}/groups/${GROUP_ID}/members/${USER3_ID}" "$USER1_TOKEN")
 
-    check_response "$response" "0" "移除群成员"
+    check_response "$response" "0" "Remove group member"
 }
 
-# 测试14：退出群组
+# Test 14: Quit group
 test_quit_group() {
-    print_header "测试14：用户2退出群组"
+    print_header "Test 14: User 2 Quit Group"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     local response=$(http_post "${API_BASE}/groups/${GROUP_ID}/quit" "{}" "$USER2_TOKEN")
 
-    check_response "$response" "0" "退出群组"
+    check_response "$response" "0" "Quit group"
 }
 
-# 测试15：获取我的群组列表
+# Test 15: Get my group list
 test_get_my_groups() {
-    print_header "测试15：获取我的群组列表"
+    print_header "Test 15: Get My Group List"
 
     local response=$(http_get "${API_BASE}/groups" "$USER1_TOKEN")
     local total=$(echo "$response" | jq -r '.data.total // 0')
 
     if [ "$total" -ge "1" ]; then
-        check_response "$response" "0" "获取我的群组列表"
-        print_info "我加入的群组数: $total"
+        check_response "$response" "0" "Get my group list"
+        print_info "My joined groups count: $total"
     else
-        print_error "获取群组列表失败"
+        print_error "Get group list failed"
     fi
 }
 
-# 测试16：开启/关闭全体禁言
+# Test 16: Enable/Disable all mute
 test_set_group_mute() {
-    print_header "测试16：开启/关闭全体禁言"
+    print_header "Test 16: Enable/Disable All Mute"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     local enable_data="{\"enabled\":true}"
     local enable_resp=$(http_put "${API_BASE}/groups/${GROUP_ID}/mute" "$enable_data" "$USER1_TOKEN")
-    check_response "$enable_resp" "0" "开启全体禁言"
+    check_response "$enable_resp" "0" "Enable all mute"
 
     local disable_data="{\"enabled\":false}"
     local disable_resp=$(http_put "${API_BASE}/groups/${GROUP_ID}/mute" "$disable_data" "$USER1_TOKEN")
-    check_response "$disable_resp" "0" "关闭全体禁言"
+    check_response "$disable_resp" "0" "Disable all mute"
 }
 
-# 测试17：置顶/取消置顶消息
+# Test 17: Pin/Unpin message
 test_pin_unpin_message() {
-    print_header "测试17：置顶/取消置顶消息"
+    print_header "Test 17: Pin/Unpin Message"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     TEST_PIN_MESSAGE_ID=$(resolve_group_message_id_for_pin)
     if [ -z "$TEST_PIN_MESSAGE_ID" ] || [ "$TEST_PIN_MESSAGE_ID" = "null" ]; then
-        print_error "置顶消息失败 - 未找到可置顶的群消息ID"
+        print_error "Pin message failed - no pinnable group message ID found"
         return 1
     fi
-    print_info "用于置顶的消息ID: ${TEST_PIN_MESSAGE_ID}"
+    print_info "Message ID for pin: ${TEST_PIN_MESSAGE_ID}"
 
     local pin_data="{\"messageId\":\"${TEST_PIN_MESSAGE_ID}\"}"
     local pin_resp=$(http_post "${API_BASE}/groups/${GROUP_ID}/pin" "$pin_data" "$USER1_TOKEN")
-    check_response "$pin_resp" "0" "置顶消息"
+    check_response "$pin_resp" "0" "Pin message"
 
     local list_resp=$(http_get "${API_BASE}/groups/${GROUP_ID}/pins" "$USER1_TOKEN")
-    check_response "$list_resp" "0" "获取置顶消息列表"
+    check_response "$list_resp" "0" "Get pinned message list"
 
     local total=$(echo "$list_resp" | jq -r '.data.total // 0')
     if [ "$total" -ge "1" ]; then
-        print_success "置顶列表 total 字段有效"
+        print_success "Pinned list total field valid"
     else
-        print_error "置顶列表 total 字段异常: $total"
+        print_error "Pinned list total field abnormal: $total"
     fi
 
     local top_message_id=$(echo "$list_resp" | jq -r '.data.topMessage.messageId // empty')
     if [ "$top_message_id" = "$TEST_PIN_MESSAGE_ID" ]; then
-        print_success "置顶列表 topMessage 返回最新置顶消息"
+        print_success "Pinned list topMessage returns latest pinned message"
     else
-        print_error "置顶列表 topMessage 校验失败，期望=${TEST_PIN_MESSAGE_ID} 实际=${top_message_id}"
+        print_error "Pinned list topMessage validation failed, expected=${TEST_PIN_MESSAGE_ID} actual=${top_message_id}"
     fi
 
     local unpin_resp=$(http_delete "${API_BASE}/groups/${GROUP_ID}/pin/${TEST_PIN_MESSAGE_ID}" "$USER1_TOKEN")
-    check_response "$unpin_resp" "0" "取消置顶消息"
+    check_response "$unpin_resp" "0" "Unpin message"
 }
 
-# 测试18：解散群组
+# Test 18: Dissolve group
 test_dissolve_group() {
-    print_header "测试18：解散群组"
+    print_header "Test 18: Dissolve Group"
 
     if [ -z "$GROUP_ID" ]; then
-        print_error "跳过测试 - 群组ID为空"
+        print_error "Skip test - group ID is empty"
         return 1
     fi
 
     local response=$(http_delete "${API_BASE}/groups/${GROUP_ID}" "$USER1_TOKEN")
 
-    check_response "$response" "0" "解散群组"
+    check_response "$response" "0" "Dissolve group"
 }
 
-# 打印测试结果摘要
+# Print test result summary
 print_summary() {
-    print_header "测试结果汇总"
+    print_header "Test Results Summary"
 
     local total=$((TEST_PASSED + TEST_FAILED))
-    echo -e "总测试数: $total"
-    echo -e "${GREEN}通过: $TEST_PASSED${NC}"
-    echo -e "${RED}失败: $TEST_FAILED${NC}"
+    echo -e "Total tests: $total"
+    echo -e "${GREEN}Passed: $TEST_PASSED${NC}"
+    echo -e "${RED}Failed: $TEST_FAILED${NC}"
 
     if [ $TEST_FAILED -eq 0 ]; then
-        echo -e "\n${GREEN}所有测试通过! ✓${NC}"
+        echo -e "\n${GREEN}All tests passed! ✓${NC}"
         return 0
     else
-        echo -e "\n${RED}部分测试失败 ✗${NC}"
+        echo -e "\n${RED}Some tests failed ✗${NC}"
         return 1
     fi
 }
 
-# 主函数
+# Main function
 main() {
     echo "======================================"
-    echo "Group Service HTTP API 测试"
+    echo "Group Service HTTP API Test"
     echo "======================================"
-    echo "开始时间: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Start time: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "Gateway URL: $GATEWAY_URL"
     echo ""
 
-    # 检查必要工具
+    # Check required tools
     if ! command -v jq &> /dev/null; then
-        print_error "需要安装 jq 工具: sudo apt-get install jq"
+        print_error "jq required: sudo apt-get install jq"
         exit 1
     fi
 
     if ! command -v curl &> /dev/null; then
-        print_error "需要安装 curl 工具"
+        print_error "curl required"
         exit 1
     fi
 
-    # 前置准备
+    # Setup
     setup_test_users || exit 1
 
-    # 执行测试
+    # Execute tests
     test_health_check
     test_create_group
     test_get_group_info
@@ -663,11 +663,11 @@ main() {
     test_pin_unpin_message
     test_dissolve_group
 
-    # 打印结果
+    # Print results
     echo ""
-    echo "结束时间: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "End time: $(date '+%Y-%m-%d %H:%M:%S')"
     print_summary
 }
 
-# 执行主函数
+# Execute main function
 main "$@"

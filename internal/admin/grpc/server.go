@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Server Admin gRPC 服务器
+// Server Admin gRPC server
 type Server struct {
 	adminpb.UnimplementedAdminServiceServer
 	svc service.AdminService
 }
 
-// NewServer 创建 gRPC 服务器
+// NewServer creates gRPC server
 func NewServer(svc service.AdminService) *Server {
 	return &Server{svc: svc}
 }

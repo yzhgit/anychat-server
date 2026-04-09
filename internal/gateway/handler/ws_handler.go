@@ -20,13 +20,13 @@ import (
 var upgrader = gorillaws.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// 允许所有来源（生产环境应验证Origin）
+	// Allow all origins (should verify Origin in production)
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
 
-// WSHandler WebSocket处理器
+// WSHandler WebSocket handler
 type WSHandler struct {
 	clientManager *client.Manager
 	jwtManager    *jwt.Manager
@@ -34,7 +34,7 @@ type WSHandler struct {
 	subscriber    *gwnotification.Subscriber
 }
 
-// NewWSHandler 创建WebSocket处理器
+// NewWSHandler creates WebSocket handler
 func NewWSHandler(
 	clientManager *client.Manager,
 	jwtManager *jwt.Manager,
@@ -49,10 +49,10 @@ func NewWSHandler(
 	}
 }
 
-// HandleWebSocket 处理WebSocket连接
-// @Summary      建立WebSocket长连接
-// @Description  客户端通过WebSocket保持长连接，接收实时通知和消息推送。由于WebSocket协议不支持自定义Header，JWT token通过URL query参数传入。
-// @Tags         实时通信
+// HandleWebSocket handle WebSocket connection
+// @Summary      establish WebSocket long connection
+// @Description  Client maintains long connection via WebSocket to receive real-time notifications and message pushes. Since WebSocket protocol doesn't support custom headers, JWT token is passed via URL query parameter.
+// @Tags         realtime
 // @Param        token  query  string  true  "JWT access token"
 // @Router       /ws [get]
 func (h *WSHandler) HandleWebSocket(c *gin.Context) {
@@ -93,11 +93,11 @@ func (h *WSHandler) HandleWebSocket(c *gin.Context) {
 
 	go wsClient.WritePump()
 
-	// ReadPump阻塞直到连接断开
+	// ReadPump blocks until connection disconnects
 	wsClient.ReadPump(h.handleClientMessage)
 
-	// 连接断开后，仅在用户真正离线时才取消NATS订阅
-	// IsOnline返回false表示该用户没有新的活跃连接（未被替换）
+	// After connection disconnects, only unsubscribe from NATS when user is truly offline
+	// IsOnline returns false when user has no new active connections (not replaced)
 	if !h.wsManager.IsOnline(userID) {
 		h.subscriber.UnsubscribeUser(userID)
 	}
@@ -107,7 +107,7 @@ func (h *WSHandler) HandleWebSocket(c *gin.Context) {
 		zap.Int("onlineCount", h.wsManager.OnlineCount()))
 }
 
-// handleClientMessage 处理客户端发来的WebSocket消息
+// handleClientMessage handle messages from WebSocket client
 func (h *WSHandler) handleClientMessage(c *websocket.Client, msg *websocket.Message) {
 	switch msg.Type {
 	case "ping":
@@ -127,7 +127,7 @@ func (h *WSHandler) handleClientMessage(c *websocket.Client, msg *websocket.Mess
 	}
 }
 
-// sendMessagePayload 客户端发送消息的payload结构
+// sendMessagePayload payload structure for client sending messages
 type sendMessagePayload struct {
 	ConversationID string   `json:"conversationId"`
 	ContentType    string   `json:"contentType"`
@@ -144,7 +144,7 @@ type sendTypingPayload struct {
 	ClientTs       *int64 `json:"clientTs,omitempty"`
 }
 
-// sendMessageResult 发送消息响应结构
+// sendMessageResult response structure for sending messages
 type sendMessageResult struct {
 	MessageID string `json:"messageId"`
 	Sequence  int64  `json:"sequence"`
@@ -163,7 +163,7 @@ type sendTypingError struct {
 	Message string `json:"message"`
 }
 
-// handleSendMessage 解析message.send payload并通过gRPC转发
+// handleSendMessage parse message.send payload and forward via gRPC
 func (h *WSHandler) handleSendMessage(c *websocket.Client, payload json.RawMessage) {
 	var req sendMessagePayload
 	if err := json.Unmarshal(payload, &req); err != nil {

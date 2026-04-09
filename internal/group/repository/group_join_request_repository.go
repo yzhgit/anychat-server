@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// GroupJoinRequestRepository 入群申请仓库接口
+// GroupJoinRequestRepository defines the join request repository interface
 type GroupJoinRequestRepository interface {
 	Create(ctx context.Context, request *model.GroupJoinRequest) error
 	GetByID(ctx context.Context, id int64) (*model.GroupJoinRequest, error)
@@ -20,22 +20,22 @@ type GroupJoinRequestRepository interface {
 	WithTx(tx *gorm.DB) GroupJoinRequestRepository
 }
 
-// groupJoinRequestRepositoryImpl 入群申请仓库实现
+// groupJoinRequestRepositoryImpl is the join request repository implementation
 type groupJoinRequestRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewGroupJoinRequestRepository 创建入群申请仓库
+// NewGroupJoinRequestRepository creates a new join request repository
 func NewGroupJoinRequestRepository(db *gorm.DB) GroupJoinRequestRepository {
 	return &groupJoinRequestRepositoryImpl{db: db}
 }
 
-// Create 创建入群申请
+// Create creates a join request
 func (r *groupJoinRequestRepositoryImpl) Create(ctx context.Context, request *model.GroupJoinRequest) error {
 	return r.db.WithContext(ctx).Create(request).Error
 }
 
-// GetByID 根据ID获取入群申请
+// GetByID gets join request by ID
 func (r *groupJoinRequestRepositoryImpl) GetByID(ctx context.Context, id int64) (*model.GroupJoinRequest, error) {
 	var request model.GroupJoinRequest
 	err := r.db.WithContext(ctx).
@@ -47,7 +47,7 @@ func (r *groupJoinRequestRepositoryImpl) GetByID(ctx context.Context, id int64) 
 	return &request, nil
 }
 
-// UpdateStatus 更新申请状态
+// UpdateStatus updates request status
 func (r *groupJoinRequestRepositoryImpl) UpdateStatus(ctx context.Context, id int64, status string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupJoinRequest{}).
@@ -58,7 +58,7 @@ func (r *groupJoinRequestRepositoryImpl) UpdateStatus(ctx context.Context, id in
 		}).Error
 }
 
-// GetPendingRequestsByGroup 获取群组的待处理申请
+// GetPendingRequestsByGroup gets pending requests for group
 func (r *groupJoinRequestRepositoryImpl) GetPendingRequestsByGroup(ctx context.Context, groupID string) ([]*model.GroupJoinRequest, error) {
 	var requests []*model.GroupJoinRequest
 	err := r.db.WithContext(ctx).
@@ -68,7 +68,7 @@ func (r *groupJoinRequestRepositoryImpl) GetPendingRequestsByGroup(ctx context.C
 	return requests, err
 }
 
-// GetPendingRequestsByUser 获取用户的待处理申请
+// GetPendingRequestsByUser gets pending requests for user
 func (r *groupJoinRequestRepositoryImpl) GetPendingRequestsByUser(ctx context.Context, userID string) ([]*model.GroupJoinRequest, error) {
 	var requests []*model.GroupJoinRequest
 	err := r.db.WithContext(ctx).
@@ -78,7 +78,7 @@ func (r *groupJoinRequestRepositoryImpl) GetPendingRequestsByUser(ctx context.Co
 	return requests, err
 }
 
-// GetRequestsByGroup 获取群组的申请列表（可按状态过滤）
+// GetRequestsByGroup gets request list for group (filterable by status)
 func (r *groupJoinRequestRepositoryImpl) GetRequestsByGroup(ctx context.Context, groupID string, status *string) ([]*model.GroupJoinRequest, error) {
 	var requests []*model.GroupJoinRequest
 	query := r.db.WithContext(ctx).Where("group_id = ?", groupID)
@@ -91,7 +91,7 @@ func (r *groupJoinRequestRepositoryImpl) GetRequestsByGroup(ctx context.Context,
 	return requests, err
 }
 
-// GetExistingRequest 获取已存在的待处理申请（防止重复申请）
+// GetExistingRequest gets existing pending request (prevents duplicate requests)
 func (r *groupJoinRequestRepositoryImpl) GetExistingRequest(ctx context.Context, groupID, userID string) (*model.GroupJoinRequest, error) {
 	var request model.GroupJoinRequest
 	err := r.db.WithContext(ctx).
@@ -106,7 +106,7 @@ func (r *groupJoinRequestRepositoryImpl) GetExistingRequest(ctx context.Context,
 	return &request, nil
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *groupJoinRequestRepositoryImpl) WithTx(tx *gorm.DB) GroupJoinRequestRepository {
 	return &groupJoinRequestRepositoryImpl{db: tx}
 }

@@ -48,14 +48,14 @@ func main() {
 
 	logger.Info("Starting calling-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := initDatabase()
 	if err != nil {
 		logger.Fatal("Failed to connect database", zap.Error(err))
 	}
 	logger.Info("Database connected successfully")
 
-	// 连接 NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
@@ -63,10 +63,10 @@ func main() {
 	defer nc.Close()
 	logger.Info("Connected to NATS")
 
-	// 初始化通知发布器
+	// Initialize notification publisher
 	notificationPub := notification.NewPublisher(nc)
 
-	// 初始化仓库
+	// Initialize repositories
 	callRepo := repository.NewCallRepository(db)
 	meetingRepo := repository.NewMeetingRepository(db)
 
@@ -76,7 +76,7 @@ func main() {
 	}
 	defer friendConn.Close()
 
-	// 初始化 LiveKit 服务
+	// Initialize LiveKit service
 	lkSvc := service.NewCallingService(
 		viper.GetString("livekit.url"),
 		viper.GetString("livekit.api_key"),
@@ -87,7 +87,7 @@ func main() {
 		notificationPub,
 	)
 
-	// 初始化并启动 gRPC 服务器
+	// Initialize and start gRPC server
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcpkg.RecoveryInterceptor(),
@@ -108,7 +108,7 @@ func main() {
 		}
 	}()
 
-	// 健康检查 HTTP 服务器
+	// Health check HTTP server
 	httpServer := initHTTPServer()
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))

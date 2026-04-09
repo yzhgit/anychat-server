@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// CallRepository 通话会话仓库
+// CallRepository is the call session repository
 type CallRepository interface {
 	CreateCallSession(session *model.CallSession) error
 	GetCallSession(callID string) (*model.CallSession, error)
@@ -63,7 +63,7 @@ func (r *callRepository) ListCallLogs(userID string, page, pageSize int) ([]*mod
 	return sessions, total, nil
 }
 
-// MeetingRepository 会议室仓库
+// MeetingRepository is the meeting room repository
 type MeetingRepository interface {
 	CreateMeeting(meeting *model.MeetingRoom) error
 	GetMeetingByRoomID(roomID string) (*model.MeetingRoom, error)

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// GroupSetting 群组设置模型
+// GroupSetting represents a group settings model
 type GroupSetting struct {
 	GroupID            string    `gorm:"column:group_id;primaryKey" json:"groupId"`
 	JoinVerify         bool      `gorm:"column:join_verify;default:true" json:"joinVerify"`
@@ -15,12 +15,12 @@ type GroupSetting struct {
 	UpdatedAt          time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns the table name
 func (GroupSetting) TableName() string {
 	return "group_settings"
 }
 
-// DefaultGroupSetting 创建默认群组设置
+// DefaultGroupSetting creates default group settings
 func DefaultGroupSetting(groupID string) *GroupSetting {
 	return &GroupSetting{
 		GroupID:            groupID,

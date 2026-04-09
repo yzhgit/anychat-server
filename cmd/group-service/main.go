@@ -39,12 +39,12 @@ const (
 func main() {
 	fmt.Printf("Starting %s %s...\n", serviceName, version)
 
-	// 加载配置
+	// Load config
 	if err := loadConfig(); err != nil {
 		panic(fmt.Sprintf("Failed to load config: %v", err))
 	}
 
-	// 初始化日志
+	// Initialize logger
 	if err := initLogger(); err != nil {
 		panic(fmt.Sprintf("Failed to init logger: %v", err))
 	}
@@ -52,38 +52,38 @@ func main() {
 
 	logger.Info("Starting group-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := initDatabase()
 	if err != nil {
 		logger.Fatal("Failed to connect database", zap.Error(err))
 	}
 	logger.Info("Database connected successfully")
 
-	// 连接到user-service
+	// Connect to user-service
 	userClient, err := connectUserService()
 	if err != nil {
 		logger.Fatal("Failed to connect to user-service", zap.Error(err))
 	}
 	logger.Info("Connected to user-service")
 
-	// 连接到message-service
+	// Connect to message-service
 	messageClient, err := connectMessageService()
 	if err != nil {
 		logger.Fatal("Failed to connect to message-service", zap.Error(err))
 	}
 	logger.Info("Connected to message-service")
 
-	// 连接NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
 	}
 	logger.Info("Connected to NATS")
 
-	// 初始化通知发布器
+	// Initialize notification publisher
 	notificationPub := notification.NewPublisher(nc)
 
-	// 初始化仓库
+	// Initialize repositories
 	groupRepo := repository.NewGroupRepository(db)
 	memberRepo := repository.NewGroupMemberRepository(db)
 	settingRepo := repository.NewGroupSettingRepository(db)
@@ -91,13 +91,13 @@ func main() {
 	pinnedRepo := repository.NewGroupPinnedMessageRepository(db)
 	qrcodeRepo := repository.NewGroupQRCodeRepository(db)
 
-	// 初始化服务
+	// Initialize services
 	groupService := service.NewGroupService(groupRepo, memberRepo, settingRepo, joinRequestRepo, pinnedRepo, qrcodeRepo, messageClient, userClient, notificationPub, db)
 
-	// 初始化gRPC服务器
+	// Initialize gRPC server
 	grpcServer := initGRPCServer(groupService)
 
-	// 启动gRPC服务器
+	// Start gRPC server
 	go func() {
 		grpcPort := viper.GetInt("server.grpc_port")
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
@@ -110,10 +110,10 @@ func main() {
 		}
 	}()
 
-	// 初始化简化的HTTP服务器（仅健康检查）
+	// Initialize simplified HTTP server (health check only)
 	httpServer := initHTTPServer()
 
-	// 启动HTTP服务器
+	// Start HTTP server
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))
 		logger.Info("HTTP server listening (health check only)", zap.String("addr", addr))
@@ -124,29 +124,29 @@ func main() {
 
 	logger.Info("Group service started successfully")
 
-	// 优雅关闭
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Info("Shutting down gracefully...")
 
-	// 关闭gRPC服务器
+	// Stop gRPC server
 	grpcServer.GracefulStop()
 
-	// 关闭HTTP服务器
+	// Stop HTTP server
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
 		logger.Error("HTTP server shutdown error", zap.Error(err))
 	}
 
-	// 关闭NATS连接
+	// Close NATS connection
 	if nc != nil {
 		nc.Close()
 	}
 
-	// 关闭数据库
+	// Close database
 	if sqlDB, err := db.DB(); err == nil {
 		sqlDB.Close()
 	}
@@ -154,14 +154,14 @@ func main() {
 	logger.Info("Service stopped!")
 }
 
-// loadConfig 加载配置
+// loadConfig loads configuration
 func loadConfig() error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./configs")
 	viper.AddConfigPath(".")
 
-	// 设置默认值
+	// Set default values
 	viper.SetDefault("server.http_port", 8004)
 	viper.SetDefault("server.grpc_port", 9004)
 	viper.SetDefault("database.postgres.host", "localhost")
@@ -176,14 +176,14 @@ func loadConfig() error {
 	viper.SetDefault("services.message.grpc_addr", "localhost:9005")
 	viper.SetDefault("services.group.grpc_addr", "localhost:9004")
 
-	// 自动读取环境变量
+	// Auto-read environment variables
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return err
 		}
-		// 配置文件不存在，使用默认值
+		// Config file not found, use defaults
 		fmt.Println("Config file not found, using defaults")
 	}
 	config.ExpandEnvInConfig()
@@ -191,7 +191,7 @@ func loadConfig() error {
 	return nil
 }
 
-// initLogger 初始化日志
+// initLogger initializes logger
 func initLogger() error {
 	return logger.Init(&logger.Config{
 		Level:    viper.GetString("log.level"),
@@ -200,7 +200,7 @@ func initLogger() error {
 	})
 }
 
-// initDatabase 初始化数据库
+// initDatabase initializes database
 func initDatabase() (*gorm.DB, error) {
 	logLevel := gormLogger.Silent
 	if viper.GetString("log.level") == "debug" {
@@ -220,7 +220,7 @@ func initDatabase() (*gorm.DB, error) {
 	})
 }
 
-// connectUserService 连接到user-service
+// connectUserService connects to user-service
 func connectUserService() (userpb.UserServiceClient, error) {
 	addr := viper.GetString("services.user.grpc_addr")
 	conn, err := grpc.NewClient(
@@ -234,7 +234,7 @@ func connectUserService() (userpb.UserServiceClient, error) {
 	return userpb.NewUserServiceClient(conn), nil
 }
 
-// connectMessageService 连接到message-service
+// connectMessageService connects to message-service
 func connectMessageService() (messagepb.MessageServiceClient, error) {
 	addr := viper.GetString("services.message.grpc_addr")
 	conn, err := grpc.NewClient(
@@ -248,7 +248,7 @@ func connectMessageService() (messagepb.MessageServiceClient, error) {
 	return messagepb.NewMessageServiceClient(conn), nil
 }
 
-// connectNATS 连接到NATS
+// connectNATS connects to NATS
 func connectNATS() (*nats.Conn, error) {
 	natsURL := viper.GetString("nats.url")
 	nc, err := nats.Connect(natsURL,
@@ -265,7 +265,7 @@ func connectNATS() (*nats.Conn, error) {
 	return nc, err
 }
 
-// initGRPCServer 初始化gRPC服务器
+// initGRPCServer initializes gRPC server
 func initGRPCServer(groupService service.GroupService) *grpc.Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -279,17 +279,17 @@ func initGRPCServer(groupService service.GroupService) *grpc.Server {
 	return grpcServer
 }
 
-// initHTTPServer 初始化HTTP服务器（仅健康检查）
+// initHTTPServer initializes HTTP server (health check only)
 func initHTTPServer() *http.Server {
-	// 设置Gin模式
+	// Set Gin mode
 	if viper.GetString("server.mode") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 创建路由
+	// Create router
 	r := gin.New()
 
-	// 健康检查接口
+	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",

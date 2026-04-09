@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims JWT声明
+// Claims JWT claims
 type Claims struct {
 	UserID     string `json:"userId"`
 	DeviceID   string `json:"deviceId"`
@@ -16,26 +16,26 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// Config JWT配置
+// Config JWT configuration
 type Config struct {
 	Secret             string
 	AccessTokenExpire  time.Duration
 	RefreshTokenExpire time.Duration
 }
 
-// Manager JWT管理器
+// Manager JWT manager
 type Manager struct {
 	config *Config
 }
 
-// NewManager 创建JWT管理器
+// NewManager creates a new JWT manager
 func NewManager(config *Config) *Manager {
 	return &Manager{
 		config: config,
 	}
 }
 
-// GenerateAccessToken 生成AccessToken
+// GenerateAccessToken generates an access token
 func (m *Manager) GenerateAccessToken(userID, deviceID, deviceType string) (string, error) {
 	now := time.Now()
 	claims := Claims{
@@ -54,7 +54,7 @@ func (m *Manager) GenerateAccessToken(userID, deviceID, deviceType string) (stri
 	return token.SignedString([]byte(m.config.Secret))
 }
 
-// GenerateRefreshToken 生成RefreshToken
+// GenerateRefreshToken generates a refresh token
 func (m *Manager) GenerateRefreshToken(userID, deviceID, deviceType string) (string, error) {
 	now := time.Now()
 	claims := Claims{
@@ -73,7 +73,7 @@ func (m *Manager) GenerateRefreshToken(userID, deviceID, deviceType string) (str
 	return token.SignedString([]byte(m.config.Secret))
 }
 
-// ParseToken 解析Token
+// ParseToken parses a token
 func (m *Manager) ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -93,7 +93,7 @@ func (m *Manager) ParseToken(tokenString string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
-// ValidateAccessToken 验证AccessToken
+// ValidateAccessToken validates an access token
 func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
 	claims, err := m.ParseToken(tokenString)
 	if err != nil {
@@ -107,7 +107,7 @@ func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-// ValidateRefreshToken 验证RefreshToken
+// ValidateRefreshToken validates a refresh token
 func (m *Manager) ValidateRefreshToken(tokenString string) (*Claims, error) {
 	claims, err := m.ParseToken(tokenString)
 	if err != nil {

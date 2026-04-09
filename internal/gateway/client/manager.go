@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Manager gRPC客户端管理器
+// Manager gRPC client manager
 type Manager struct {
 	authConn           *grpc.ClientConn
 	userConn           *grpc.ClientConn
@@ -43,9 +43,9 @@ type Manager struct {
 	versionClient      versionpb.VersionServiceClient
 }
 
-// NewManager 创建gRPC客户端管理器
+// NewManager creates gRPC client manager
 func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr, conversationAddr, syncAddr, callingAddr, versionAddr string) (*Manager, error) {
-	// 连接auth-service
+	// Connect to auth-service
 	authConn, err := grpc.NewClient(
 		authAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -55,7 +55,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to auth-service", zap.String("addr", authAddr))
 
-	// 连接user-service
+	// Connect to user-service
 	userConn, err := grpc.NewClient(
 		userAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -66,7 +66,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to user-service", zap.String("addr", userAddr))
 
-	// 连接friend-service
+	// Connect to friend-service
 	friendConn, err := grpc.NewClient(
 		friendAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -78,7 +78,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to friend-service", zap.String("addr", friendAddr))
 
-	// 连接group-service
+	// Connect to group-service
 	groupConn, err := grpc.NewClient(
 		groupAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -91,7 +91,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to group-service", zap.String("addr", groupAddr))
 
-	// 连接file-service
+	// Connect to file-service
 	fileConn, err := grpc.NewClient(
 		fileAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -105,7 +105,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to file-service", zap.String("addr", fileAddr))
 
-	// 连接message-service
+	// Connect to message-service
 	messageConn, err := grpc.NewClient(
 		messageAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -120,7 +120,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to message-service", zap.String("addr", messageAddr))
 
-	// 连接conversation-service
+	// Connect to conversation-service
 	conversationConn, err := grpc.NewClient(
 		conversationAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -136,7 +136,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to conversation-service", zap.String("addr", conversationAddr))
 
-	// 连接sync-service
+	// Connect to sync-service
 	syncConn, err := grpc.NewClient(
 		syncAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -153,7 +153,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to sync-service", zap.String("addr", syncAddr))
 
-	// 连接calling-service
+	// Connect to calling-service
 	callingConn, err := grpc.NewClient(
 		callingAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -171,7 +171,7 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}
 	logger.Info("Connected to calling-service", zap.String("addr", callingAddr))
 
-	// 连接version-service
+	// Connect to version-service
 	versionConn, err := grpc.NewClient(
 		versionAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -214,57 +214,57 @@ func NewManager(authAddr, userAddr, friendAddr, groupAddr, fileAddr, messageAddr
 	}, nil
 }
 
-// Auth 获取auth服务客户端
+// Auth get auth service client
 func (m *Manager) Auth() authpb.AuthServiceClient {
 	return m.authClient
 }
 
-// User 获取user服务客户端
+// User get user service client
 func (m *Manager) User() userpb.UserServiceClient {
 	return m.userClient
 }
 
-// Friend 获取friend服务客户端
+// Friend get friend service client
 func (m *Manager) Friend() friendpb.FriendServiceClient {
 	return m.friendClient
 }
 
-// Group 获取group服务客户端
+// Group get group service client
 func (m *Manager) Group() grouppb.GroupServiceClient {
 	return m.groupClient
 }
 
-// File 获取file服务客户端
+// File get file service client
 func (m *Manager) File() filepb.FileServiceClient {
 	return m.fileClient
 }
 
-// Message 获取message服务客户端
+// Message get message service client
 func (m *Manager) Message() messagepb.MessageServiceClient {
 	return m.messageClient
 }
 
-// Conversation 获取conversation服务客户端
+// Conversation get conversation service client
 func (m *Manager) Conversation() conversationpb.ConversationServiceClient {
 	return m.conversationClient
 }
 
-// Sync 获取sync服务客户端
+// Sync get sync service client
 func (m *Manager) Sync() syncpb.SyncServiceClient {
 	return m.syncClient
 }
 
-// Calling 获取音视频通话服务客户端
+// Calling get audio/video call service client
 func (m *Manager) Calling() callingpb.CallingServiceClient {
 	return m.callingClient
 }
 
-// Version 获取version服务客户端
+// Version get version service client
 func (m *Manager) Version() versionpb.VersionServiceClient {
 	return m.versionClient
 }
 
-// Close 关闭所有连接
+// Close close all connections
 func (m *Manager) Close() error {
 	var errs []error
 

@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// SequenceRepository 序列号仓库接口
+// SequenceRepository sequence repository interface
 type SequenceRepository interface {
 	GetOrCreate(ctx context.Context, conversationID string) (*model.ConversationSequence, error)
 	IncrementAndGet(ctx context.Context, conversationID string) (int64, error)
@@ -18,21 +18,21 @@ type SequenceRepository interface {
 	WithTx(tx *gorm.DB) SequenceRepository
 }
 
-// sequenceRepositoryImpl 序列号仓库实现
+// sequenceRepositoryImpl sequence repository implementation
 type sequenceRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewSequenceRepository 创建序列号仓库
+// NewSequenceRepository creates sequence repository
 func NewSequenceRepository(db *gorm.DB) SequenceRepository {
 	return &sequenceRepositoryImpl{db: db}
 }
 
-// GetOrCreate 获取或创建序列号记录
+// GetOrCreate gets or creates sequence record
 func (r *sequenceRepositoryImpl) GetOrCreate(ctx context.Context, conversationID string) (*model.ConversationSequence, error) {
 	var seq model.ConversationSequence
 
-	// 尝试获取
+	// Try to get
 	err := r.db.WithContext(ctx).
 		Where("conversation_id = ?", conversationID).
 		First(&seq).Error
@@ -45,7 +45,7 @@ func (r *sequenceRepositoryImpl) GetOrCreate(ctx context.Context, conversationID
 		return nil, err
 	}
 
-	// 不存在则创建
+	// Create if not exists
 	seq = model.ConversationSequence{
 		ConversationID: conversationID,
 		CurrentSeq:     0,
@@ -56,7 +56,7 @@ func (r *sequenceRepositoryImpl) GetOrCreate(ctx context.Context, conversationID
 		Create(&seq).Error
 
 	if err != nil {
-		// 如果并发创建失败，再次获取
+		// If concurrent create fails, try to get again
 		err = r.db.WithContext(ctx).
 			Where("conversation_id = ?", conversationID).
 			First(&seq).Error
@@ -65,14 +65,14 @@ func (r *sequenceRepositoryImpl) GetOrCreate(ctx context.Context, conversationID
 	return &seq, err
 }
 
-// IncrementAndGet 递增并获取序列号（原子操作）
+// IncrementAndGet increments and gets sequence (atomic operation)
 func (r *sequenceRepositoryImpl) IncrementAndGet(ctx context.Context, conversationID string) (int64, error) {
-	// 确保记录存在
+	// Ensure record exists
 	if _, err := r.GetOrCreate(ctx, conversationID); err != nil {
 		return 0, err
 	}
 
-	// 原子递增
+	// Atomic increment
 	result := r.db.WithContext(ctx).
 		Model(&model.ConversationSequence{}).
 		Where("conversation_id = ?", conversationID).
@@ -82,7 +82,7 @@ func (r *sequenceRepositoryImpl) IncrementAndGet(ctx context.Context, conversati
 		return 0, result.Error
 	}
 
-	// 获取更新后的值
+	// Get updated value
 	var seq model.ConversationSequence
 	err := r.db.WithContext(ctx).
 		Where("conversation_id = ?", conversationID).
@@ -91,7 +91,7 @@ func (r *sequenceRepositoryImpl) IncrementAndGet(ctx context.Context, conversati
 	return seq.CurrentSeq, err
 }
 
-// GetCurrentSeq 获取当前序列号
+// GetCurrentSeq gets current sequence
 func (r *sequenceRepositoryImpl) GetCurrentSeq(ctx context.Context, conversationID string) (int64, error) {
 	var seq model.ConversationSequence
 	err := r.db.WithContext(ctx).
@@ -109,7 +109,7 @@ func (r *sequenceRepositoryImpl) GetCurrentSeq(ctx context.Context, conversation
 	return seq.CurrentSeq, nil
 }
 
-// Reset 重置序列号
+// Reset resets sequence
 func (r *sequenceRepositoryImpl) Reset(ctx context.Context, conversationID string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.ConversationSequence{}).
@@ -117,14 +117,14 @@ func (r *sequenceRepositoryImpl) Reset(ctx context.Context, conversationID strin
 		Update("current_seq", 0).Error
 }
 
-// Delete 删除序列号记录
+// Delete deletes sequence record
 func (r *sequenceRepositoryImpl) Delete(ctx context.Context, conversationID string) error {
 	return r.db.WithContext(ctx).
 		Where("conversation_id = ?", conversationID).
 		Delete(&model.ConversationSequence{}).Error
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *sequenceRepositoryImpl) WithTx(tx *gorm.DB) SequenceRepository {
 	return &sequenceRepositoryImpl{db: tx}
 }

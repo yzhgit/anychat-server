@@ -12,18 +12,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Server Conversation gRPC服务器
+// Server is the Conversation gRPC server
 type Server struct {
 	conversationpb.UnimplementedConversationServiceServer
 	conversationService service.ConversationService
 }
 
-// NewServer 创建gRPC服务器
+// NewServer creates a new gRPC server
 func NewServer(conversationService service.ConversationService) *Server {
 	return &Server{conversationService: conversationService}
 }
 
-// GetConversations 获取用户会话列表
+// GetConversations retrieves the list of user conversations
 func (s *Server) GetConversations(ctx context.Context, req *conversationpb.GetConversationsRequest) (*conversationpb.GetConversationsResponse, error) {
 	if req.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
@@ -36,7 +36,7 @@ func (s *Server) GetConversations(ctx context.Context, req *conversationpb.GetCo
 	return resp, nil
 }
 
-// GetConversation 获取单个会话
+// GetConversation retrieves a single conversation
 func (s *Server) GetConversation(ctx context.Context, req *conversationpb.GetConversationRequest) (*conversationpb.Conversation, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -49,7 +49,7 @@ func (s *Server) GetConversation(ctx context.Context, req *conversationpb.GetCon
 	return conversation, nil
 }
 
-// CreateOrUpdateConversation 创建或更新会话
+// CreateOrUpdateConversation creates or updates a conversation
 func (s *Server) CreateOrUpdateConversation(ctx context.Context, req *conversationpb.CreateOrUpdateConversationRequest) (*conversationpb.Conversation, error) {
 	if req.UserId == "" || req.TargetId == "" || req.ConversationType == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id, target_id and conversation_type are required")
@@ -62,7 +62,7 @@ func (s *Server) CreateOrUpdateConversation(ctx context.Context, req *conversati
 	return conversation, nil
 }
 
-// DeleteConversation 删除会话
+// DeleteConversation deletes a conversation
 func (s *Server) DeleteConversation(ctx context.Context, req *conversationpb.DeleteConversationRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -74,7 +74,7 @@ func (s *Server) DeleteConversation(ctx context.Context, req *conversationpb.Del
 	return &commonpb.Empty{}, nil
 }
 
-// SetPinned 设置置顶
+// SetPinned sets pinned status
 func (s *Server) SetPinned(ctx context.Context, req *conversationpb.SetPinnedRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -86,7 +86,7 @@ func (s *Server) SetPinned(ctx context.Context, req *conversationpb.SetPinnedReq
 	return &commonpb.Empty{}, nil
 }
 
-// SetMuted 设置免打扰
+// SetMuted sets muted status
 func (s *Server) SetMuted(ctx context.Context, req *conversationpb.SetMutedRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -98,7 +98,7 @@ func (s *Server) SetMuted(ctx context.Context, req *conversationpb.SetMutedReque
 	return &commonpb.Empty{}, nil
 }
 
-// ClearUnread 清除未读数
+// ClearUnread clears unread count
 func (s *Server) ClearUnread(ctx context.Context, req *conversationpb.ClearUnreadRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -110,7 +110,7 @@ func (s *Server) ClearUnread(ctx context.Context, req *conversationpb.ClearUnrea
 	return &commonpb.Empty{}, nil
 }
 
-// GetTotalUnread 获取总未读数
+// GetTotalUnread gets total unread count
 func (s *Server) GetTotalUnread(ctx context.Context, req *conversationpb.GetTotalUnreadRequest) (*conversationpb.GetTotalUnreadResponse, error) {
 	if req.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
@@ -123,7 +123,7 @@ func (s *Server) GetTotalUnread(ctx context.Context, req *conversationpb.GetTota
 	return &conversationpb.GetTotalUnreadResponse{TotalUnread: total}, nil
 }
 
-// IncrUnread 增加未读数
+// IncrUnread increments unread count
 func (s *Server) IncrUnread(ctx context.Context, req *conversationpb.IncrUnreadRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -135,7 +135,7 @@ func (s *Server) IncrUnread(ctx context.Context, req *conversationpb.IncrUnreadR
 	return &commonpb.Empty{}, nil
 }
 
-// SetBurnAfterReading 设置阅后即焚
+// SetBurnAfterReading sets burn after reading
 func (s *Server) SetBurnAfterReading(ctx context.Context, req *conversationpb.SetBurnAfterReadingRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")
@@ -147,7 +147,7 @@ func (s *Server) SetBurnAfterReading(ctx context.Context, req *conversationpb.Se
 	return &commonpb.Empty{}, nil
 }
 
-// SetAutoDelete 设置自动删除
+// SetAutoDelete sets auto delete
 func (s *Server) SetAutoDelete(ctx context.Context, req *conversationpb.SetAutoDeleteRequest) (*commonpb.Empty, error) {
 	if req.UserId == "" || req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id and conversation_id are required")

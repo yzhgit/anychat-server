@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// MessageSendIdempotency 消息发送幂等键
+// MessageSendIdempotency message send idempotency key
 type MessageSendIdempotency struct {
 	ID             int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	SenderID       string    `gorm:"column:sender_id;not null;uniqueIndex:uk_sender_conversation_local" json:"senderId"`
@@ -13,7 +13,7 @@ type MessageSendIdempotency struct {
 	UpdatedAt      time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (MessageSendIdempotency) TableName() string {
 	return "message_send_idempotency"
 }

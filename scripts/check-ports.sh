@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# 端口检查和清理脚本
-# 在启动服务前检查端口占用情况
+# Port check and cleanup script
+# Check port usage before starting services
 #
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -31,7 +31,7 @@ print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
-# 检查单个端口
+# Check single port
 check_port() {
     local port=$1
     local service=$2
@@ -48,9 +48,9 @@ check_port() {
     fi
 }
 
-# 检查基础设施端口
+# Check infrastructure ports
 check_infrastructure_ports() {
-    print_header "检查基础设施端口"
+    print_header "Checking Infrastructure Ports"
 
     local failed=0
 
@@ -65,13 +65,13 @@ check_infrastructure_ports() {
     return $failed
 }
 
-# 检查微服务端口
+# Check microservice ports
 check_microservice_ports() {
-    print_header "检查微服务端口"
+    print_header "Checking Microservice Ports"
 
     local failed=0
 
-    # 核心服务
+    # Core services
     check_port 8080 "gateway-service HTTP" || ((failed++))
     check_port 8001 "auth-service HTTP" || ((failed++))
     check_port 9001 "auth-service gRPC" || ((failed++))
@@ -94,7 +94,7 @@ check_microservice_ports() {
     return $failed
 }
 
-# 停止占用端口的进程
+# Kill process on port
 kill_process_on_port() {
     local port=$1
     local pids=$(lsof -ti :$port 2>/dev/null || echo "")
@@ -110,15 +110,15 @@ kill_process_on_port() {
     fi
 }
 
-# 清理微服务进程
+# Cleanup microservice processes
 cleanup_microservices() {
-    print_header "清理微服务进程"
+    print_header "Cleaning Up Microservice Processes"
 
     echo "Stopping all microservices..."
     pkill -f "auth-service|user-service|gateway-service|friend-service|group-service|file-service|message-service" 2>/dev/null || true
     sleep 2
 
-    # 检查是否还有进程
+    # Check if any processes remain
     local remaining=$(ps aux | grep -E "auth-service|user-service|friend-service|group-service|file-service|gateway-service" | grep -v grep || echo "")
     if [ -z "$remaining" ]; then
         print_success "All microservices stopped"
@@ -128,11 +128,11 @@ cleanup_microservices() {
     fi
 }
 
-# 显示端口使用情况
+# Show port usage
 show_port_usage() {
-    print_header "当前端口使用情况"
+    print_header "Current Port Usage"
 
-    echo -e "\n${YELLOW}基础设施端口:${NC}"
+    echo -e "\n${YELLOW}Infrastructure Ports:${NC}"
     for port in 5432 6379 4222 8222 9000 9091 7880; do
         local result=$(lsof -i :$port 2>/dev/null | grep LISTEN || echo "")
         if [ -n "$result" ]; then
@@ -140,7 +140,7 @@ show_port_usage() {
         fi
     done
 
-    echo -e "\n${YELLOW}微服务端口:${NC}"
+    echo -e "\n${YELLOW}Microservice Ports:${NC}"
     for port in 8080 8001 9001 8002 9002 8003 9003 8004 9004 8007 9007 8008 9008 8009 9009 9010 8011 9011; do
         local result=$(lsof -i :$port 2>/dev/null | grep LISTEN || echo "")
         if [ -n "$result" ]; then
@@ -149,49 +149,49 @@ show_port_usage() {
     done
 }
 
-# 主菜单
+# Main menu
 show_menu() {
-    echo -e "\n${BLUE}AnyChat 端口管理工具${NC}"
-    echo "1) 检查所有端口"
-    echo "2) 清理微服务进程"
-    echo "3) 显示端口使用情况"
-    echo "4) 停止特定端口的进程"
-    echo "5) 完整清理 (停止微服务 + Docker)"
-    echo "0) 退出"
-    echo -n "选择操作: "
+    echo -e "\n${BLUE}AnyChat Port Management Tool${NC}"
+    echo "1) Check all ports"
+    echo "2) Cleanup microservice processes"
+    echo "3) Show port usage"
+    echo "4) Stop process on specific port"
+    echo "5) Full cleanup (stop microservices + Docker)"
+    echo "0) Exit"
+    echo -n "Select operation: "
 }
 
-# 主函数
+# Main function
 main() {
     if [ "$1" = "--check" ]; then
-        # 仅检查模式
+        # Check-only mode
         local failed=0
         check_infrastructure_ports || ((failed+=$?))
         check_microservice_ports || ((failed+=$?))
 
         if [ $failed -eq 0 ]; then
-            echo -e "\n${GREEN}所有端口可用！${NC}"
+            echo -e "\n${GREEN}All ports available!${NC}"
             exit 0
         else
-            echo -e "\n${RED}发现 $failed 个端口冲突${NC}"
+            echo -e "\n${RED}Found $failed port conflicts${NC}"
             exit 1
         fi
     elif [ "$1" = "--clean" ]; then
-        # 清理模式
+        # Cleanup mode
         cleanup_microservices
         exit 0
     elif [ "$1" = "--kill" ] && [ -n "$2" ]; then
-        # 停止特定端口
+        # Stop specific port
         kill_process_on_port $2
         exit 0
     elif [ "$1" = "--full-clean" ]; then
-        # 完整清理
+        # Full cleanup
         cleanup_microservices
         echo ""
         mage docker:down
         exit 0
     elif [ -z "$1" ]; then
-        # 交互模式
+        # Interactive mode
         while true; do
             show_menu
             read choice
@@ -208,7 +208,7 @@ main() {
                     show_port_usage
                     ;;
                 4)
-                    echo -n "输入端口号: "
+                    echo -n "Enter port number: "
                     read port
                     kill_process_on_port $port
                     ;;
@@ -218,25 +218,25 @@ main() {
                     mage docker:down
                     ;;
                 0)
-                    echo "退出"
+                    echo "Exiting"
                     exit 0
                     ;;
                 *)
-                    echo "无效选择"
+                    echo "Invalid choice"
                     ;;
             esac
         done
     else
-        # 显示帮助
-        echo "用法:"
-        echo "  $0                    # 交互模式"
-        echo "  $0 --check            # 仅检查端口"
-        echo "  $0 --clean            # 清理微服务进程"
-        echo "  $0 --kill <port>      # 停止特定端口的进程"
-        echo "  $0 --full-clean       # 完整清理 (微服务 + Docker)"
+        # Show help
+        echo "Usage:"
+        echo "  $0                    # Interactive mode"
+        echo "  $0 --check            # Check ports only"
+        echo "  $0 --clean            # Cleanup microservice processes"
+        echo "  $0 --kill <port>      # Stop process on specific port"
+        echo "  $0 --full-clean       # Full cleanup (microservices + Docker)"
         exit 0
     fi
 }
 
-# 运行主函数
+# Run main function
 main "$@"

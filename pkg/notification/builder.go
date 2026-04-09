@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// NewNotification 创建新通知
+// NewNotification creates a new notification
 func NewNotification(notifType string, fromUserID string, priority Priority) *Notification {
 	return &Notification{
 		NotificationID: uuid.New().String(),
@@ -16,19 +16,19 @@ func NewNotification(notifType string, fromUserID string, priority Priority) *No
 	}
 }
 
-// WithPayload 设置payload
+// WithPayload sets payload
 func (n *Notification) WithPayload(payload map[string]interface{}) *Notification {
 	n.Payload = payload
 	return n
 }
 
-// WithMetadata 设置metadata
+// WithMetadata sets metadata
 func (n *Notification) WithMetadata(metadata map[string]interface{}) *Notification {
 	n.Metadata = metadata
 	return n
 }
 
-// AddPayloadField 添加payload字段
+// AddPayloadField adds payload field
 func (n *Notification) AddPayloadField(key string, value interface{}) *Notification {
 	if n.Payload == nil {
 		n.Payload = make(map[string]interface{})
@@ -37,7 +37,7 @@ func (n *Notification) AddPayloadField(key string, value interface{}) *Notificat
 	return n
 }
 
-// AddMetadataField 添加metadata字段
+// AddMetadataField adds metadata field
 func (n *Notification) AddMetadataField(key string, value interface{}) *Notification {
 	if n.Metadata == nil {
 		n.Metadata = make(map[string]interface{})

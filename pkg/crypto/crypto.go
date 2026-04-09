@@ -10,20 +10,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// HashPassword 密码加密
+// HashPassword encrypts password
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-// CheckPassword 验证密码
+// CheckPassword verifies password
 func CheckPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
-// ValidatePasswordStrength 验证密码强度
-// 要求：8-32位，包含数字和字母
+// ValidatePasswordStrength validates password strength
+// Requirements: 8-32 characters, contains numbers and letters
 func ValidatePasswordStrength(password string) bool {
 	if len(password) < 8 || len(password) > 32 {
 		return false
@@ -35,14 +35,14 @@ func ValidatePasswordStrength(password string) bool {
 	return hasNumber && hasLetter
 }
 
-// MD5 计算MD5
+// MD5 calculates MD5 hash
 func MD5(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// GenerateRandomString 生成随机字符串
+// GenerateRandomString generates random string
 func GenerateRandomString(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
@@ -51,7 +51,7 @@ func GenerateRandomString(length int) (string, error) {
 	return hex.EncodeToString(bytes)[:length], nil
 }
 
-// GenerateVerifyCode 生成验证码
+// GenerateVerifyCode generates verification code
 func GenerateVerifyCode(length int) (string, error) {
 	if length <= 0 {
 		length = 6
@@ -71,7 +71,7 @@ func GenerateVerifyCode(length int) (string, error) {
 	return string(code), nil
 }
 
-// GenerateQRCodeToken 生成二维码Token
+// GenerateQRCodeToken generates QR code token
 func GenerateQRCodeToken(userID string) (string, error) {
 	randomStr, err := GenerateRandomString(16)
 	if err != nil {

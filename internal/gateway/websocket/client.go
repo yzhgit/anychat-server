@@ -10,29 +10,29 @@ import (
 )
 
 const (
-	writeWait      = 10 * time.Second // 写操作超时
-	pongWait       = 60 * time.Second // 等待pong响应的超时
-	pingPeriod     = 54 * time.Second // 发送ping的间隔（小于pongWait）
-	maxMessageSize = 65536            // 最大消息大小（64KB）
+	writeWait      = 10 * time.Second // write operation timeout
+	pongWait       = 60 * time.Second // timeout waiting for pong response
+	pingPeriod     = 54 * time.Second // interval to send ping (less than pongWait)
+	maxMessageSize = 65536            // max message size (64KB)
 )
 
-// Message WebSocket消息格式
+// Message WebSocket message format
 type Message struct {
 	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload,omitempty"`
 }
 
-// Client WebSocket客户端
+// Client WebSocket client
 type Client struct {
 	UserID   string
 	DeviceID string
 	Conn     *gorillaws.Conn
-	Send     chan []byte    // 待发送消息队列
-	Done     chan struct{}  // 关闭信号（被新连接替换时关闭）
+	Send     chan []byte   // message queue to send
+	Done     chan struct{} // close signal (closed when replaced by new connection)
 	manager  *Manager
 }
 
-// NewClient 创建新的WebSocket客户端
+// NewClient creates new WebSocket client
 func NewClient(userID, deviceID string, conn *gorillaws.Conn, manager *Manager) *Client {
 	return &Client{
 		UserID:   userID,
@@ -44,7 +44,7 @@ func NewClient(userID, deviceID string, conn *gorillaws.Conn, manager *Manager) 
 	}
 }
 
-// WritePump 处理向客户端发送消息（含心跳），在独立goroutine中运行
+// WritePump handles sending messages to client (with heartbeat), runs in separate goroutine
 func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -57,7 +57,7 @@ func (c *Client) WritePump() {
 		case message, ok := <-c.Send:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// Send通道已关闭
+				// Send channel is closed
 				c.Conn.WriteMessage(gorillaws.CloseMessage, []byte{})
 				return
 			}
@@ -73,7 +73,7 @@ func (c *Client) WritePump() {
 				return
 			}
 		case <-c.Done:
-			// 被新连接替换，关闭旧连接
+			// replaced by new connection, close old connection
 			c.Conn.WriteMessage(gorillaws.CloseMessage, gorillaws.FormatCloseMessage(
 				gorillaws.CloseNormalClosure, "replaced by new connection"))
 			return
@@ -81,7 +81,7 @@ func (c *Client) WritePump() {
 	}
 }
 
-// ReadPump 处理从客户端接收消息，阻塞直到连接断开
+// ReadPump handles receiving messages from client, blocks until connection disconnects
 func (c *Client) ReadPump(onMessage func(client *Client, msg *Message)) {
 	defer func() {
 		c.manager.Unregister(c)

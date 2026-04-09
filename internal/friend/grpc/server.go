@@ -13,28 +13,28 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// FriendServer friend gRPC服务器
+// FriendServer is the friend gRPC server
 type FriendServer struct {
 	friendpb.UnimplementedFriendServiceServer
 	friendService service.FriendService
 }
 
-// NewFriendServer 创建friend gRPC服务器
+// NewFriendServer creates a new friend gRPC server
 func NewFriendServer(friendService service.FriendService) *FriendServer {
 	return &FriendServer{
 		friendService: friendService,
 	}
 }
 
-// GetFriendList 获取好友列表
+// GetFriendList retrieves the friend list
 func (s *FriendServer) GetFriendList(ctx context.Context, req *friendpb.GetFriendListRequest) (*friendpb.GetFriendListResponse, error) {
-	// 调用service层
+	// Call service layer
 	resp, err := s.friendService.GetFriendList(ctx, req.UserId, req.LastUpdateTime)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	friends := make([]*friendpb.Friend, 0, len(resp.Friends))
 	for _, f := range resp.Friends {
 		friend := &friendpb.Friend{
@@ -59,16 +59,16 @@ func (s *FriendServer) GetFriendList(ctx context.Context, req *friendpb.GetFrien
 	}, nil
 }
 
-// SendFriendRequest 发送好友申请
+// SendFriendRequest sends a friend request
 func (s *FriendServer) SendFriendRequest(ctx context.Context, req *friendpb.SendFriendRequestRequest) (*friendpb.SendFriendRequestResponse, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.SendFriendRequestRequest{
 		UserID:  req.ToUserId,
 		Message: req.Message,
 		Source:  req.Source,
 	}
 
-	// 调用service层
+	// Call service layer
 	resp, err := s.friendService.SendFriendRequest(ctx, req.FromUserId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -80,14 +80,14 @@ func (s *FriendServer) SendFriendRequest(ctx context.Context, req *friendpb.Send
 	}, nil
 }
 
-// HandleFriendRequest 处理好友申请
+// HandleFriendRequest handles a friend request
 func (s *FriendServer) HandleFriendRequest(ctx context.Context, req *friendpb.HandleFriendRequestRequest) (*commonpb.Empty, error) {
-	// Proto -> DTO 转换
+	// Proto -> DTO conversion
 	dtoReq := &dto.HandleFriendRequestRequest{
 		Action: req.Action,
 	}
 
-	// 调用service层
+	// Call service layer
 	err := s.friendService.HandleFriendRequest(ctx, req.UserId, req.RequestId, dtoReq)
 	if err != nil {
 		return nil, convertError(err)
@@ -96,15 +96,15 @@ func (s *FriendServer) HandleFriendRequest(ctx context.Context, req *friendpb.Ha
 	return &commonpb.Empty{}, nil
 }
 
-// GetFriendRequests 获取好友申请列表
+// GetFriendRequests retrieves the friend request list
 func (s *FriendServer) GetFriendRequests(ctx context.Context, req *friendpb.GetFriendRequestsRequest) (*friendpb.GetFriendRequestsResponse, error) {
-	// 调用service层
+	// Call service layer
 	resp, err := s.friendService.GetFriendRequests(ctx, req.UserId, req.Type)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	requests := make([]*friendpb.FriendRequest, 0, len(resp.Requests))
 	for _, r := range resp.Requests {
 		request := &friendpb.FriendRequest{
@@ -132,7 +132,7 @@ func (s *FriendServer) GetFriendRequests(ctx context.Context, req *friendpb.GetF
 	}, nil
 }
 
-// DeleteFriend 删除好友
+// DeleteFriend deletes a friend
 func (s *FriendServer) DeleteFriend(ctx context.Context, req *friendpb.DeleteFriendRequest) (*commonpb.Empty, error) {
 	err := s.friendService.DeleteFriend(ctx, req.UserId, req.FriendId)
 	if err != nil {
@@ -141,7 +141,7 @@ func (s *FriendServer) DeleteFriend(ctx context.Context, req *friendpb.DeleteFri
 	return &commonpb.Empty{}, nil
 }
 
-// UpdateRemark 更新好友备注
+// UpdateRemark updates friend remark
 func (s *FriendServer) UpdateRemark(ctx context.Context, req *friendpb.UpdateRemarkRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.UpdateRemarkRequest{
 		Remark: req.Remark,
@@ -154,7 +154,7 @@ func (s *FriendServer) UpdateRemark(ctx context.Context, req *friendpb.UpdateRem
 	return &commonpb.Empty{}, nil
 }
 
-// AddToBlacklist 添加到黑名单
+// AddToBlacklist adds user to blacklist
 func (s *FriendServer) AddToBlacklist(ctx context.Context, req *friendpb.AddToBlacklistRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.AddToBlacklistRequest{
 		UserId: req.BlockedUserId,
@@ -167,7 +167,7 @@ func (s *FriendServer) AddToBlacklist(ctx context.Context, req *friendpb.AddToBl
 	return &commonpb.Empty{}, nil
 }
 
-// RemoveFromBlacklist 从黑名单移除
+// RemoveFromBlacklist removes user from blacklist
 func (s *FriendServer) RemoveFromBlacklist(ctx context.Context, req *friendpb.RemoveFromBlacklistRequest) (*commonpb.Empty, error) {
 	err := s.friendService.RemoveFromBlacklist(ctx, req.UserId, req.BlockedUserId)
 	if err != nil {
@@ -176,14 +176,14 @@ func (s *FriendServer) RemoveFromBlacklist(ctx context.Context, req *friendpb.Re
 	return &commonpb.Empty{}, nil
 }
 
-// GetBlacklist 获取黑名单列表
+// GetBlacklist retrieves the blacklist
 func (s *FriendServer) GetBlacklist(ctx context.Context, req *friendpb.GetBlacklistRequest) (*friendpb.GetBlacklistResponse, error) {
 	resp, err := s.friendService.GetBlacklist(ctx, req.UserId)
 	if err != nil {
 		return nil, convertError(err)
 	}
 
-	// DTO -> Proto 转换
+	// DTO -> Proto conversion
 	items := make([]*friendpb.BlacklistItem, 0, len(resp.Items))
 	for _, item := range resp.Items {
 		pbItem := &friendpb.BlacklistItem{
@@ -208,7 +208,7 @@ func (s *FriendServer) GetBlacklist(ctx context.Context, req *friendpb.GetBlackl
 	}, nil
 }
 
-// IsFriend 检查是否是好友
+// IsFriend checks if users are friends
 func (s *FriendServer) IsFriend(ctx context.Context, req *friendpb.IsFriendRequest) (*friendpb.IsFriendResponse, error) {
 	isFriend, err := s.friendService.IsFriend(ctx, req.UserId, req.FriendId)
 	if err != nil {
@@ -219,7 +219,7 @@ func (s *FriendServer) IsFriend(ctx context.Context, req *friendpb.IsFriendReque
 	}, nil
 }
 
-// IsBlocked 检查是否被拉黑
+// IsBlocked checks if user is blocked
 func (s *FriendServer) IsBlocked(ctx context.Context, req *friendpb.IsBlockedRequest) (*friendpb.IsBlockedResponse, error) {
 	isBlocked, err := s.friendService.IsBlocked(ctx, req.UserId, req.TargetUserId)
 	if err != nil {
@@ -230,7 +230,7 @@ func (s *FriendServer) IsBlocked(ctx context.Context, req *friendpb.IsBlockedReq
 	}, nil
 }
 
-// BatchCheckFriend 批量检查好友关系
+// BatchCheckFriend batch checks friend relationships
 func (s *FriendServer) BatchCheckFriend(ctx context.Context, req *friendpb.BatchCheckFriendRequest) (*friendpb.BatchCheckFriendResponse, error) {
 	results, err := s.friendService.BatchCheckFriend(ctx, req.UserId, req.FriendIds)
 	if err != nil {
@@ -241,7 +241,7 @@ func (s *FriendServer) BatchCheckFriend(ctx context.Context, req *friendpb.Batch
 	}, nil
 }
 
-// convertError 将业务错误转换为gRPC错误
+// convertError converts business errors to gRPC errors
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
 		switch bizErr.Code {

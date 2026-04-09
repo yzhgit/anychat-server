@@ -1,4 +1,4 @@
--- 创建消息表（按月分表策略，此表为模板）
+-- Create messages table (monthly sharding strategy, this table is the template)
 CREATE TABLE IF NOT EXISTS messages (
     id BIGSERIAL PRIMARY KEY,
     message_id VARCHAR(64) NOT NULL UNIQUE,
@@ -7,20 +7,20 @@ CREATE TABLE IF NOT EXISTS messages (
     sender_id VARCHAR(36) NOT NULL,
     content_type VARCHAR(20) NOT NULL,  -- text/image/video/audio/file/location/card
     content JSONB NOT NULL,
-    sequence BIGINT NOT NULL,  -- 会话内递增序列号
-    reply_to VARCHAR(64),  -- 回复的消息ID
-    at_users TEXT[],  -- @的用户ID列表
-    status SMALLINT DEFAULT 0,  -- 0-正常 1-撤回 2-删除
-    burn_after_reading_seconds INT NOT NULL DEFAULT 0,  -- 阅后即焚时长快照(秒),0表示不启用
-    auto_delete_expire_time TIMESTAMPTZ,  -- 自动删除策略计算出的过期时间
-    burn_after_reading_expire_time TIMESTAMPTZ,  -- 阅后即焚策略计算出的过期时间
-    expire_time TIMESTAMPTZ,  -- 消息过期时间,为NULL表示永不过期
+    sequence BIGINT NOT NULL,  -- Incrementing sequence number within conversation
+    reply_to VARCHAR(64),  -- Message ID being replied to
+    at_users TEXT[],  -- List of user IDs being @ed
+    status SMALLINT DEFAULT 0,  -- 0-normal, 1-recalled, 2-deleted
+    burn_after_reading_seconds INT NOT NULL DEFAULT 0,  -- Burn-after-reading duration in seconds, 0 means disabled
+    auto_delete_expire_time TIMESTAMPTZ,  -- Expiration time calculated from auto-delete policy
+    burn_after_reading_expire_time TIMESTAMPTZ,  -- Expiration time calculated from burn-after-reading policy
+    expire_time TIMESTAMPTZ,  -- Message expiration time, NULL means never expires
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_conversation_sequence UNIQUE (conversation_id, sequence)
 );
 
--- 创建索引
+-- Create indexes
 CREATE INDEX idx_messages_conversation_sequence ON messages(conversation_id, sequence DESC);
 CREATE INDEX idx_messages_sender_time ON messages(sender_id, created_at DESC);
 CREATE INDEX idx_messages_message_id ON messages(message_id);
@@ -28,7 +28,7 @@ CREATE INDEX idx_messages_status ON messages(status) WHERE status = 0;
 CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
 CREATE INDEX idx_messages_expire_time ON messages(expire_time) WHERE expire_time IS NOT NULL;
 
--- 创建已读回执表
+-- Create read receipts table
 CREATE TABLE IF NOT EXISTS message_read_receipts (
     id BIGSERIAL PRIMARY KEY,
     conversation_id VARCHAR(64) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS message_read_receipts (
 CREATE INDEX idx_read_receipts_conversation ON message_read_receipts(conversation_id);
 CREATE INDEX idx_read_receipts_user ON message_read_receipts(user_id);
 
--- 创建会话序列号表（用于生成递增序列号）
+-- Create conversation sequence table (for generating incrementing sequence numbers)
 CREATE TABLE IF NOT EXISTS conversation_sequences (
     id BIGSERIAL PRIMARY KEY,
     conversation_id VARCHAR(64) NOT NULL UNIQUE,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS conversation_sequences (
 
 CREATE INDEX idx_conversation_sequences_conversation ON conversation_sequences(conversation_id);
 
--- 创建消息引用表（用于记录消息之间的引用关系）
+-- Create message references table (for recording reference relationships between messages)
 CREATE TABLE IF NOT EXISTS message_references (
     id BIGSERIAL PRIMARY KEY,
     message_id VARCHAR(64) NOT NULL,

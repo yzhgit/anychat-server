@@ -47,19 +47,19 @@ func main() {
 
 	logger.Info("Starting admin-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := initDatabase()
 	if err != nil {
 		logger.Fatal("Failed to connect database", zap.Error(err))
 	}
 	logger.Info("Database connected successfully")
 
-	// 初始化仓库
+	// Initialize repositories
 	adminRepo := repository.NewAdminUserRepository(db)
 	auditRepo := repository.NewAuditLogRepository(db)
 	configRepo := repository.NewSystemConfigRepository(db)
 
-	// 连接下游服务
+	// Connect to downstream services
 	clientManager, err := adminclient.NewManager(
 		viper.GetString("services.user.grpc_addr"),
 		viper.GetString("services.group.grpc_addr"),
@@ -70,13 +70,13 @@ func main() {
 	}
 	defer clientManager.Close()
 
-	// JWT管理器（管理员专用独立secret）
+	// JWT manager (admin-specific separate secret)
 	jwtManager := jwt.NewManager(&jwt.Config{
 		Secret:            viper.GetString("admin.jwt.secret"),
 		AccessTokenExpire: time.Duration(viper.GetInt("admin.jwt.access_token_expire")) * time.Second,
 	})
 
-	// 初始化业务服务
+	// Initialize business services
 	adminSvc := service.NewAdminService(
 		jwtManager,
 		adminRepo,
@@ -87,7 +87,7 @@ func main() {
 		clientManager.FileClient,
 	)
 
-	// 初始化gRPC服务器
+	// Initialize gRPC server
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcpkg.RecoveryInterceptor(),
@@ -108,7 +108,7 @@ func main() {
 		}
 	}()
 
-	// 初始化HTTP服务器
+	// Initialize HTTP server
 	if viper.GetString("server.mode") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}

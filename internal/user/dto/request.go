@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-// UpdateProfileRequest 更新个人资料请求
+// UpdateProfileRequest update profile request
 type UpdateProfileRequest struct {
 	Nickname  *string    `json:"nickname"`
 	Avatar    *string    `json:"avatar"`
@@ -12,7 +12,7 @@ type UpdateProfileRequest struct {
 	Region    *string    `json:"region"`
 }
 
-// UpdateSettingsRequest 更新个人设置请求
+// UpdateSettingsRequest update settings request
 type UpdateSettingsRequest struct {
 	NotificationEnabled   *bool   `json:"notificationEnabled"`
 	SoundEnabled          *bool   `json:"soundEnabled"`
@@ -24,20 +24,20 @@ type UpdateSettingsRequest struct {
 	Language              *string `json:"language"`
 }
 
-// UpdatePushTokenRequest 更新推送Token请求
+// UpdatePushTokenRequest update push token request
 type UpdatePushTokenRequest struct {
 	DeviceID  string `json:"deviceId" binding:"required"`
 	PushToken string `json:"pushToken" binding:"required"`
 	Platform  string `json:"platform" binding:"required"` // iOS/Android
 }
 
-// BindPhoneRequest 绑定手机号请求
+// BindPhoneRequest bind phone request
 type BindPhoneRequest struct {
 	PhoneNumber string `json:"phoneNumber" binding:"required"`
 	VerifyCode  string `json:"verifyCode" binding:"required"`
 }
 
-// ChangePhoneRequest 更换手机号请求
+// ChangePhoneRequest change phone request
 type ChangePhoneRequest struct {
 	OldPhoneNumber string  `json:"oldPhoneNumber" binding:"required"`
 	NewPhoneNumber string  `json:"newPhoneNumber" binding:"required"`
@@ -46,13 +46,13 @@ type ChangePhoneRequest struct {
 	DeviceID       string  `json:"-"`
 }
 
-// BindEmailRequest 绑定邮箱请求
+// BindEmailRequest bind email request
 type BindEmailRequest struct {
 	Email      string `json:"email" binding:"required"`
 	VerifyCode string `json:"verifyCode" binding:"required"`
 }
 
-// ChangeEmailRequest 更换邮箱请求
+// ChangeEmailRequest change email request
 type ChangeEmailRequest struct {
 	OldEmail      string  `json:"oldEmail" binding:"required"`
 	NewEmail      string  `json:"newEmail" binding:"required"`
@@ -61,7 +61,7 @@ type ChangeEmailRequest struct {
 	DeviceID      string  `json:"-"`
 }
 
-// SearchUsersRequest 搜索用户请求
+// SearchUsersRequest search users request
 type SearchUsersRequest struct {
 	Keyword  string `form:"keyword" binding:"required"`
 	Page     int    `form:"page"`

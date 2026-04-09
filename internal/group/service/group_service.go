@@ -34,16 +34,16 @@ type pinnedMessageSnapshot struct {
 	messageSeq  *int64
 }
 
-// GroupService 群组服务接口
+// GroupService represents the group service interface
 type GroupService interface {
-	// 群组管理
+	// Group management
 	CreateGroup(ctx context.Context, ownerID string, req *dto.CreateGroupRequest) (*dto.GroupResponse, error)
 	GetGroupInfo(ctx context.Context, userID, groupID string) (*dto.GroupResponse, error)
 	UpdateGroup(ctx context.Context, userID, groupID string, req *dto.UpdateGroupRequest) error
 	DissolveGroup(ctx context.Context, userID, groupID string) error
 	GetUserGroups(ctx context.Context, userID string, lastUpdateTime *int64) (*dto.GroupListResponse, error)
 
-	// 成员管理
+	// Member management
 	GetGroupMembers(ctx context.Context, userID, groupID string, page, pageSize int) (*dto.GroupMemberListResponse, error)
 	InviteMembers(ctx context.Context, userID, groupID string, req *dto.InviteMembersRequest) error
 	RemoveMember(ctx context.Context, userID, groupID, targetUserID string) error
@@ -54,7 +54,7 @@ type GroupService interface {
 	MuteMember(ctx context.Context, userID, groupID, targetUserID string, req *dto.MuteMemberRequest) error
 	UnmuteMember(ctx context.Context, userID, groupID, targetUserID string) error
 
-	// 入群申请
+	// Join requests
 	JoinGroup(ctx context.Context, userID, groupID string, req *dto.JoinGroupRequest) (*dto.JoinGroupResponse, error)
 	HandleJoinRequest(ctx context.Context, userID string, requestID int64, req *dto.HandleJoinRequestRequest) error
 	GetJoinRequests(ctx context.Context, userID, groupID string, status *string) (*dto.JoinRequestListResponse, error)
@@ -63,24 +63,24 @@ type GroupService interface {
 	GetPinnedMessages(ctx context.Context, userID, groupID string) (*dto.PinnedMessageListResponse, error)
 	SetGroupMute(ctx context.Context, userID, groupID string, enabled bool) error
 
-	// 群组设置
+	// Group settings
 	UpdateGroupSettings(ctx context.Context, userID, groupID string, req *dto.UpdateGroupSettingsRequest) error
 	GetGroupSettings(ctx context.Context, groupID string) (*dto.GroupSettingsResponse, error)
 
-	// 群备注
+	// Group remarks
 	UpdateMemberRemark(ctx context.Context, userID, groupID string, req *dto.UpdateMemberRemarkRequest) error
 
-	// 群二维码
+	// Group QR code
 	GetGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
 	RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
 	GetGroupPreviewByQRCode(ctx context.Context, token string) (*dto.GroupQRCodePreviewResponse, error)
 	JoinGroupByQRCode(ctx context.Context, userID, token string) (*dto.JoinGroupByQRCodeResponse, error)
 
-	// 内部gRPC方法（供其他服务调用）
+	// Internal gRPC methods (called by other services)
 	IsMember(ctx context.Context, groupID, userID string) (bool, string, error)
 }
 
-// groupServiceImpl 群组服务实现
+// groupServiceImpl represents the group service implementation
 type groupServiceImpl struct {
 	groupRepo       repository.GroupRepository
 	memberRepo      repository.GroupMemberRepository
@@ -94,7 +94,7 @@ type groupServiceImpl struct {
 	db              *gorm.DB
 }
 
-// NewGroupService 创建群组服务
+// NewGroupService creates a new group service
 func NewGroupService(
 	groupRepo repository.GroupRepository,
 	memberRepo repository.GroupMemberRepository,
@@ -121,23 +121,23 @@ func NewGroupService(
 	}
 }
 
-// CreateGroup 创建群组
+// CreateGroup creates a new group
 func (s *groupServiceImpl) CreateGroup(ctx context.Context, ownerID string, req *dto.CreateGroupRequest) (*dto.GroupResponse, error) {
-	// 验证：至少需要创建者 + 至少1个成员
+	// Validate: at least owner + 1 member required
 	if len(req.MemberIDs) == 0 {
-		return nil, errors.NewBusiness(errors.CodeGroupMemberTooFew, "至少需要邀请一名成员")
+		return nil, errors.NewBusiness(errors.CodeGroupMemberTooFew, "At least one member must be invited")
 	}
 
-	// 验证：成员数量不能超过最大限制
+	// Validate: member count cannot exceed max limit
 	totalMembers := len(req.MemberIDs) + 1 // +1 for owner
 	if totalMembers > 500 {
-		return nil, errors.NewBusiness(errors.CodeGroupMemberLimitReached, "群成员数量超过限制")
+		return nil, errors.NewBusiness(errors.CodeGroupMemberLimitReached, "Group member count exceeds limit")
 	}
 
-	// 生成唯一群组ID
+	// Generate unique group ID
 	groupID := uuid.New().String()
 
-	// 创建群组对象
+	// Create group object
 	group := &model.Group{
 		GroupID:     groupID,
 		Name:        req.Name,
@@ -150,26 +150,26 @@ func (s *groupServiceImpl) CreateGroup(ctx context.Context, ownerID string, req 
 		UpdatedAt:   time.Now(),
 	}
 
-	// 使用事务创建群组
+	// Create group with transaction
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		groupRepoTx := s.groupRepo.WithTx(tx)
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		settingRepoTx := s.settingRepo.WithTx(tx)
 
-		// 1. 创建群组记录
+		// 1. Create group record
 		if err := groupRepoTx.Create(ctx, group); err != nil {
 			logger.Error("Failed to create group", zap.Error(err))
 			return err
 		}
 
-		// 2. 创建默认群组设置
+		// 2. Create default group settings
 		setting := model.DefaultGroupSetting(groupID)
 		if err := settingRepoTx.Create(ctx, setting); err != nil {
 			logger.Error("Failed to create group settings", zap.Error(err))
 			return err
 		}
 
-		// 3. 添加群主
+		// 3. Add owner
 		ownerMember := &model.GroupMember{
 			GroupID:  groupID,
 			UserID:   ownerID,
@@ -181,12 +181,12 @@ func (s *groupServiceImpl) CreateGroup(ctx context.Context, ownerID string, req 
 			return err
 		}
 
-		// 4. 添加初始成员
+		// 4. Add initial members
 		members := make([]*model.GroupMember, 0, len(req.MemberIDs))
 		now := time.Now()
 		for _, memberID := range req.MemberIDs {
 			if memberID == ownerID {
-				continue // 跳过群主
+				continue // skip owner
 			}
 			members = append(members, &model.GroupMember{
 				GroupID:  groupID,
@@ -210,12 +210,12 @@ func (s *groupServiceImpl) CreateGroup(ctx context.Context, ownerID string, req 
 		return nil, err
 	}
 
-	// 发布成员加入通知（通知所有成员）
+	// Publish member joined notification (to all members)
 	for _, memberID := range req.MemberIDs {
 		s.publishMemberJoinedNotification(groupID, memberID, ownerID)
 	}
 
-	// 构造响应
+	// Build response
 	return &dto.GroupResponse{
 		GroupID:      group.GroupID,
 		Name:         group.Name,
@@ -233,24 +233,24 @@ func (s *groupServiceImpl) CreateGroup(ctx context.Context, ownerID string, req 
 	}, nil
 }
 
-// GetGroupInfo 获取群组信息
+// GetGroupInfo gets group information
 func (s *groupServiceImpl) GetGroupInfo(ctx context.Context, userID, groupID string) (*dto.GroupResponse, error) {
-	// 获取群组信息
+	// Get group info
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		logger.Error("Failed to get group", zap.Error(err))
 		return nil, err
 	}
 
-	// 检查群组状态
+	// Check group status
 	if !group.IsActive() {
-		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
-	// 获取用户在群组中的角色
+	// Get user's role in the group
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	myRole := ""
 	displayName := group.Name
@@ -280,13 +280,13 @@ func (s *groupServiceImpl) GetGroupInfo(ctx context.Context, userID, groupID str
 	}, nil
 }
 
-// UpdateGroup 更新群组信息
+// UpdateGroup updates group information
 func (s *groupServiceImpl) UpdateGroup(ctx context.Context, userID, groupID string, req *dto.UpdateGroupRequest) error {
-	// 权限检查：群主和管理员可修改；普通成员需群设置允许
+	// Permission check: owner and admin can modify; regular members need group settings to allow
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
@@ -297,11 +297,11 @@ func (s *groupServiceImpl) UpdateGroup(ctx context.Context, userID, groupID stri
 			return settingsErr
 		}
 		if settings == nil || !settings.AllowMemberModify {
-			return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限更新群信息")
+			return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to update group info")
 		}
 	}
 
-	// 构建更新字段
+	// Build update fields
 	updates := make(map[string]any)
 	if req.Name != nil {
 		updates["name"] = *req.Name
@@ -317,61 +317,61 @@ func (s *groupServiceImpl) UpdateGroup(ctx context.Context, userID, groupID stri
 	}
 
 	if len(updates) == 0 {
-		return nil // 没有需要更新的字段
+		return nil // no fields to update
 	}
 
-	// 更新群组
+	// Update group
 	if err := s.groupRepo.UpdateFields(ctx, groupID, updates); err != nil {
 		logger.Error("Failed to update group", zap.Error(err))
 		return err
 	}
 
-	// 发布群组信息更新通知
+	// Publish group info updated notification
 	s.publishGroupInfoUpdatedNotification(groupID, userID, req)
 
 	return nil
 }
 
-// DissolveGroup 解散群组
+// DissolveGroup dissolves a group
 func (s *groupServiceImpl) DissolveGroup(ctx context.Context, userID, groupID string) error {
-	// 权限检查：只有群主可以解散
+	// Permission check: only owner can dissolve
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
 	if !member.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoOwnerPermission, "只有群主可以解散群组")
+		return errors.NewBusiness(errors.CodeNoOwnerPermission, "Only the owner can dissolve the group")
 	}
 
-	// 软删除群组
+	// Soft delete group
 	if err := s.groupRepo.Delete(ctx, groupID); err != nil {
 		logger.Error("Failed to dissolve group", zap.Error(err))
 		return err
 	}
 
-	// 获取群组信息用于通知
+	// Get group info for notification
 	group, _ := s.groupRepo.GetByGroupID(ctx, groupID)
 	groupName := ""
 	if group != nil {
 		groupName = group.Name
 	}
 
-	// 发布群组解散通知
+	// Publish group disbanded notification
 	s.publishGroupDisbandedNotification(groupID, userID, groupName)
 
 	return nil
 }
 
-// GetUserGroups 获取用户加入的群组列表
+// GetUserGroups gets list of groups user has joined
 func (s *groupServiceImpl) GetUserGroups(ctx context.Context, userID string, lastUpdateTime *int64) (*dto.GroupListResponse, error) {
 	var members []*model.GroupMember
 	var err error
 
-	// 增量同步
+	// Incremental sync
 	if lastUpdateTime != nil && *lastUpdateTime > 0 {
 		t := time.Unix(*lastUpdateTime, 0)
 		members, err = s.memberRepo.GetUserGroupsByUpdateTime(ctx, userID, t)
@@ -384,7 +384,7 @@ func (s *groupServiceImpl) GetUserGroups(ctx context.Context, userID string, las
 		return nil, err
 	}
 
-	// 获取群组详情
+	// Get group details
 	groups := make([]*dto.GroupResponse, 0, len(members))
 	for _, member := range members {
 		group, err := s.groupRepo.GetByGroupID(ctx, member.GroupID)
@@ -394,7 +394,7 @@ func (s *groupServiceImpl) GetUserGroups(ctx context.Context, userID string, las
 		}
 
 		if !group.IsActive() {
-			continue // 跳过已解散的群组
+			continue // skip dissolved groups
 		}
 
 		displayName := group.Name
@@ -427,18 +427,18 @@ func (s *groupServiceImpl) GetUserGroups(ctx context.Context, userID string, las
 	}, nil
 }
 
-// GetGroupMembers 获取群成员列表
+// GetGroupMembers gets list of group members
 func (s *groupServiceImpl) GetGroupMembers(ctx context.Context, userID, groupID string, page, pageSize int) (*dto.GroupMemberListResponse, error) {
-	// 验证用户是否是群成员
+	// Validate user is a group member
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
 	if err != nil {
 		return nil, err
 	}
 	if !isMember {
-		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 	}
 
-	// 默认分页参数
+	// Default pagination params
 	if page <= 0 {
 		page = 1
 	}
@@ -446,14 +446,14 @@ func (s *groupServiceImpl) GetGroupMembers(ctx context.Context, userID, groupID 
 		pageSize = 20
 	}
 
-	// 获取成员列表
+	// Get member list
 	members, total, err := s.memberRepo.GetMembers(ctx, groupID, page, pageSize)
 	if err != nil {
 		logger.Error("Failed to get group members", zap.Error(err))
 		return nil, err
 	}
 
-	// 转换为DTO
+	// Convert to DTO
 	memberResponses := make([]*dto.GroupMemberResponse, 0, len(members))
 	for _, m := range members {
 		response := &dto.GroupMemberResponse{
@@ -476,58 +476,58 @@ func (s *groupServiceImpl) GetGroupMembers(ctx context.Context, userID, groupID 
 	}, nil
 }
 
-// InviteMembers 邀请成员
+// InviteMembers invites members to a group
 func (s *groupServiceImpl) InviteMembers(ctx context.Context, userID, groupID string, req *dto.InviteMembersRequest) error {
-	// 获取群组信息
+	// Get group info
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return err
 	}
 
-	// 检查群组状态
+	// Check group status
 	if !group.IsActive() {
-		return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
-	// 权限检查：获取邀请人信息
+	// Permission check: get inviter info
 	inviter, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
-	// 检查群设置：普通成员是否可以邀请
+	// Check group settings: can regular members invite
 	settings, err := s.settingRepo.GetSettings(ctx, groupID)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
 	if settings != nil && !settings.AllowMemberInvite && !inviter.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "群设置不允许普通成员邀请")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "Group settings do not allow regular members to invite")
 	}
 	joinVerify := true
 	if settings != nil {
 		joinVerify = settings.JoinVerify
 	}
 
-	// 验证：群成员数量未达上限
+	// Validate: member count not at limit
 	if group.IsFull() {
-		return errors.NewBusiness(errors.CodeGroupMemberLimitReached, "群成员已达上限")
+		return errors.NewBusiness(errors.CodeGroupMemberLimitReached, "Group member limit reached")
 	}
 
-	// 处理每个被邀请人
+	// Process each invitee
 	for _, inviteeID := range req.UserIDs {
-		// 检查是否已经是成员
+		// Check if already a member
 		isMember, _ := s.memberRepo.IsMember(ctx, groupID, inviteeID)
 		if isMember {
-			continue // 跳过已经是成员的用户
+			continue // skip users who are already members
 		}
 
-		// 如果需要验证，创建入群申请
+		// If verification needed, create join request
 		if joinVerify {
 			request := &model.GroupJoinRequest{
 				GroupID:   groupID,
@@ -541,7 +541,7 @@ func (s *groupServiceImpl) InviteMembers(ctx context.Context, userID, groupID st
 				continue
 			}
 		} else {
-			// 直接添加成员
+			// Directly add member
 			err := s.db.Transaction(func(tx *gorm.DB) error {
 				memberRepoTx := s.memberRepo.WithTx(tx)
 				groupRepoTx := s.groupRepo.WithTx(tx)
@@ -556,7 +556,7 @@ func (s *groupServiceImpl) InviteMembers(ctx context.Context, userID, groupID st
 					return err
 				}
 
-				// 更新成员数量
+				// Update member count
 				return groupRepoTx.UpdateMemberCount(ctx, groupID, 1)
 			})
 
@@ -570,39 +570,39 @@ func (s *groupServiceImpl) InviteMembers(ctx context.Context, userID, groupID st
 	return nil
 }
 
-// RemoveMember 移除成员
+// RemoveMember removes a member from a group
 func (s *groupServiceImpl) RemoveMember(ctx context.Context, userID, groupID, targetUserID string) error {
-	// 获取操作者信息
+	// Get operator info
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
-	// 获取目标成员信息
+	// Get target member info
 	target, err := s.memberRepo.GetMember(ctx, groupID, targetUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "目标用户不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "Target user is not a group member")
 		}
 		return err
 	}
 
-	// 权限检查
+	// Permission check
 	if target.IsOwner() {
-		return errors.NewBusiness(errors.CodeCannotRemoveOwner, "不能移除群主")
+		return errors.NewBusiness(errors.CodeCannotRemoveOwner, "Cannot remove group owner")
 	}
 
 	if !operator.CanRemoveMember(target.Role) {
 		if target.Role == model.GroupRoleAdmin {
-			return errors.NewBusiness(errors.CodeCannotRemoveAdmin, "管理员不能移除其他管理员")
+			return errors.NewBusiness(errors.CodeCannotRemoveAdmin, "Admins cannot remove other admins")
 		}
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限移除成员")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to remove member")
 	}
 
-	// 使用事务删除成员并更新计数
+	// Use transaction to delete member and update count
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		groupRepoTx := s.groupRepo.WithTx(tx)
@@ -619,40 +619,40 @@ func (s *groupServiceImpl) RemoveMember(ctx context.Context, userID, groupID, ta
 		return err
 	}
 
-	// 发布成员离开通知
+	// Publish member left notification
 	s.publishMemberLeftNotification(groupID, targetUserID, userID, "removed_by_admin")
 
 	return nil
 }
 
-// QuitGroup 退出群组
+// QuitGroup makes user quit a group
 func (s *groupServiceImpl) QuitGroup(ctx context.Context, userID, groupID string) error {
-	// 获取成员信息
+	// Get member info
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
-	// 群主不能直接退出
+	// Owner cannot quit directly
 	if member.IsOwner() {
-		// 检查是否只剩群主一人
+		// Check if only owner remains
 		count, err := s.memberRepo.GetMemberCount(ctx, groupID)
 		if err != nil {
 			return err
 		}
 
 		if count == 1 {
-			// 自动解散群组
+			// Auto dissolve group
 			return s.DissolveGroup(ctx, userID, groupID)
 		}
 
-		return errors.NewBusiness(errors.CodeCannotQuitOwnGroup, "群主不能退出群组，请先转让群主或解散群组")
+		return errors.NewBusiness(errors.CodeCannotQuitOwnGroup, "Owner cannot quit group, please transfer ownership or dissolve group first")
 	}
 
-	// 使用事务删除成员并更新计数
+	// Use transaction to delete member and update count
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		groupRepoTx := s.groupRepo.WithTx(tx)
@@ -669,65 +669,65 @@ func (s *groupServiceImpl) QuitGroup(ctx context.Context, userID, groupID string
 		return err
 	}
 
-	// 发布成员离开通知
+	// Publish member left notification
 	s.publishMemberLeftNotification(groupID, userID, userID, "self_quit")
 
 	return nil
 }
 
-// UpdateMemberRole 更新成员角色
+// UpdateMemberRole updates member role
 func (s *groupServiceImpl) UpdateMemberRole(ctx context.Context, userID, groupID, targetUserID string, req *dto.UpdateMemberRoleRequest) error {
-	// 权限检查：只有群主可以设置角色
+	// Permission check: only owner can set role
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
 	if !operator.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoOwnerPermission, "只有群主可以设置管理员")
+		return errors.NewBusiness(errors.CodeNoOwnerPermission, "Only owner can set admin")
 	}
 
-	// 验证目标成员存在
+	// Validate target member exists
 	target, err := s.memberRepo.GetMember(ctx, groupID, targetUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "目标用户不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "Target user is not a group member")
 		}
 		return err
 	}
 
-	// 不能修改群主角色
+	// Cannot modify owner role
 	if target.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoOwnerPermission, "不能修改群主角色")
+		return errors.NewBusiness(errors.CodeNoOwnerPermission, "Cannot modify owner role")
 	}
 
-	// 更新角色
+	// Update role
 	if err := s.memberRepo.UpdateRole(ctx, groupID, targetUserID, req.Role); err != nil {
 		logger.Error("Failed to update member role", zap.Error(err))
 		return err
 	}
 
-	// 发布角色变更通知
+	// Publish role changed notification
 	s.publishRoleChangedNotification(groupID, targetUserID, target.Role, req.Role, userID)
 
 	return nil
 }
 
-// UpdateMemberNickname 更新群昵称
+// UpdateMemberNickname updates member nickname in group
 func (s *groupServiceImpl) UpdateMemberNickname(ctx context.Context, userID, groupID string, req *dto.UpdateMemberNicknameRequest) error {
-	// 验证用户是否是群成员
+	// Validate user is group member
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
 	if err != nil {
 		return err
 	}
 	if !isMember {
-		return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 	}
 
-	// 更新昵称
+	// Update nickname
 	if err := s.memberRepo.UpdateNickname(ctx, groupID, userID, req.Nickname); err != nil {
 		logger.Error("Failed to update member nickname", zap.Error(err))
 		return err
@@ -736,50 +736,50 @@ func (s *groupServiceImpl) UpdateMemberNickname(ctx context.Context, userID, gro
 	return nil
 }
 
-// TransferOwnership 转让群主
+// TransferOwnership transfers group ownership
 func (s *groupServiceImpl) TransferOwnership(ctx context.Context, userID, groupID, newOwnerID string) error {
-	// 权限检查：只有群主可以转让
+	// Permission check: only owner can transfer
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
 	if !operator.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoOwnerPermission, "只有群主可以转让群组")
+		return errors.NewBusiness(errors.CodeNoOwnerPermission, "Only owner can transfer group")
 	}
 
-	// 验证新群主是群成员
+	// Validate new owner is group member
 	newOwner, err := s.memberRepo.GetMember(ctx, groupID, newOwnerID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "新群主不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "New owner is not a group member")
 		}
 		return err
 	}
 
 	if newOwner.IsOwner() {
-		return nil // 已经是群主，无需操作
+		return nil // already owner, no action needed
 	}
 
-	// 使用事务转让群主
+	// Use transaction to transfer ownership
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		groupRepoTx := s.groupRepo.WithTx(tx)
 
-		// 1. 更新群组owner_id
+		// 1. Update group owner_id
 		if err := groupRepoTx.UpdateFields(ctx, groupID, map[string]any{"owner_id": newOwnerID}); err != nil {
 			return err
 		}
 
-		// 2. 将原群主改为管理员
+		// 2. Change original owner to admin
 		if err := memberRepoTx.UpdateRole(ctx, groupID, userID, model.GroupRoleAdmin); err != nil {
 			return err
 		}
 
-		// 3. 将新群主改为owner
+		// 3. Change new owner to owner
 		return memberRepoTx.UpdateRole(ctx, groupID, newOwnerID, model.GroupRoleOwner)
 	})
 
@@ -791,28 +791,28 @@ func (s *groupServiceImpl) TransferOwnership(ctx context.Context, userID, groupI
 	return nil
 }
 
-// MuteMember 禁言成员
+// MuteMember mutes a member
 func (s *groupServiceImpl) MuteMember(ctx context.Context, userID, groupID, targetUserID string, req *dto.MuteMemberRequest) error {
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 	target, err := s.memberRepo.GetMember(ctx, groupID, targetUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "目标用户不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "Target user is not a group member")
 		}
 		return err
 	}
 
 	if target.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "不能禁言群主")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "Cannot mute group owner")
 	}
 	if !operator.CanMuteMember(target.Role) {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限禁言成员")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to mute member")
 	}
 
 	var mutedUntil *time.Time
@@ -822,12 +822,12 @@ func (s *groupServiceImpl) MuteMember(ctx context.Context, userID, groupID, targ
 		mutedUntil = &permanent
 	case "temporary":
 		if req.DurationMinutes <= 0 {
-			return errors.NewBusiness(errors.CodeParamError, "临时禁言时长必须大于0")
+			return errors.NewBusiness(errors.CodeParamError, "Temporary mute duration must be greater than 0")
 		}
 		t := time.Now().Add(time.Duration(req.DurationMinutes) * time.Minute)
 		mutedUntil = &t
 	default:
-		return errors.NewBusiness(errors.CodeParamError, "禁言类型无效")
+		return errors.NewBusiness(errors.CodeParamError, "Invalid mute type")
 	}
 
 	if err := s.memberRepo.UpdateMutedUntil(ctx, groupID, targetUserID, mutedUntil); err != nil {
@@ -839,27 +839,27 @@ func (s *groupServiceImpl) MuteMember(ctx context.Context, userID, groupID, targ
 	return nil
 }
 
-// UnmuteMember 解除禁言
+// UnmuteMember unmutes a member
 func (s *groupServiceImpl) UnmuteMember(ctx context.Context, userID, groupID, targetUserID string) error {
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 	target, err := s.memberRepo.GetMember(ctx, groupID, targetUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "目标用户不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "Target user is not a group member")
 		}
 		return err
 	}
 	if target.IsOwner() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "不能操作群主")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "Cannot operate on group owner")
 	}
 	if !operator.CanMuteMember(target.Role) {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限解除禁言")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to unmute member")
 	}
 	if err := s.memberRepo.UpdateMutedUntil(ctx, groupID, targetUserID, nil); err != nil {
 		logger.Error("Failed to unmute member", zap.Error(err))
@@ -869,32 +869,32 @@ func (s *groupServiceImpl) UnmuteMember(ctx context.Context, userID, groupID, ta
 	return nil
 }
 
-// JoinGroup 加入群组
+// JoinGroup joins a user to a group
 func (s *groupServiceImpl) JoinGroup(ctx context.Context, userID, groupID string, req *dto.JoinGroupRequest) (*dto.JoinGroupResponse, error) {
-	// 获取群组信息
+	// Get group info
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return nil, err
 	}
 
-	// 检查群组状态
+	// Check group status
 	if !group.IsActive() {
-		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
-	// 检查是否已经是成员
+	// Check if already a member
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
 	if err != nil {
 		return nil, err
 	}
 	if isMember {
-		return nil, errors.NewBusiness(errors.CodeAlreadyGroupMember, "你已经是群成员")
+		return nil, errors.NewBusiness(errors.CodeAlreadyGroupMember, "You are already a group member")
 	}
 
-	// 检查是否已经有待处理的申请
+	// Check if already has pending request
 	existingRequest, err := s.joinRequestRepo.GetExistingRequest(ctx, groupID, userID)
 	if err != nil {
 		return nil, err
@@ -903,14 +903,14 @@ func (s *groupServiceImpl) JoinGroup(ctx context.Context, userID, groupID string
 		return &dto.JoinGroupResponse{
 			NeedVerify: true,
 			RequestID:  &existingRequest.ID,
-			Message:    "你已经有待处理的申请",
+			Message:    "You already have a pending request",
 		}, nil
 	}
 
-	// 检查是否需要验证
+	// Check if verification is needed
 	joinVerify := s.getGroupJoinVerify(ctx, groupID)
 	if joinVerify {
-		// 创建入群申请
+		// Create join request
 		request := &model.GroupJoinRequest{
 			GroupID:   groupID,
 			UserID:    userID,
@@ -926,11 +926,11 @@ func (s *groupServiceImpl) JoinGroup(ctx context.Context, userID, groupID string
 		return &dto.JoinGroupResponse{
 			NeedVerify: true,
 			RequestID:  &request.ID,
-			Message:    "申请已提交，等待审核",
+			Message:    "Request submitted, waiting for approval",
 		}, nil
 	}
 
-	// 直接加入群组
+	// Directly join group
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		groupRepoTx := s.groupRepo.WithTx(tx)
@@ -955,53 +955,53 @@ func (s *groupServiceImpl) JoinGroup(ctx context.Context, userID, groupID string
 
 	return &dto.JoinGroupResponse{
 		NeedVerify: false,
-		Message:    "成功加入群组",
+		Message:    "Successfully joined the group",
 	}, nil
 }
 
-// HandleJoinRequest 处理入群申请
+// HandleJoinRequest handles a join request
 func (s *groupServiceImpl) HandleJoinRequest(ctx context.Context, userID string, requestID int64, req *dto.HandleJoinRequestRequest) error {
-	// 获取申请信息
+	// Get request info
 	request, err := s.joinRequestRepo.GetByID(ctx, requestID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeJoinRequestNotFound, "入群申请不存在")
+			return errors.NewBusiness(errors.CodeJoinRequestNotFound, "Join request not found")
 		}
 		return err
 	}
 
-	// 检查申请状态
+	// Check request status
 	if request.IsProcessed() {
-		return errors.NewBusiness(errors.CodeJoinRequestProcessed, "申请已处理")
+		return errors.NewBusiness(errors.CodeJoinRequestProcessed, "Request already processed")
 	}
 
-	// 权限检查：群主和管理员可以处理
+	// Permission check: owner and admin can handle
 	operator, err := s.memberRepo.GetMember(ctx, request.GroupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
 	if !operator.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限处理申请")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to handle request")
 	}
 
-	// 处理申请
+	// Handle request
 	if req.Accept {
-		// 接受申请：使用事务
+		// Accept request: use transaction
 		err = s.db.Transaction(func(tx *gorm.DB) error {
 			joinRequestRepoTx := s.joinRequestRepo.WithTx(tx)
 			memberRepoTx := s.memberRepo.WithTx(tx)
 			groupRepoTx := s.groupRepo.WithTx(tx)
 
-			// 1. 更新申请状态
+			// 1. Update request status
 			if err := joinRequestRepoTx.UpdateStatus(ctx, requestID, model.JoinRequestStatusAccepted); err != nil {
 				return err
 			}
 
-			// 2. 添加成员
+			// 2. Add member
 			member := &model.GroupMember{
 				GroupID:  request.GroupID,
 				UserID:   request.UserID,
@@ -1012,7 +1012,7 @@ func (s *groupServiceImpl) HandleJoinRequest(ctx context.Context, userID string,
 				return err
 			}
 
-			// 3. 更新成员数量
+			// 3. Update member count
 			return groupRepoTx.UpdateMemberCount(ctx, request.GroupID, 1)
 		})
 
@@ -1021,7 +1021,7 @@ func (s *groupServiceImpl) HandleJoinRequest(ctx context.Context, userID string,
 			return err
 		}
 	} else {
-		// 拒绝申请
+		// Reject request
 		if err := s.joinRequestRepo.UpdateStatus(ctx, requestID, model.JoinRequestStatusRejected); err != nil {
 			logger.Error("Failed to reject join request", zap.Error(err))
 			return err
@@ -1031,27 +1031,27 @@ func (s *groupServiceImpl) HandleJoinRequest(ctx context.Context, userID string,
 	return nil
 }
 
-// GetJoinRequests 获取入群申请列表
+// GetJoinRequests gets join request list
 func (s *groupServiceImpl) GetJoinRequests(ctx context.Context, userID, groupID string, status *string) (*dto.JoinRequestListResponse, error) {
 	operator, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return nil, errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return nil, err
 	}
 	if !operator.CanManageGroup() {
-		return nil, errors.NewBusiness(errors.CodeNoAdminPermission, "无权限查看入群申请")
+		return nil, errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to view join requests")
 	}
 
-	// 获取申请列表
+	// Get request list
 	requests, err := s.joinRequestRepo.GetRequestsByGroup(ctx, groupID, status)
 	if err != nil {
 		logger.Error("Failed to get join requests", zap.Error(err))
 		return nil, err
 	}
 
-	// 转换为DTO
+	// Convert to DTO
 	requestResponses := make([]*dto.JoinRequestResponse, 0, len(requests))
 	for _, r := range requests {
 		response := &dto.JoinRequestResponse{
@@ -1074,28 +1074,28 @@ func (s *groupServiceImpl) GetJoinRequests(ctx context.Context, userID, groupID 
 	}, nil
 }
 
-// PinGroupMessage 置顶群消息
+// PinGroupMessage pins a message in group
 func (s *groupServiceImpl) PinGroupMessage(ctx context.Context, userID, groupID, messageID string) error {
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return err
 	}
 	if !group.IsActive() {
-		return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 	if !member.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限置顶消息")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to pin message")
 	}
 
 	exists, err := s.pinnedRepo.Exists(ctx, groupID, messageID)
@@ -1110,7 +1110,7 @@ func (s *groupServiceImpl) PinGroupMessage(ctx context.Context, userID, groupID,
 			return err
 		}
 		if total >= maxPinnedMessagesPerGroup {
-			return errors.NewBusiness(errors.CodeGroupPinnedLimitExceeded, "已达置顶上限，请先取消部分置顶")
+			return errors.NewBusiness(errors.CodeGroupPinnedLimitExceeded, "Pinned message limit reached, please unpin some first")
 		}
 	}
 
@@ -1139,29 +1139,29 @@ func (s *groupServiceImpl) PinGroupMessage(ctx context.Context, userID, groupID,
 	return nil
 }
 
-// UnpinGroupMessage 取消置顶群消息
+// UnpinGroupMessage unpins a message in group
 func (s *groupServiceImpl) UnpinGroupMessage(ctx context.Context, userID, groupID, messageID string) error {
 	if userID != "" {
 		group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+				return errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 			}
 			return err
 		}
 		if !group.IsActive() {
-			return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+			return errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 		}
 
 		member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+				return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 			}
 			return err
 		}
 		if !member.CanManageGroup() {
-			return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限取消置顶")
+			return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to unpin")
 		}
 	}
 
@@ -1181,17 +1181,17 @@ func (s *groupServiceImpl) UnpinGroupMessage(ctx context.Context, userID, groupI
 	return nil
 }
 
-// GetPinnedMessages 获取群置顶消息
+// GetPinnedMessages gets pinned messages
 func (s *groupServiceImpl) GetPinnedMessages(ctx context.Context, userID, groupID string) (*dto.PinnedMessageListResponse, error) {
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return nil, err
 	}
 	if !group.IsActive() {
-		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
@@ -1199,7 +1199,7 @@ func (s *groupServiceImpl) GetPinnedMessages(ctx context.Context, userID, groupI
 		return nil, err
 	}
 	if !isMember {
-		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 	}
 
 	records, err := s.pinnedRepo.ListByGroup(ctx, groupID)
@@ -1239,28 +1239,28 @@ func (s *groupServiceImpl) GetPinnedMessages(ctx context.Context, userID, groupI
 	return resp, nil
 }
 
-// SetGroupMute 设置全体禁言
+// SetGroupMute sets group-wide mute
 func (s *groupServiceImpl) SetGroupMute(ctx context.Context, userID, groupID string, enabled bool) error {
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return err
 	}
 	if !group.IsActive() {
-		return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 	if !member.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限设置全体禁言")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to set group mute")
 	}
 
 	if err := s.groupRepo.UpdateFields(ctx, groupID, map[string]any{"is_muted": enabled}); err != nil {
@@ -1268,9 +1268,9 @@ func (s *groupServiceImpl) SetGroupMute(ctx context.Context, userID, groupID str
 		return err
 	}
 
-	messageText := "已关闭全体禁言"
+	messageText := "Group mute disabled"
 	if enabled {
-		messageText = "已开启全体禁言"
+		messageText = "Group mute enabled"
 	}
 	if err := s.sendGroupSystemMessage(ctx, groupID, userID, messageText); err != nil {
 		logger.Warn("Failed to send group mute system message", zap.String("groupID", groupID), zap.Error(err))
@@ -1280,22 +1280,22 @@ func (s *groupServiceImpl) SetGroupMute(ctx context.Context, userID, groupID str
 	return nil
 }
 
-// UpdateGroupSettings 更新群组设置
+// UpdateGroupSettings updates group settings
 func (s *groupServiceImpl) UpdateGroupSettings(ctx context.Context, userID, groupID string, req *dto.UpdateGroupSettingsRequest) error {
-	// 权限检查：只有群主和管理员可以更新设置
+	// Permission check: only owner and admin can update settings
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return err
 	}
 
 	if !member.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限更新群设置")
+		return errors.NewBusiness(errors.CodeNoAdminPermission, "No permission to update group settings")
 	}
 
-	// 构建更新字段
+	// Build update fields
 	updates := make(map[string]any)
 	if req.JoinVerify != nil {
 		updates["join_verify"] = *req.JoinVerify
@@ -1317,7 +1317,7 @@ func (s *groupServiceImpl) UpdateGroupSettings(ctx context.Context, userID, grou
 		return nil
 	}
 
-	// 更新设置
+	// Update settings
 	if err := s.settingRepo.UpdateSettings(ctx, groupID, updates); err != nil {
 		logger.Error("Failed to update group settings", zap.Error(err))
 		return err
@@ -1327,12 +1327,12 @@ func (s *groupServiceImpl) UpdateGroupSettings(ctx context.Context, userID, grou
 	return nil
 }
 
-// GetGroupSettings 获取群组设置
+// GetGroupSettings gets group settings
 func (s *groupServiceImpl) GetGroupSettings(ctx context.Context, groupID string) (*dto.GroupSettingsResponse, error) {
 	settings, err := s.settingRepo.GetSettings(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// 返回默认设置
+			// Return default settings
 			return &dto.GroupSettingsResponse{
 				GroupID:           groupID,
 				JoinVerify:        true,
@@ -1356,7 +1356,7 @@ func (s *groupServiceImpl) GetGroupSettings(ctx context.Context, groupID string)
 	}, nil
 }
 
-// IsMember 检查是否为群成员（供其他服务调用）
+// IsMember checks if user is group member (called by other services)
 func (s *groupServiceImpl) IsMember(ctx context.Context, groupID, userID string) (bool, string, error) {
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
@@ -1369,13 +1369,13 @@ func (s *groupServiceImpl) IsMember(ctx context.Context, groupID, userID string)
 	return true, member.Role, nil
 }
 
-// UpdateMemberRemark 设置/清空群备注（仅对操作者自己可见）
+// UpdateMemberRemark sets/clears group remark (only visible to self)
 func (s *groupServiceImpl) UpdateMemberRemark(ctx context.Context, userID, groupID string, req *dto.UpdateMemberRemarkRequest) error {
 	if req == nil {
-		return errors.NewBusiness(errors.CodeParamError, "请求参数不能为空")
+		return errors.NewBusiness(errors.CodeParamError, "Request parameters cannot be empty")
 	}
 	if utf8.RuneCountInString(req.Remark) > 20 {
-		return errors.NewBusiness(errors.CodeParamError, "备注名不能超过20个字符")
+		return errors.NewBusiness(errors.CodeParamError, "Remark cannot exceed 20 characters")
 	}
 
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
@@ -1383,7 +1383,7 @@ func (s *groupServiceImpl) UpdateMemberRemark(ctx context.Context, userID, group
 		return err
 	}
 	if !isMember {
-		return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		return errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 	}
 
 	if err := s.memberRepo.UpdateRemark(ctx, groupID, userID, req.Remark); err != nil {
@@ -1393,19 +1393,19 @@ func (s *groupServiceImpl) UpdateMemberRemark(ctx context.Context, userID, group
 	return nil
 }
 
-// GetGroupQRCode 获取群二维码（有效则返回，快过期则自动续期，无则创建）
+// GetGroupQRCode gets group QR code (returns if valid, auto-renews if expiring, creates if not exists)
 func (s *groupServiceImpl) GetGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
 	if err != nil {
 		return nil, err
 	}
 	if !isMember {
-		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 	}
 
 	qr, err := s.qrcodeRepo.GetActiveByGroupID(ctx, groupID)
 	if err == nil && qr.IsValid() {
-		// 距过期不足 1 天时自动续期
+		// Auto-renew when less than 1 day until expiration
 		if time.Until(qr.ExpireAt) < model.QRCodeRenewThreshold {
 			newExpire := time.Now().Add(model.DefaultQRCodeTTL)
 			if renewErr := s.qrcodeRepo.UpdateExpireAt(ctx, qr.Token, newExpire); renewErr != nil {
@@ -1417,24 +1417,24 @@ func (s *groupServiceImpl) GetGroupQRCode(ctx context.Context, userID, groupID s
 		return buildQRCodeResponse(qr), nil
 	}
 
-	// 创建新二维码
+	// Create new QR code
 	return s.createNewQRCode(ctx, userID, groupID)
 }
 
-// RefreshGroupQRCode 刷新群二维码（使旧码立即失效，仅群主/管理员）
+// RefreshGroupQRCode refreshes group QR code (invalidates old one, owner/admin only)
 func (s *groupServiceImpl) RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			return nil, errors.NewBusiness(errors.CodeNotGroupMember, "You are not a group member")
 		}
 		return nil, err
 	}
 	if !member.CanManageGroup() {
-		return nil, errors.NewBusiness(errors.CodeNoAdminPermission, "仅群主或管理员可刷新二维码")
+		return nil, errors.NewBusiness(errors.CodeNoAdminPermission, "Only owner or admin can refresh QR code")
 	}
 
-	// 失效旧码
+	// Invalidate old QR code
 	if err := s.qrcodeRepo.InvalidateByGroupID(ctx, groupID); err != nil {
 		logger.Error("Failed to invalidate old qrcode", zap.Error(err))
 		return nil, err
@@ -1448,29 +1448,29 @@ func (s *groupServiceImpl) RefreshGroupQRCode(ctx context.Context, userID, group
 	return resp, nil
 }
 
-// GetGroupPreviewByQRCode 通过二维码 token 获取群信息预览
+// GetGroupPreviewByQRCode gets group preview by QR code token
 func (s *groupServiceImpl) GetGroupPreviewByQRCode(ctx context.Context, token string) (*dto.GroupQRCodePreviewResponse, error) {
 	qr, err := s.qrcodeRepo.GetByToken(ctx, token)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码无效")
+			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "QR code invalid")
 		}
 		return nil, err
 	}
 
 	if !qr.IsValid() {
-		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已失效，请联系群成员重新获取")
+		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "QR code expired, please contact group member to get new one")
 	}
 
 	group, err := s.groupRepo.GetByGroupID(ctx, qr.GroupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return nil, err
 	}
 	if !group.IsActive() {
-		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 
 	return &dto.GroupQRCodePreviewResponse{
@@ -1482,18 +1482,18 @@ func (s *groupServiceImpl) GetGroupPreviewByQRCode(ctx context.Context, token st
 	}, nil
 }
 
-// JoinGroupByQRCode 扫码加入群组
+// JoinGroupByQRCode joins group by QR code
 func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token string) (*dto.JoinGroupByQRCodeResponse, error) {
 	qr, err := s.qrcodeRepo.GetByToken(ctx, token)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码无效")
+			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "QR code invalid")
 		}
 		return nil, err
 	}
 
 	if !qr.IsValid() {
-		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已失效，请联系群成员重新获取")
+		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "QR code expired, please contact group member to get new one")
 	}
 
 	groupID := qr.GroupID
@@ -1501,15 +1501,15 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "Group not found")
 		}
 		return nil, err
 	}
 	if !group.IsActive() {
-		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "Group has been dissolved")
 	}
 	if group.IsFull() {
-		return nil, errors.NewBusiness(errors.CodeGroupMemberLimitReached, "群成员已达上限")
+		return nil, errors.NewBusiness(errors.CodeGroupMemberLimitReached, "Group member limit reached")
 	}
 
 	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
@@ -1517,13 +1517,13 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 		return nil, err
 	}
 	if isMember {
-		return nil, errors.NewBusiness(errors.CodeAlreadyGroupMember, "你已是该群成员")
+		return nil, errors.NewBusiness(errors.CodeAlreadyGroupMember, "You are already a group member")
 	}
 
-	// 复用 JoinGroup 中的验证逻辑
+	// Reuse validation logic from JoinGroup
 	joinVerify := s.getGroupJoinVerify(ctx, groupID)
 	if joinVerify {
-		// 检查是否已有待处理申请
+		// Check if already has pending request
 		existingReq, _ := s.joinRequestRepo.GetExistingRequest(ctx, groupID, userID)
 		if existingReq != nil {
 			return &dto.JoinGroupByQRCodeResponse{
@@ -1552,7 +1552,7 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 		}, nil
 	}
 
-	// 直接加入
+	// Directly join
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		memberRepoTx := s.memberRepo.WithTx(tx)
 		groupRepoTx := s.groupRepo.WithTx(tx)
@@ -1581,7 +1581,7 @@ func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token 
 	}, nil
 }
 
-// createNewQRCode 生成并持久化一条新二维码记录
+// createNewQRCode generates and persists a new QR code record
 func (s *groupServiceImpl) createNewQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
 	qr := &model.GroupQRCode{
 		GroupID:   groupID,
@@ -1617,7 +1617,7 @@ func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID strin
 
 func (s *groupServiceImpl) getPinnedMessageSnapshot(ctx context.Context, groupID, messageID string) (*pinnedMessageSnapshot, error) {
 	if s.messageClient == nil {
-		return nil, errors.NewBusiness(errors.CodeInternalError, "消息服务不可用")
+		return nil, errors.NewBusiness(errors.CodeInternalError, "Message service unavailable")
 	}
 
 	msg, err := s.messageClient.GetMessageById(ctx, &messagepb.GetMessageByIdRequest{
@@ -1625,15 +1625,15 @@ func (s *groupServiceImpl) getPinnedMessageSnapshot(ctx context.Context, groupID
 	})
 	if err != nil {
 		logger.Error("Failed to load pinned message content", zap.String("messageId", messageID), zap.Error(err))
-		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "消息不存在")
+		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "Message not found")
 	}
 
 	if msg.GetConversationType() != "group" || msg.GetConversationId() != groupID {
-		return nil, errors.NewBusiness(errors.CodeMessageNotInGroup, "消息不属于该群")
+		return nil, errors.NewBusiness(errors.CodeMessageNotInGroup, "Message does not belong to this group")
 	}
 
 	if msg.GetStatus() != 0 {
-		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "消息不存在或不可见")
+		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "Message not found or invisible")
 	}
 
 	contentType := msg.GetContentType()
@@ -1669,21 +1669,21 @@ func buildPinnedMessagePreview(content, contentType string) string {
 		if rawText != "" {
 			return truncateWithEllipsis(rawText, pinnedMessagePreviewMaxRuneCount)
 		}
-		return "[文本消息]"
+		return "[Text]"
 	case "image":
-		return "[图片]"
+		return "[Image]"
 	case "video":
-		return "[视频]"
+		return "[Video]"
 	case "audio":
-		return "[语音]"
+		return "[Voice]"
 	case "file":
-		return "[文件]"
+		return "[File]"
 	case "location":
-		return "[位置]"
+		return "[Location]"
 	case "card":
-		return "[名片]"
+		return "[Card]"
 	default:
-		return "[消息]"
+		return "[Message]"
 	}
 }
 
@@ -1715,7 +1715,7 @@ func (s *groupServiceImpl) sendGroupSystemMessage(ctx context.Context, groupID, 
 	return err
 }
 
-// publishMemberJoinedNotification 发布成员加入通知
+// publishMemberJoinedNotification publishes member joined notification
 func (s *groupServiceImpl) publishMemberJoinedNotification(groupID, userID, inviterID string) {
 	if s.notificationPub == nil {
 		return
@@ -1741,7 +1741,7 @@ func (s *groupServiceImpl) publishMemberJoinedNotification(groupID, userID, invi
 	}
 }
 
-// publishGroupJoinRequestedNotification 发布入群申请通知
+// publishGroupJoinRequestedNotification publishes join request notification
 func (s *groupServiceImpl) publishGroupJoinRequestedNotification(groupID, userID string, requestID int64, source string) {
 	if s.notificationPub == nil {
 		return
@@ -1769,7 +1769,7 @@ func (s *groupServiceImpl) publishGroupJoinRequestedNotification(groupID, userID
 	}
 }
 
-// publishGroupQRCodeRefreshedNotification 发布群二维码刷新通知
+// publishGroupQRCodeRefreshedNotification publishes QR code refreshed notification
 func (s *groupServiceImpl) publishGroupQRCodeRefreshedNotification(groupID, operatorID, token string, expireAt int64) {
 	if s.notificationPub == nil {
 		return
@@ -1796,7 +1796,7 @@ func (s *groupServiceImpl) publishGroupQRCodeRefreshedNotification(groupID, oper
 	}
 }
 
-// publishMemberLeftNotification 发布成员离开通知
+// publishMemberLeftNotification publishes member left notification
 func (s *groupServiceImpl) publishMemberLeftNotification(groupID, userID, operatorID, reason string) {
 	if s.notificationPub == nil {
 		return
@@ -1823,7 +1823,7 @@ func (s *groupServiceImpl) publishMemberLeftNotification(groupID, userID, operat
 	}
 }
 
-// publishGroupInfoUpdatedNotification 发布群组信息更新通知
+// publishGroupInfoUpdatedNotification publishes group info updated notification
 func (s *groupServiceImpl) publishGroupInfoUpdatedNotification(groupID, operatorID string, req *dto.UpdateGroupRequest) {
 	if s.notificationPub == nil {
 		return
@@ -1868,7 +1868,7 @@ func (s *groupServiceImpl) publishGroupInfoUpdatedNotification(groupID, operator
 	}
 }
 
-// publishRoleChangedNotification 发布角色变更通知
+// publishRoleChangedNotification publishes role changed notification
 func (s *groupServiceImpl) publishRoleChangedNotification(groupID, userID, oldRole, newRole, operatorID string) {
 	if s.notificationPub == nil {
 		return
@@ -1952,7 +1952,7 @@ func (s *groupServiceImpl) publishMemberUnmutedNotification(groupID, operatorID,
 	}
 }
 
-// publishGroupMutedNotification 发布全体禁言通知
+// publishGroupMutedNotification publishes group muted notification
 func (s *groupServiceImpl) publishGroupMutedNotification(groupID, operatorID string, enabled bool) {
 	if s.notificationPub == nil {
 		return
@@ -2058,7 +2058,7 @@ func (s *groupServiceImpl) publishGroupMessageUnpinnedNotification(groupID, oper
 	}
 }
 
-// publishGroupDisbandedNotification 发布群组解散通知
+// publishGroupDisbandedNotification publishes group disbanded notification
 func (s *groupServiceImpl) publishGroupDisbandedNotification(groupID, operatorID, groupName string) {
 	if s.notificationPub == nil {
 		return

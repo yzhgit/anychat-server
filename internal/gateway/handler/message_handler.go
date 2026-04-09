@@ -12,12 +12,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// MessageHandler 消息HTTP处理器
+// MessageHandler message HTTP handler
 type MessageHandler struct {
 	clientManager *client.Manager
 }
 
-// NewMessageHandler 创建消息处理器
+// NewMessageHandler creates message handler
 func NewMessageHandler(clientManager *client.Manager) *MessageHandler {
 	return &MessageHandler{
 		clientManager: clientManager,
@@ -59,18 +59,18 @@ type readTriggerEvent struct {
 	IdempotencyKey string `json:"idempotency_key,omitempty"`
 }
 
-// SendMessage 发送消息
-// @Summary      发送消息
-// @Description  通过HTTP发送会话消息（支持幂等local_id）
-// @Tags         消息
+// SendMessage send message
+// @Summary      send message
+// @Description  Send conversation message via HTTP (supports idempotent local_id)
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      sendMessageRequest  true  "消息内容"
-// @Success      200      {object}  response.Response{data=object}  "成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      sendMessageRequest  true  "message content"
+// @Success      200      {object}  response.Response{data=object}  "success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /messages [post]
 func (h *MessageHandler) SendMessage(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -102,22 +102,22 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessages 获取消息列表
-// @Summary      获取历史消息
-// @Description  按会话ID和序列号区间分页拉取消息
-// @Tags         消息
+// GetMessages get message list
+// @Summary      get message history
+// @Description  Paginate pull messages by conversation ID and sequence range
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversation_id  query     string  true   "会话ID"
-// @Param        start_seq        query     int64   false  "起始序列号"
-// @Param        end_seq          query     int64   false  "结束序列号"
-// @Param        limit            query     int32   false  "数量限制(默认20,最大100)"
-// @Param        reverse          query     bool    false  "是否倒序"
-// @Success      200              {object}  response.Response{data=object}  "成功"
-// @Failure      400              {object}  response.Response  "参数错误"
-// @Failure      401              {object}  response.Response  "未授权"
-// @Failure      500              {object}  response.Response  "服务器错误"
+// @Param        conversation_id  query     string  true   "conversation ID"
+// @Param        start_seq        query     int64   false  "start sequence"
+// @Param        end_seq          query     int64   false  "end sequence"
+// @Param        limit            query     int32   false  "limit (default 20, max 100)"
+// @Param        reverse          query     bool    false  "reverse order"
+// @Success      200              {object}  response.Response{data=object}  "success"
+// @Failure      400              {object}  response.Response  "parameter error"
+// @Failure      401              {object}  response.Response  "unauthorized"
+// @Failure      500              {object}  response.Response  "server error"
 // @Router       /messages [get]
 func (h *MessageHandler) GetMessages(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -179,19 +179,19 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessageByID 获取单条消息
-// @Summary      获取消息详情
-// @Description  通过消息ID获取单条消息
-// @Tags         消息
+// GetMessageByID get single message
+// @Summary      get message detail
+// @Description  Get single message by message ID
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        messageId  path      string  true  "消息ID"
-// @Success      200        {object}  response.Response{data=object}  "成功"
-// @Failure      400        {object}  response.Response  "参数错误"
-// @Failure      401        {object}  response.Response  "未授权"
-// @Failure      404        {object}  response.Response  "消息不存在"
-// @Failure      500        {object}  response.Response  "服务器错误"
+// @Param        messageId  path      string  true  "message ID"
+// @Success      200        {object}  response.Response{data=object}  "success"
+// @Failure      400        {object}  response.Response  "parameter error"
+// @Failure      401        {object}  response.Response  "unauthorized"
+// @Failure      404        {object}  response.Response  "message not found"
+// @Failure      500        {object}  response.Response  "server error"
 // @Router       /messages/{messageId} [get]
 func (h *MessageHandler) GetMessageByID(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -215,22 +215,22 @@ func (h *MessageHandler) GetMessageByID(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// SearchMessages 搜索会话消息
-// @Summary      搜索消息
-// @Description  按关键字和会话范围搜索消息
-// @Tags         消息
+// SearchMessages search conversation messages
+// @Summary      search messages
+// @Description  Search messages by keyword and conversation scope
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        keyword          query     string  true   "关键字"
-// @Param        conversation_id  query     string  true   "会话ID"
-// @Param        content_type     query     string  false  "消息类型"
-// @Param        limit            query     int32   false  "每页数量(默认20,最大100)"
-// @Param        offset           query     int32   false  "偏移量"
-// @Success      200              {object}  response.Response{data=object}  "成功"
-// @Failure      400              {object}  response.Response  "参数错误"
-// @Failure      401              {object}  response.Response  "未授权"
-// @Failure      500              {object}  response.Response  "服务器错误"
+// @Param        keyword          query     string  true   "keyword"
+// @Param        conversation_id  query     string  true   "conversation ID"
+// @Param        content_type     query     string  false  "message type"
+// @Param        limit            query     int32   false  "page size (default 20, max 100)"
+// @Param        offset           query     int32   false  "offset"
+// @Success      200              {object}  response.Response{data=object}  "success"
+// @Failure      400              {object}  response.Response  "parameter error"
+// @Failure      401              {object}  response.Response  "unauthorized"
+// @Failure      500              {object}  response.Response  "server error"
 // @Router       /messages/search [get]
 func (h *MessageHandler) SearchMessages(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -283,20 +283,20 @@ func (h *MessageHandler) SearchMessages(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// RecallMessage 撤回消息
-// @Summary      撤回消息
-// @Description  撤回指定消息，只能撤回自己发送的消息，且需在2分钟内
-// @Tags         消息
+// RecallMessage recall message
+// @Summary      recall message
+// @Description  Recall specified message, can only recall own messages within 2 minutes
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      recallMessageRequest  true  "消息ID"
-// @Success      200      {object}  response.Response  "成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "无权限或已超时"
-// @Failure      404      {object}  response.Response  "消息不存在"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      recallMessageRequest  true  "message ID"
+// @Success      200      {object}  response.Response  "success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "no permission or timeout"
+// @Failure      404      {object}  response.Response  "message not found"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /messages/recall [post]
 func (h *MessageHandler) RecallMessage(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -319,19 +319,19 @@ func (h *MessageHandler) RecallMessage(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// DeleteMessage 删除消息
-// @Summary      删除消息
-// @Description  删除指定消息，只能删除自己发送的消息
-// @Tags         消息
+// DeleteMessage delete message
+// @Summary      delete message
+// @Description  Delete specified message, can only delete own messages
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        messageId  path      string  true  "消息ID"
-// @Success      200      {object}  response.Response  "成功"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "无权限"
-// @Failure      404      {object}  response.Response  "消息不存在"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        messageId  path      string  true  "message ID"
+// @Success      200      {object}  response.Response  "success"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "no permission"
+// @Failure      404      {object}  response.Response  "message not found"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /messages/{messageId} [delete]
 func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -354,18 +354,18 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// AckReadTriggers 阅后即焚阅读触发回执
-// @Summary      阅后即焚阅读触发回执
-// @Description  客户端批量上报消息阅读触发事件，服务端据此启动阅后即焚计时
-// @Tags         消息
+// AckReadTriggers burn after reading read trigger acknowledgment
+// @Summary      burn after reading read trigger acknowledgment
+// @Description  Client batch reports message read trigger events, server starts burn timer accordingly
+// @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      ackReadTriggersRequest  true  "阅读触发事件"
-// @Success      200      {object}  response.Response{data=object}  "成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      ackReadTriggersRequest  true  "read trigger events"
+// @Success      200      {object}  response.Response{data=object}  "success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /messages/read-triggers [post]
 func (h *MessageHandler) AckReadTriggers(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

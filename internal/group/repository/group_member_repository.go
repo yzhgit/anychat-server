@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// GroupMemberRepository 群成员仓库接口
+// GroupMemberRepository defines the group member repository interface
 type GroupMemberRepository interface {
 	AddMember(ctx context.Context, member *model.GroupMember) error
 	AddMembers(ctx context.Context, members []*model.GroupMember) error
@@ -27,34 +27,34 @@ type GroupMemberRepository interface {
 	WithTx(tx *gorm.DB) GroupMemberRepository
 }
 
-// groupMemberRepositoryImpl 群成员仓库实现
+// groupMemberRepositoryImpl is the group member repository implementation
 type groupMemberRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewGroupMemberRepository 创建群成员仓库
+// NewGroupMemberRepository creates a new group member repository
 func NewGroupMemberRepository(db *gorm.DB) GroupMemberRepository {
 	return &groupMemberRepositoryImpl{db: db}
 }
 
-// AddMember 添加成员
+// AddMember adds a member
 func (r *groupMemberRepositoryImpl) AddMember(ctx context.Context, member *model.GroupMember) error {
 	return r.db.WithContext(ctx).Create(member).Error
 }
 
-// AddMembers 批量添加成员
+// AddMembers adds multiple members
 func (r *groupMemberRepositoryImpl) AddMembers(ctx context.Context, members []*model.GroupMember) error {
 	return r.db.WithContext(ctx).Create(members).Error
 }
 
-// RemoveMember 移除成员
+// RemoveMember removes a member
 func (r *groupMemberRepositoryImpl) RemoveMember(ctx context.Context, groupID, userID string) error {
 	return r.db.WithContext(ctx).
 		Where("group_id = ? AND user_id = ?", groupID, userID).
 		Delete(&model.GroupMember{}).Error
 }
 
-// UpdateRole 更新成员角色
+// UpdateRole updates member role
 func (r *groupMemberRepositoryImpl) UpdateRole(ctx context.Context, groupID, userID, role string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupMember{}).
@@ -65,7 +65,7 @@ func (r *groupMemberRepositoryImpl) UpdateRole(ctx context.Context, groupID, use
 		}).Error
 }
 
-// UpdateNickname 更新群昵称
+// UpdateNickname updates group nickname
 func (r *groupMemberRepositoryImpl) UpdateNickname(ctx context.Context, groupID, userID, nickname string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupMember{}).
@@ -76,7 +76,7 @@ func (r *groupMemberRepositoryImpl) UpdateNickname(ctx context.Context, groupID,
 		}).Error
 }
 
-// UpdateRemark 更新群备注（仅对操作者自己可见）
+// UpdateRemark updates group remark (only visible to self)
 func (r *groupMemberRepositoryImpl) UpdateRemark(ctx context.Context, groupID, userID, remark string) error {
 	var remarkValue interface{} = remark
 	if remark == "" {
@@ -92,7 +92,7 @@ func (r *groupMemberRepositoryImpl) UpdateRemark(ctx context.Context, groupID, u
 		}).Error
 }
 
-// UpdateMuted 更新禁言状态
+// UpdateMuted updates muted status
 func (r *groupMemberRepositoryImpl) UpdateMutedUntil(ctx context.Context, groupID, userID string, mutedUntil *time.Time) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupMember{}).
@@ -103,7 +103,7 @@ func (r *groupMemberRepositoryImpl) UpdateMutedUntil(ctx context.Context, groupI
 		}).Error
 }
 
-// GetMember 获取成员信息
+// GetMember gets member info
 func (r *groupMemberRepositoryImpl) GetMember(ctx context.Context, groupID, userID string) (*model.GroupMember, error) {
 	var member model.GroupMember
 	err := r.db.WithContext(ctx).
@@ -115,19 +115,19 @@ func (r *groupMemberRepositoryImpl) GetMember(ctx context.Context, groupID, user
 	return &member, nil
 }
 
-// GetMembers 获取群成员列表（支持分页）
+// GetMembers gets group member list (with pagination)
 func (r *groupMemberRepositoryImpl) GetMembers(ctx context.Context, groupID string, page, pageSize int) ([]*model.GroupMember, int64, error) {
 	var members []*model.GroupMember
 	var total int64
 
 	query := r.db.WithContext(ctx).Model(&model.GroupMember{}).Where("group_id = ?", groupID)
 
-	// 获取总数
+	// Get total count
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// 分页查询
+	// Paginated query
 	offset := (page - 1) * pageSize
 	err := query.
 		Order("joined_at ASC").
@@ -138,7 +138,7 @@ func (r *groupMemberRepositoryImpl) GetMembers(ctx context.Context, groupID stri
 	return members, total, err
 }
 
-// GetMembersByRole 根据角色获取成员
+// GetMembersByRole gets members by role
 func (r *groupMemberRepositoryImpl) GetMembersByRole(ctx context.Context, groupID, role string) ([]*model.GroupMember, error) {
 	var members []*model.GroupMember
 	err := r.db.WithContext(ctx).
@@ -148,7 +148,7 @@ func (r *groupMemberRepositoryImpl) GetMembersByRole(ctx context.Context, groupI
 	return members, err
 }
 
-// GetMemberCount 获取成员数量
+// GetMemberCount gets member count
 func (r *groupMemberRepositoryImpl) GetMemberCount(ctx context.Context, groupID string) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -158,7 +158,7 @@ func (r *groupMemberRepositoryImpl) GetMemberCount(ctx context.Context, groupID 
 	return count, err
 }
 
-// IsMember 检查是否是成员
+// IsMember checks if user is a member
 func (r *groupMemberRepositoryImpl) IsMember(ctx context.Context, groupID, userID string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -168,7 +168,7 @@ func (r *groupMemberRepositoryImpl) IsMember(ctx context.Context, groupID, userI
 	return count > 0, err
 }
 
-// GetUserGroups 获取用户加入的群组列表
+// GetUserGroups gets list of groups user joined
 func (r *groupMemberRepositoryImpl) GetUserGroups(ctx context.Context, userID string) ([]*model.GroupMember, error) {
 	var members []*model.GroupMember
 	err := r.db.WithContext(ctx).
@@ -178,7 +178,7 @@ func (r *groupMemberRepositoryImpl) GetUserGroups(ctx context.Context, userID st
 	return members, err
 }
 
-// GetUserGroupsByUpdateTime 根据更新时间获取用户群组列表（增量同步）
+// GetUserGroupsByUpdateTime gets user groups by update time (incremental sync)
 func (r *groupMemberRepositoryImpl) GetUserGroupsByUpdateTime(ctx context.Context, userID string, lastUpdateTime time.Time) ([]*model.GroupMember, error) {
 	var members []*model.GroupMember
 	err := r.db.WithContext(ctx).
@@ -188,7 +188,7 @@ func (r *groupMemberRepositoryImpl) GetUserGroupsByUpdateTime(ctx context.Contex
 	return members, err
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *groupMemberRepositoryImpl) WithTx(tx *gorm.DB) GroupMemberRepository {
 	return &groupMemberRepositoryImpl{db: tx}
 }

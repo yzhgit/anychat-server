@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// VerificationTemplate 验证码模板
+// VerificationTemplate verification template model
 type VerificationTemplate struct {
 	ID            int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	Purpose       string    `gorm:"column:purpose;not null;uniqueIndex" json:"purpose"`

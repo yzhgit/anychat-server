@@ -15,6 +15,7 @@ import (
 	"github.com/anychat/server/internal/push/jpush"
 	"github.com/anychat/server/internal/push/repository"
 	"github.com/anychat/server/internal/push/service"
+	"github.com/anychat/server/pkg/config"
 	"github.com/anychat/server/pkg/database"
 	grpcpkg "github.com/anychat/server/pkg/grpc"
 	"github.com/anychat/server/pkg/logger"
@@ -25,7 +26,6 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/anychat/server/pkg/config"
 )
 
 const (
@@ -46,14 +46,14 @@ func main() {
 
 	logger.Info("Starting push-service", zap.String("version", version))
 
-	// 连接数据库
+	// Connect to database
 	db, err := initDatabase()
 	if err != nil {
 		logger.Fatal("Failed to connect database", zap.Error(err))
 	}
 	logger.Info("Database connected successfully")
 
-	// 连接NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
@@ -61,18 +61,18 @@ func main() {
 	defer nc.Close()
 	logger.Info("Connected to NATS")
 
-	// 初始化极光推送客户端
+	// Initialize JPush client
 	jpushClient := jpush.NewClient(
 		viper.GetString("jpush.app_key"),
 		viper.GetString("jpush.master_secret"),
 	)
 
-	// 初始化仓库与服务
+	// Initialize repositories and services
 	pushLogRepo := repository.NewPushLogRepository(db)
 	pushSvc := service.NewPushService(jpushClient, pushLogRepo)
 
-	// 订阅 NATS 通知（通配符匹配所有用户通知）
-	// 格式: notification.{service}.{event}.{userID}
+	// Subscribe to NATS notifications (wildcard matching all user notifications)
+	// Format: notification.{service}.{event}.{userID}
 	sub, err := nc.Subscribe("notification.>", pushSvc.HandleNotification)
 	if err != nil {
 		logger.Fatal("Failed to subscribe NATS notifications", zap.Error(err))
@@ -80,7 +80,7 @@ func main() {
 	defer sub.Unsubscribe() //nolint:errcheck
 	logger.Info("Subscribed to NATS notification.>")
 
-	// 初始化并启动 gRPC 服务器
+	// Initialize and start gRPC server
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcpkg.RecoveryInterceptor(),
@@ -101,7 +101,7 @@ func main() {
 		}
 	}()
 
-	// 启动健康检查 HTTP 服务器
+	// Start health check HTTP server
 	httpServer := initHTTPServer()
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("server.http_port"))

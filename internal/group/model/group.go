@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// Group 群组模型
+// Group represents a group model
 type Group struct {
 	ID           int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	GroupID      string    `gorm:"column:group_id;not null;uniqueIndex" json:"groupId"`
@@ -19,23 +19,23 @@ type Group struct {
 	UpdatedAt    time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns the table name
 func (Group) TableName() string {
 	return "groups"
 }
 
-// GroupStatus 群组状态
+// GroupStatus represents group status
 const (
-	GroupStatusDissolved = 0 // 已解散
-	GroupStatusNormal    = 1 // 正常
+	GroupStatusDissolved = 0 // dissolved
+	GroupStatusNormal    = 1 // normal
 )
 
-// IsActive 是否有效
+// IsActive checks if group is active
 func (g *Group) IsActive() bool {
 	return g.Status == GroupStatusNormal
 }
 
-// IsFull 是否已满
+// IsFull checks if group is full
 func (g *Group) IsFull() bool {
 	return g.MemberCount >= g.MaxMembers
 }

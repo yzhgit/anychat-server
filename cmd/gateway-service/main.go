@@ -29,8 +29,8 @@ import (
 
 // @title           AnyChat Gateway API
 // @version         1.0
-// @description     AnyChat 即时通讯系统的网关 API 服务，提供用户认证、用户管理等功能的 HTTP 接口。
-// @description     所有需要认证的接口都需要在 Header 中携带 Authorization: Bearer <token>
+// @description     AnyChat instant messaging system gateway API service, providing HTTP interfaces for user authentication, user management, and other functions.
+// @description     All endpoints requiring authentication must include Authorization: Bearer <token> in the Header.
 
 // @contact.name   AnyChat API Support
 // @contact.url    https://github.com/yzhgit/anychat-server
@@ -55,12 +55,12 @@ const (
 func main() {
 	fmt.Printf("Starting %s %s...\n", serviceName, version)
 
-	// 加载配置
+	// Load config
 	if err := loadConfig(); err != nil {
 		panic(fmt.Sprintf("Failed to load config: %v", err))
 	}
 
-	// 初始化日志
+	// Initialize logger
 	if err := initLogger(); err != nil {
 		panic(fmt.Sprintf("Failed to init logger: %v", err))
 	}
@@ -68,10 +68,10 @@ func main() {
 
 	logger.Info("Starting gateway-service", zap.String("version", version))
 
-	// 初始化JWT管理器
+	// Initialize JWT manager
 	jwtManager := initJWT()
 
-	// 连接到后端gRPC服务
+	// Connect to backend gRPC services
 	clientManager, err := client.NewManager(
 		viper.GetString("services.auth.grpc_addr"),
 		viper.GetString("services.user.grpc_addr"),
@@ -91,7 +91,7 @@ func main() {
 
 	logger.Info("Connected to all backend services")
 
-	// 连接NATS
+	// Connect to NATS
 	nc, err := connectNATS()
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS", zap.Error(err))
@@ -99,16 +99,16 @@ func main() {
 	defer nc.Close()
 	logger.Info("Connected to NATS")
 
-	// 初始化WebSocket管理器
+	// Initialize WebSocket manager
 	wsManager := gwwebsocket.NewManager()
 
-	// 初始化通知订阅器
+	// Initialize notification subscriber
 	subscriber := gwnotification.NewSubscriber(nc, wsManager)
 
-	// 初始化HTTP服务器
+	// Initialize HTTP server
 	httpServer := initHTTPServer(clientManager, jwtManager, wsManager, subscriber)
 
-	// 启动HTTP服务器
+	// Start HTTP server
 	go func() {
 		addr := fmt.Sprintf(":%d", viper.GetInt("gateway.http_port"))
 		logger.Info("Gateway HTTP server listening", zap.String("addr", addr))
@@ -119,14 +119,14 @@ func main() {
 
 	logger.Info("Gateway service started successfully")
 
-	// 优雅关闭
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Info("Shutting down gracefully...")
 
-	// 关闭HTTP服务器
+	// Stop HTTP server
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
@@ -136,14 +136,14 @@ func main() {
 	logger.Info("Service stopped!")
 }
 
-// loadConfig 加载配置
+// loadConfig loads configuration
 func loadConfig() error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./configs")
 	viper.AddConfigPath(".")
 
-	// 设置默认值
+	// Set default values
 	viper.SetDefault("gateway.http_port", 8080)
 	viper.SetDefault("services.auth.grpc_addr", "localhost:9001")
 	viper.SetDefault("services.user.grpc_addr", "localhost:9002")
@@ -163,14 +163,14 @@ func loadConfig() error {
 	viper.SetDefault("log.output", "stdout")
 	viper.SetDefault("server.mode", "development")
 
-	// 自动读取环境变量
+	// Auto-read environment variables
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return err
 		}
-		// 配置文件不存在，使用默认值
+		// Config file not found, use defaults
 		fmt.Println("Config file not found, using defaults")
 	}
 	config.ExpandEnvInConfig()
@@ -188,7 +188,7 @@ func getCallingGRPCAddr() string {
 	return "localhost:9009"
 }
 
-// initLogger 初始化日志
+// initLogger initializes logger
 func initLogger() error {
 	return logger.Init(&logger.Config{
 		Level:    viper.GetString("log.level"),
@@ -197,7 +197,7 @@ func initLogger() error {
 	})
 }
 
-// initJWT 初始化JWT管理器
+// initJWT initializes JWT manager
 func initJWT() *jwt.Manager {
 	return jwt.NewManager(&jwt.Config{
 		Secret:             viper.GetString("jwt.secret"),
@@ -206,7 +206,7 @@ func initJWT() *jwt.Manager {
 	})
 }
 
-// connectNATS 连接到NATS
+// connectNATS connects to NATS
 func connectNATS() (*nats.Conn, error) {
 	natsURL := viper.GetString("nats.url")
 	nc, err := nats.Connect(natsURL,
@@ -223,28 +223,28 @@ func connectNATS() (*nats.Conn, error) {
 	return nc, err
 }
 
-// initHTTPServer 初始化HTTP服务器
+// initHTTPServer initializes HTTP server
 func initHTTPServer(clientManager *client.Manager, jwtManager *jwt.Manager,
 	wsManager *gwwebsocket.Manager, subscriber *gwnotification.Subscriber) *http.Server {
-	// 设置Gin模式
+	// Set Gin mode
 	if viper.GetString("server.mode") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 创建路由
+	// Create router
 	r := gin.New()
 
-	// 中间件
+	// Middleware
 	r.Use(middleware.Recovery())
 	r.Use(middleware.Logger())
 	r.Use(middleware.CORS())
 
-	// Swagger文档路由（仅在非生产环境）
+	// Swagger docs route (non-production only)
 	if viper.GetString("server.mode") != "release" {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	// 注册路由
+	// Register routes
 	handler.RegisterRoutes(r, clientManager, jwtManager, wsManager, subscriber)
 
 	return &http.Server{

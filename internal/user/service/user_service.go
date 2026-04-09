@@ -19,36 +19,36 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserService 用户服务接口
+// UserService user service interface
 type UserService interface {
-	// 用户资料
+	// User profile
 	GetProfile(ctx context.Context, userID string) (*dto.UserProfileResponse, error)
 	UpdateProfile(ctx context.Context, userID string, req *dto.UpdateProfileRequest) (*dto.UserProfileResponse, error)
 	GetUserInfo(ctx context.Context, userID, targetUserID string) (*dto.UserInfoResponse, error)
 	SearchUsers(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error)
 
-	// 用户设置
+	// User settings
 	GetSettings(ctx context.Context, userID string) (*dto.UserSettingsResponse, error)
 	UpdateSettings(ctx context.Context, userID string, req *dto.UpdateSettingsRequest) (*dto.UserSettingsResponse, error)
 
-	// 二维码
+	// QR code
 	RefreshQRCode(ctx context.Context, userID string) (*dto.QRCodeResponse, error)
 	GetUserByQRCode(ctx context.Context, code string) (*dto.UserBriefInfo, error)
 
-	// 推送Token
+	// Push token
 	UpdatePushToken(ctx context.Context, userID string, req *dto.UpdatePushTokenRequest) error
 
-	// 账号绑定
+	// Account binding
 	BindPhone(ctx context.Context, userID string, req *dto.BindPhoneRequest) (*dto.BindPhoneResponse, error)
 	ChangePhone(ctx context.Context, userID string, req *dto.ChangePhoneRequest) (*dto.ChangePhoneResponse, error)
 	BindEmail(ctx context.Context, userID string, req *dto.BindEmailRequest) (*dto.BindEmailResponse, error)
 	ChangeEmail(ctx context.Context, userID string, req *dto.ChangeEmailRequest) (*dto.ChangeEmailResponse, error)
 
-	// 初始化用户数据
+	// Initialize user data
 	InitUserData(ctx context.Context, userID, nickname string) error
 }
 
-// userServiceImpl 用户服务实现
+// userServiceImpl user service implementation
 type userServiceImpl struct {
 	profileRepo   repository.UserProfileRepository
 	settingsRepo  repository.UserSettingsRepository
@@ -60,7 +60,7 @@ type userServiceImpl struct {
 	verifySvc     authservice.VerificationService
 }
 
-// NewUserService 创建用户服务
+// NewUserService creates user service
 func NewUserService(
 	profileRepo repository.UserProfileRepository,
 	settingsRepo repository.UserSettingsRepository,
@@ -83,9 +83,9 @@ func NewUserService(
 	}
 }
 
-// InitUserData 初始化用户数据（注册时调用）
+// InitUserData initializes user data (called during registration)
 func (s *userServiceImpl) InitUserData(ctx context.Context, userID, nickname string) error {
-	// 创建用户资料
+	// Create user profile
 	if nickname == "" {
 		nickname = fmt.Sprintf("User_%s", userID[:8])
 	}
@@ -100,7 +100,7 @@ func (s *userServiceImpl) InitUserData(ctx context.Context, userID, nickname str
 		return err
 	}
 
-	// 创建用户设置
+	// Create user settings
 	settings := &model.UserSettings{
 		UserID:                userID,
 		NotificationEnabled:   true,
@@ -117,12 +117,12 @@ func (s *userServiceImpl) InitUserData(ctx context.Context, userID, nickname str
 		return err
 	}
 
-	// 生成二维码
+	// Generate QR code
 	_, err := s.RefreshQRCode(ctx, userID)
 	return err
 }
 
-// GetProfile 获取个人资料
+// GetProfile retrieves personal profile
 func (s *userServiceImpl) GetProfile(ctx context.Context, userID string) (*dto.UserProfileResponse, error) {
 	profile, err := s.profileRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -159,25 +159,25 @@ func (s *userServiceImpl) GetProfile(ctx context.Context, userID string) (*dto.U
 	return resp, nil
 }
 
-// UpdateProfile 更新个人资料
+// UpdateProfile updates personal profile
 func (s *userServiceImpl) UpdateProfile(ctx context.Context, userID string, req *dto.UpdateProfileRequest) (*dto.UserProfileResponse, error) {
-	// 获取当前资料
+	// Get current profile
 	profile, err := s.profileRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 更新昵称
+	// Update nickname
 	if req.Nickname != nil {
 		if !validator.ValidateNickname(*req.Nickname) {
-			return nil, errors.NewBusiness(errors.CodeParamError, "昵称格式错误")
+			return nil, errors.NewBusiness(errors.CodeParamError, "invalid nickname format")
 		}
 
 		if validator.ContainsSensitiveWords(*req.Nickname) {
 			return nil, errors.NewBusiness(errors.CodeNicknameSensitive, "")
 		}
 
-		// 检查昵称是否被占用
+		// Check if nickname is already taken
 		exists, err := s.profileRepo.CheckNicknameExists(ctx, *req.Nickname, userID)
 		if err != nil {
 			return nil, err
@@ -189,35 +189,35 @@ func (s *userServiceImpl) UpdateProfile(ctx context.Context, userID string, req 
 		profile.Nickname = *req.Nickname
 	}
 
-	// 更新头像
+	// Update avatar
 	if req.Avatar != nil {
 		profile.Avatar = *req.Avatar
 	}
 
-	// 更新签名
+	// Update signature
 	if req.Signature != nil {
 		profile.Signature = *req.Signature
 	}
 
-	// 更新性别
+	// Update gender
 	if req.Gender != nil {
 		if !validator.ValidateGender(*req.Gender) {
-			return nil, errors.NewBusiness(errors.CodeParamError, "性别值无效")
+			return nil, errors.NewBusiness(errors.CodeParamError, "invalid gender value")
 		}
 		profile.Gender = *req.Gender
 	}
 
-	// 更新生日
+	// Update birthday
 	if req.Birthday != nil {
 		profile.Birthday = req.Birthday
 	}
 
-	// 更新地区
+	// Update region
 	if req.Region != nil {
 		profile.Region = *req.Region
 	}
 
-	// 保存更新
+	// Save update
 	if err := s.profileRepo.Update(ctx, profile); err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (s *userServiceImpl) UpdateProfile(ctx context.Context, userID string, req 
 	}, nil
 }
 
-// GetUserInfo 获取用户信息（查询其他用户）
+// GetUserInfo retrieves user info (query other users)
 func (s *userServiceImpl) GetUserInfo(ctx context.Context, userID, targetUserID string) (*dto.UserInfoResponse, error) {
 	profile, err := s.profileRepo.GetByUserID(ctx, targetUserID)
 	if err != nil {
@@ -248,7 +248,7 @@ func (s *userServiceImpl) GetUserInfo(ctx context.Context, userID, targetUserID 
 	isFriend := false
 	isBlocked := false
 
-	// 仅当有查询者且依赖可用时，查询好友关系和黑名单状态
+	// Only query friend relationship and block status when requester exists and dependency is available
 	if userID != "" && s.friendClient != nil {
 		blockedResp, err := s.friendClient.IsBlocked(ctx, &friendpb.IsBlockedRequest{
 			UserId:       userID,
@@ -259,7 +259,7 @@ func (s *userServiceImpl) GetUserInfo(ctx context.Context, userID, targetUserID 
 		}
 		isBlocked = blockedResp.IsBlocked
 		if isBlocked {
-			return nil, errors.NewBusiness(errors.CodePermissionDenied, "对方已将你拉黑")
+			return nil, errors.NewBusiness(errors.CodePermissionDenied, "you have been blocked by this user")
 		}
 
 		friendResp, err := s.friendClient.IsFriend(ctx, &friendpb.IsFriendRequest{
@@ -284,7 +284,7 @@ func (s *userServiceImpl) GetUserInfo(ctx context.Context, userID, targetUserID 
 	}, nil
 }
 
-// SearchUsers 搜索用户
+// SearchUsers searches for users
 func (s *userServiceImpl) SearchUsers(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
 	if req.Page <= 0 {
 		req.Page = 1
@@ -315,7 +315,7 @@ func (s *userServiceImpl) SearchUsers(ctx context.Context, req *dto.SearchUsersR
 	}, nil
 }
 
-// GetSettings 获取个人设置
+// GetSettings retrieves personal settings
 func (s *userServiceImpl) GetSettings(ctx context.Context, userID string) (*dto.UserSettingsResponse, error) {
 	settings, err := s.settingsRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -338,14 +338,14 @@ func (s *userServiceImpl) GetSettings(ctx context.Context, userID string) (*dto.
 	}, nil
 }
 
-// UpdateSettings 更新个人设置
+// UpdateSettings updates personal settings
 func (s *userServiceImpl) UpdateSettings(ctx context.Context, userID string, req *dto.UpdateSettingsRequest) (*dto.UserSettingsResponse, error) {
 	settings, err := s.settingsRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 更新设置
+	// Update settings
 	if req.NotificationEnabled != nil {
 		settings.NotificationEnabled = *req.NotificationEnabled
 	}
@@ -371,7 +371,7 @@ func (s *userServiceImpl) UpdateSettings(ctx context.Context, userID string, req
 		settings.Language = *req.Language
 	}
 
-	// 保存更新
+	// Save update
 	if err := s.settingsRepo.Update(ctx, settings); err != nil {
 		return nil, err
 	}
@@ -389,21 +389,21 @@ func (s *userServiceImpl) UpdateSettings(ctx context.Context, userID string, req
 	}, nil
 }
 
-// RefreshQRCode 刷新二维码
+// RefreshQRCode refreshes QR code
 func (s *userServiceImpl) RefreshQRCode(ctx context.Context, userID string) (*dto.QRCodeResponse, error) {
-	// 生成二维码Token
+	// Generate QR code token
 	qrcodeToken, err := crypto.GenerateQRCodeToken(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 生成二维码URL
+	// Generate QR code URL
 	qrcodeURL := fmt.Sprintf("anychat://qrcode?token=%s", qrcodeToken)
 
-	// 24小时后过期
+	// Expires after 24 hours
 	expiresAt := time.Now().Add(24 * time.Hour)
 
-	// 保存二维码记录
+	// Save QR code record
 	qrcode := &model.UserQRCode{
 		UserID:      userID,
 		QRCodeToken: qrcodeToken,
@@ -415,7 +415,7 @@ func (s *userServiceImpl) RefreshQRCode(ctx context.Context, userID string) (*dt
 		return nil, err
 	}
 
-	// 更新用户资料中的二维码URL
+	// Update QR code URL in user profile
 	if err := s.profileRepo.UpdateQRCode(ctx, userID, qrcodeURL); err != nil {
 		return nil, err
 	}
@@ -426,9 +426,9 @@ func (s *userServiceImpl) RefreshQRCode(ctx context.Context, userID string) (*dt
 	}, nil
 }
 
-// GetUserByQRCode 根据二维码获取用户信息
+// GetUserByQRCode retrieves user info by QR code
 func (s *userServiceImpl) GetUserByQRCode(ctx context.Context, code string) (*dto.UserBriefInfo, error) {
-	// 查找二维码
+	// Find QR code
 	qrcode, err := s.qrcodeRepo.GetByToken(ctx, code)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -437,12 +437,12 @@ func (s *userServiceImpl) GetUserByQRCode(ctx context.Context, code string) (*dt
 		return nil, err
 	}
 
-	// 检查是否过期
+	// Check if expired
 	if qrcode.IsExpired() {
 		return nil, errors.NewBusiness(errors.CodeQRCodeExpired, "")
 	}
 
-	// 获取用户资料
+	// Get user profile
 	profile, err := s.profileRepo.GetByUserID(ctx, qrcode.UserID)
 	if err != nil {
 		return nil, err
@@ -456,7 +456,7 @@ func (s *userServiceImpl) GetUserByQRCode(ctx context.Context, code string) (*dt
 	}, nil
 }
 
-// UpdatePushToken 更新推送Token
+// UpdatePushToken updates push token
 func (s *userServiceImpl) UpdatePushToken(ctx context.Context, userID string, req *dto.UpdatePushTokenRequest) error {
 	token := &model.UserPushToken{
 		UserID:    userID,
@@ -468,7 +468,7 @@ func (s *userServiceImpl) UpdatePushToken(ctx context.Context, userID string, re
 	return s.pushTokenRepo.CreateOrUpdate(ctx, token)
 }
 
-// BindPhone 绑定手机号
+// BindPhone binds phone number
 func (s *userServiceImpl) BindPhone(ctx context.Context, userID string, req *dto.BindPhoneRequest) (*dto.BindPhoneResponse, error) {
 	if !validator.ValidatePhone(req.PhoneNumber) {
 		return nil, errors.NewBusiness(errors.CodePhoneFormatInvalid, "")
@@ -486,7 +486,7 @@ func (s *userServiceImpl) BindPhone(ctx context.Context, userID string, req *dto
 				IsPrimary:   true,
 			}, nil
 		}
-		return nil, errors.NewBusiness(errors.CodeParamError, "已绑定手机号，请使用更换手机号接口")
+		return nil, errors.NewBusiness(errors.CodeParamError, "phone already bound, please use change phone API")
 	}
 
 	if err := s.ensurePhoneAvailable(ctx, req.PhoneNumber, userID); err != nil {
@@ -505,7 +505,7 @@ func (s *userServiceImpl) BindPhone(ctx context.Context, userID string, req *dto
 	}, nil
 }
 
-// ChangePhone 更换手机号
+// ChangePhone changes phone number
 func (s *userServiceImpl) ChangePhone(ctx context.Context, userID string, req *dto.ChangePhoneRequest) (*dto.ChangePhoneResponse, error) {
 	if !validator.ValidatePhone(req.NewPhoneNumber) {
 		return nil, errors.NewBusiness(errors.CodePhoneFormatInvalid, "")
@@ -519,7 +519,7 @@ func (s *userServiceImpl) ChangePhone(ctx context.Context, userID string, req *d
 		return nil, errors.NewBusiness(errors.CodeOldPhoneNotMatch, "")
 	}
 	if req.NewPhoneNumber == req.OldPhoneNumber {
-		return nil, errors.NewBusiness(errors.CodeParamError, "新手机号不能与旧手机号相同")
+		return nil, errors.NewBusiness(errors.CodeParamError, "new phone number cannot be the same as old phone number")
 	}
 
 	if req.OldVerifyCode != nil && *req.OldVerifyCode != "" {
@@ -546,7 +546,7 @@ func (s *userServiceImpl) ChangePhone(ctx context.Context, userID string, req *d
 	}, nil
 }
 
-// BindEmail 绑定邮箱
+// BindEmail binds email
 func (s *userServiceImpl) BindEmail(ctx context.Context, userID string, req *dto.BindEmailRequest) (*dto.BindEmailResponse, error) {
 	if !validator.ValidateEmail(req.Email) {
 		return nil, errors.NewBusiness(errors.CodeEmailFormatInvalid, "")
@@ -564,7 +564,7 @@ func (s *userServiceImpl) BindEmail(ctx context.Context, userID string, req *dto
 				IsPrimary: true,
 			}, nil
 		}
-		return nil, errors.NewBusiness(errors.CodeParamError, "已绑定邮箱，请使用更换邮箱接口")
+		return nil, errors.NewBusiness(errors.CodeParamError, "email already bound, please use change email API")
 	}
 
 	if err := s.ensureEmailAvailable(ctx, req.Email, userID); err != nil {
@@ -583,7 +583,7 @@ func (s *userServiceImpl) BindEmail(ctx context.Context, userID string, req *dto
 	}, nil
 }
 
-// ChangeEmail 更换邮箱
+// ChangeEmail changes email
 func (s *userServiceImpl) ChangeEmail(ctx context.Context, userID string, req *dto.ChangeEmailRequest) (*dto.ChangeEmailResponse, error) {
 	if !validator.ValidateEmail(req.NewEmail) {
 		return nil, errors.NewBusiness(errors.CodeEmailFormatInvalid, "")
@@ -597,7 +597,7 @@ func (s *userServiceImpl) ChangeEmail(ctx context.Context, userID string, req *d
 		return nil, errors.NewBusiness(errors.CodeOldEmailNotMatch, "")
 	}
 	if req.NewEmail == req.OldEmail {
-		return nil, errors.NewBusiness(errors.CodeParamError, "新邮箱不能与旧邮箱相同")
+		return nil, errors.NewBusiness(errors.CodeParamError, "new email cannot be the same as old email")
 	}
 
 	if req.OldVerifyCode != nil && *req.OldVerifyCode != "" {
@@ -626,7 +626,7 @@ func (s *userServiceImpl) ChangeEmail(ctx context.Context, userID string, req *d
 
 func (s *userServiceImpl) requireAuthUser(ctx context.Context, userID string) (*authmodel.User, error) {
 	if s.authUserRepo == nil {
-		return nil, errors.NewBusiness(errors.CodeInternalError, "账号模块未初始化")
+		return nil, errors.NewBusiness(errors.CodeInternalError, "account module not initialized")
 	}
 
 	user, err := s.authUserRepo.GetByID(ctx, userID)
@@ -663,7 +663,7 @@ func (s *userServiceImpl) ensureEmailAvailable(ctx context.Context, email, exclu
 
 func (s *userServiceImpl) verifyCode(ctx context.Context, target, targetType, purpose, code string) error {
 	if s.verifySvc == nil {
-		return errors.NewBusiness(errors.CodeInternalError, "验证码模块未初始化")
+		return errors.NewBusiness(errors.CodeInternalError, "verification module not initialized")
 	}
 
 	_, err := s.verifySvc.VerifyCode(ctx, &authdto.VerifyCodeRequest{
@@ -677,7 +677,7 @@ func (s *userServiceImpl) verifyCode(ctx context.Context, target, targetType, pu
 
 func (s *userServiceImpl) invalidateSessionsAfterContactChange(ctx context.Context, userID, deviceID string) error {
 	if s.sessionRepo == nil {
-		return errors.NewBusiness(errors.CodeInternalError, "会话模块未初始化")
+		return errors.NewBusiness(errors.CodeInternalError, "session module not initialized")
 	}
 	return s.sessionRepo.DeleteByUserIDExceptDeviceID(ctx, userID, deviceID)
 }

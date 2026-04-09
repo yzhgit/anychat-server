@@ -1,44 +1,45 @@
 #!/bin/bash
 #
-# Sync Service HTTP API 测试脚本
-# 用于测试数据同步相关的 HTTP 接口
+# Sync Service HTTP API Test Script
+# Tests data sync related HTTP APIs
 #
-# 用法:
+# Usage:
 #   ./test-sync-api.sh
 #   GATEWAY_URL=http://localhost:8080 ./test-sync-api.sh
 #
-# 说明:
-#   同步服务是无状态聚合层，通过调用 friend/group/conversation/message 服务
-#   获取增量数据。本脚本验证 API 的响应结构及错误处理，空账号状态下
-#   全量同步应当返回空集合而非错误。
+# Notes:
+#   Sync service is a stateless aggregation layer that calls 
+#   friend/group/conversation/message services to get incremental data.
+#   This script validates API response structure and error handling.
+#   For empty accounts, full sync should return empty set not error.
 #
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 配置
+# Configuration
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:8080}"
 API_BASE="${GATEWAY_URL}/api/v1"
 
-# 测试数据
+# Test data
 TIMESTAMP=$(date +%s)
 TEST_EMAIL="sync_u1_${TIMESTAMP}@example.com"
 TEST_PASSWORD="Test@123456"
 TEST_DEVICE_ID="sync-test-device-${TIMESTAMP}"
 
-# 全局变量
+# Global variables
 USER_TOKEN=""
 USER_ID=""
 PASS=0
 FAIL=0
 
 # ────────────────────────────────────────
-# 工具函数
+# Utility functions
 # ────────────────────────────────────────
 
 print_header() {
@@ -54,7 +55,7 @@ pass() {
 
 fail() {
     echo -e "  ${RED}✗ FAIL${NC}: $1"
-    echo -e "  ${RED}  详情: $2${NC}"
+    echo -e "  ${RED}  Details: $2${NC}"
     FAIL=$((FAIL + 1))
 }
 
@@ -67,7 +68,7 @@ check_http_status() {
     if [ "$actual" = "$expected" ]; then
         pass "$desc (HTTP $actual)"
     else
-        fail "$desc" "期望 HTTP $expected，实际 HTTP $actual，响应: $body"
+        fail "$desc" "Expected HTTP $expected, actual HTTP $actual, response: $body"
     fi
 }
 
@@ -79,18 +80,18 @@ check_json_field() {
     if [ "$value" = "$expected" ]; then
         pass "$desc"
     else
-        fail "$desc" "期望 '$expected'，实际 '$value'"
+        fail "$desc" "Expected '$expected', actual '$value'"
     fi
 }
 
 # ────────────────────────────────────────
-# 注册并登录用户
+# Register and login user
 # ────────────────────────────────────────
 
 setup_user() {
-    print_header "初始化测试用户"
+    print_header "Initializing test user"
 
-    # 注册
+    # Register
     local reg_resp
     reg_resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/auth/register" \
         -H "Content-Type: application/json" \
@@ -101,11 +102,11 @@ setup_user() {
     reg_body=$(echo "$reg_resp" | head -n -1)
 
     if [ "$reg_status" != "200" ]; then
-        echo -e "${RED}注册用户失败 (HTTP $reg_status): $reg_body${NC}"
+        echo -e "${RED}User registration failed (HTTP $reg_status): $reg_body${NC}"
         exit 1
     fi
 
-    # 登录
+    # Login
     local login_resp
     login_resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/auth/login" \
         -H "Content-Type: application/json" \
@@ -116,7 +117,7 @@ setup_user() {
     login_body=$(echo "$login_resp" | head -n -1)
 
     if [ "$login_status" != "200" ]; then
-        echo -e "${RED}登录失败 (HTTP $login_status): $login_body${NC}"
+        echo -e "${RED}Login failed (HTTP $login_status): $login_body${NC}"
         exit 1
     fi
 
@@ -126,18 +127,18 @@ setup_user() {
               echo "$login_body" | grep -o '"userId":"[^"]*"' | head -1 | cut -d'"' -f4)
 
     if [ -z "$USER_TOKEN" ]; then
-        echo -e "${RED}无法获取 accessToken${NC}"
+        echo -e "${RED}Cannot get accessToken${NC}"
         exit 1
     fi
-    echo "  用户注册并登录成功 (ID: ${USER_ID})"
+    echo "  User registered and logged in successfully (ID: ${USER_ID})"
 }
 
 # ────────────────────────────────────────
-# 测试用例
+# Test cases
 # ────────────────────────────────────────
 
 test_full_sync_empty_account() {
-    print_header "测试1: 全量同步（空账号）"
+    print_header "Test 1: Full Sync (Empty Account)"
 
     local resp
     resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/sync" \
@@ -149,25 +150,25 @@ test_full_sync_empty_account() {
     local body
     body=$(echo "$resp" | head -n -1)
 
-    check_http_status "全量同步返回200" "200" "$status" "$body"
+    check_http_status "Full sync returns 200" "200" "$status" "$body"
 
     local code
     code=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','-1'))" 2>/dev/null || \
            echo "$body" | grep -o '"code":[0-9]*' | head -1 | cut -d: -f2)
-    check_json_field "响应code为0" "$code" "0"
+    check_json_field "Response code is 0" "$code" "0"
 
     local sync_time
     sync_time=$(echo "$body" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('sync_time',''))" 2>/dev/null || \
                 echo "$body" | grep -o '"sync_time":[0-9]*' | head -1 | cut -d: -f2)
     if [ -n "$sync_time" ] && [ "$sync_time" != "0" ]; then
-        pass "响应包含 sync_time"
+        pass "Response contains sync_time"
     else
-        fail "响应包含 sync_time" "sync_time 为空或0，body: $body"
+        fail "Response contains sync_time" "sync_time is empty or 0, body: $body"
     fi
 }
 
 test_incremental_sync() {
-    print_header "测试2: 增量同步（带 lastSyncTime）"
+    print_header "Test 2: Incremental Sync (with lastSyncTime)"
 
     local last_sync=$((TIMESTAMP - 3600))
     local resp
@@ -180,16 +181,16 @@ test_incremental_sync() {
     local body
     body=$(echo "$resp" | head -n -1)
 
-    check_http_status "增量同步返回200" "200" "$status" "$body"
+    check_http_status "Incremental sync returns 200" "200" "$status" "$body"
 
     local code
     code=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','-1'))" 2>/dev/null || \
            echo "$body" | grep -o '"code":[0-9]*' | head -1 | cut -d: -f2)
-    check_json_field "响应code为0" "$code" "0"
+    check_json_field "Response code is 0" "$code" "0"
 }
 
 test_sync_without_auth() {
-    print_header "测试3: 未认证同步"
+    print_header "Test 3: Unauthenticated Sync"
 
     local body
     body=$(curl -s -X POST "${API_BASE}/sync" \
@@ -199,11 +200,11 @@ test_sync_without_auth() {
     code=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','-1'))" 2>/dev/null || \
            echo "$body" | grep -o '"code":[0-9]*' | head -1 | cut -d: -f2)
 
-    check_json_field "未认证返回code 401" "$code" "401"
+    check_json_field "Unauthenticated returns code 401" "$code" "401"
 }
 
 test_sync_messages_empty() {
-    print_header "测试4: 消息补齐（空会话列表）"
+    print_header "Test 4: Message Sync (Empty Conversation List)"
 
     local resp
     resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/sync/messages" \
@@ -215,16 +216,16 @@ test_sync_messages_empty() {
     local body
     body=$(echo "$resp" | head -n -1)
 
-    check_http_status "消息补齐（空列表）返回200" "200" "$status" "$body"
+    check_http_status "Message sync (empty list) returns 200" "200" "$status" "$body"
 
     local code
     code=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','-1'))" 2>/dev/null || \
            echo "$body" | grep -o '"code":[0-9]*' | head -1 | cut -d: -f2)
-    check_json_field "响应code为0" "$code" "0"
+    check_json_field "Response code is 0" "$code" "0"
 }
 
 test_sync_messages_without_auth() {
-    print_header "测试5: 未认证消息补齐"
+    print_header "Test 5: Unauthenticated Message Sync"
 
     local body
     body=$(curl -s -X POST "${API_BASE}/sync/messages" \
@@ -234,11 +235,11 @@ test_sync_messages_without_auth() {
     code=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','-1'))" 2>/dev/null || \
            echo "$body" | grep -o '"code":[0-9]*' | head -1 | cut -d: -f2)
 
-    check_json_field "未认证返回code 401" "$code" "401"
+    check_json_field "Unauthenticated returns code 401" "$code" "401"
 }
 
 test_sync_with_nonexistent_conversation() {
-    print_header "测试6: 消息补齐（不存在的会话）"
+    print_header "Test 6: Message Sync (Non-existent Conversation)"
 
     local resp
     resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/sync/messages" \
@@ -250,12 +251,12 @@ test_sync_with_nonexistent_conversation() {
     local body
     body=$(echo "$resp" | head -n -1)
 
-    # 不存在的会话：同步服务会跳过并返回空列表，不应报错
-    check_http_status "不存在会话时仍返回200" "200" "$status" "$body"
+    # Non-existent conversation: sync service skips and returns empty list, should not error
+    check_http_status "Returns 200 when conversation doesn't exist" "200" "$status" "$body"
 }
 
 test_sync_with_limit_query_param() {
-    print_header "测试7: 消息补齐（通过 query param 指定 limit）"
+    print_header "Test 7: Message Sync (via query param limit)"
 
     local resp
     resp=$(curl -s -w "\n%{http_code}" -X POST "${API_BASE}/sync/messages?limit=10" \
@@ -267,37 +268,37 @@ test_sync_with_limit_query_param() {
     local body
     body=$(echo "$resp" | head -n -1)
 
-    check_http_status "带 limit 参数的消息补齐返回200" "200" "$status" "$body"
+    check_http_status "Message sync with limit param returns 200" "200" "$status" "$body"
 }
 
 # ────────────────────────────────────────
-# 汇总
+# Summary
 # ────────────────────────────────────────
 
 print_summary() {
     echo ""
     echo -e "${YELLOW}════════════════════════════════════════${NC}"
-    echo -e "测试结果: ${GREEN}${PASS} 通过${NC} / ${RED}${FAIL} 失败${NC}"
+    echo -e "Test Results: ${GREEN}${PASS} passed${NC} / ${RED}${FAIL} failed${NC}"
     echo -e "${YELLOW}════════════════════════════════════════${NC}"
 
     if [ $FAIL -eq 0 ]; then
-        echo -e "${GREEN}所有同步服务测试通过!${NC}"
+        echo -e "${GREEN}All sync service tests passed!${NC}"
         exit 0
     else
-        echo -e "${RED}有 ${FAIL} 个测试失败${NC}"
+        echo -e "${RED}${FAIL} tests failed${NC}"
         exit 1
     fi
 }
 
 # ────────────────────────────────────────
-# 主流程
+# Main flow
 # ────────────────────────────────────────
 
 echo -e "${GREEN}╔══════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║   Sync Service HTTP API 测试              ║${NC}"
+echo -e "${GREEN}║   Sync Service HTTP API Test             ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════╝${NC}"
 echo "Gateway: ${GATEWAY_URL}"
-echo "时间: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
 
 setup_user
 

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// AdminUser 管理员账户
+// AdminUser admin account
 type AdminUser struct {
 	ID           string     `gorm:"column:id;primaryKey"`
 	Username     string     `gorm:"column:username;uniqueIndex;not null"`
@@ -17,5 +17,5 @@ type AdminUser struct {
 
 func (AdminUser) TableName() string { return "admin_users" }
 
-// IsActive 是否有效
+// IsActive returns whether the admin account is active
 func (a *AdminUser) IsActive() bool { return a.Status == 1 }

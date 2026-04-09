@@ -10,34 +10,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// FriendHandler friend HTTP处理器
+// FriendHandler friend HTTP handler
 type FriendHandler struct {
 	clientManager *client.Manager
 }
 
-// NewFriendHandler 创建friend处理器
+// NewFriendHandler creates friend handler
 func NewFriendHandler(clientManager *client.Manager) *FriendHandler {
 	return &FriendHandler{
 		clientManager: clientManager,
 	}
 }
 
-// GetFriends 获取好友列表
-// @Summary      获取好友列表
-// @Description  获取当前用户的所有好友,支持增量同步
-// @Tags         好友
+// GetFriends get friend list
+// @Summary      get friend list
+// @Description  Get all friends of current user, supports incremental sync
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        lastUpdateTime  query  int64  false  "上次更新时间戳(增量同步)"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        lastUpdateTime  query  int64  false  "last update timestamp (incremental sync)"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends [get]
 func (h *FriendHandler) GetFriends(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
-	// 解析查询参数
+	// Parse query parameters
 	var lastUpdateTime *int64
 	if timeStr := c.Query("lastUpdateTime"); timeStr != "" {
 		if t, err := strconv.ParseInt(timeStr, 10, 64); err == nil {
@@ -57,18 +57,18 @@ func (h *FriendHandler) GetFriends(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// SendFriendRequest 发送好友申请
-// @Summary      发送好友申请
-// @Description  向指定用户发送好友申请
-// @Tags         好友
+// SendFriendRequest send friend request
+// @Summary      send friend request
+// @Description  Send friend request to specified user
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object  true  "申请信息"
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        request  body  object  true  "request info"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/requests [post]
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -98,19 +98,19 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// HandleFriendRequest 处理好友申请
-// @Summary      处理好友申请
-// @Description  接受或拒绝好友申请
-// @Tags         好友
+// HandleFriendRequest handle friend request
+// @Summary      handle friend request
+// @Description  Accept or reject friend request
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  int  true  "申请ID"
-// @Param        request  body  object  true  "处理动作"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        id       path  int  true  "request ID"
+// @Param        request  body  object  true  "handle action"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/requests/{id} [put]
 func (h *FriendHandler) HandleFriendRequest(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -143,17 +143,17 @@ func (h *FriendHandler) HandleFriendRequest(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetFriendRequests 获取好友申请列表
-// @Summary      获取好友申请列表
-// @Description  获取收到的或发送的好友申请列表
-// @Tags         好友
+// GetFriendRequests get friend request list
+// @Summary      get friend request list
+// @Description  Get received or sent friend request list
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        type  query  string  false  "类型: received(收到的)/sent(发送的)"  default(received)
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        type  query  string  false  "type: received/sent"  default(received)
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/requests [get]
 func (h *FriendHandler) GetFriendRequests(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -172,17 +172,17 @@ func (h *FriendHandler) GetFriendRequests(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// DeleteFriend 删除好友
-// @Summary      删除好友
-// @Description  删除指定好友
-// @Tags         好友
+// DeleteFriend delete friend
+// @Summary      delete friend
+// @Description  Delete specified friend
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id  path  string  true  "好友用户ID"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        id  path  string  true  "friend user ID"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/{id} [delete]
 func (h *FriendHandler) DeleteFriend(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -200,19 +200,19 @@ func (h *FriendHandler) DeleteFriend(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UpdateRemark 更新好友备注
-// @Summary      更新好友备注
-// @Description  更新指定好友的备注名称
-// @Tags         好友
+// UpdateRemark update friend remark
+// @Summary      update friend remark
+// @Description  Update remark name for specified friend
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string  true  "好友用户ID"
-// @Param        request  body  object  true  "备注信息"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        id       path  string  true  "friend user ID"
+// @Param        request  body  object  true  "remark info"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/{id}/remark [put]
 func (h *FriendHandler) UpdateRemark(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -240,18 +240,18 @@ func (h *FriendHandler) UpdateRemark(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// AddToBlacklist 添加黑名单
-// @Summary      添加黑名单
-// @Description  将指定用户添加到黑名单
-// @Tags         好友
+// AddToBlacklist add to blacklist
+// @Summary      add to blacklist
+// @Description  Add specified user to blacklist
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object  true  "用户ID"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      400  {object}  response.Response  "参数错误"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        request  body  object  true  "user ID"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      400  {object}  response.Response  "parameter error"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/blacklist [post]
 func (h *FriendHandler) AddToBlacklist(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -277,17 +277,17 @@ func (h *FriendHandler) AddToBlacklist(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// RemoveFromBlacklist 从黑名单移除
-// @Summary      从黑名单移除
-// @Description  将指定用户从黑名单移除
-// @Tags         好友
+// RemoveFromBlacklist remove from blacklist
+// @Summary      remove from blacklist
+// @Description  Remove specified user from blacklist
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id  path  string  true  "被拉黑用户ID"
-// @Success      200  {object}  response.Response  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Param        id  path  string  true  "blocked user ID"
+// @Success      200  {object}  response.Response  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/blacklist/{id} [delete]
 func (h *FriendHandler) RemoveFromBlacklist(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -305,16 +305,16 @@ func (h *FriendHandler) RemoveFromBlacklist(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetBlacklist 获取黑名单
-// @Summary      获取黑名单
-// @Description  获取当前用户的黑名单列表
-// @Tags         好友
+// GetBlacklist get blacklist
+// @Summary      get blacklist
+// @Description  Get current user's blacklist
+// @Tags         friend
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  response.Response{data=object}  "成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Success      200  {object}  response.Response{data=object}  "success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /friends/blacklist [get]
 func (h *FriendHandler) GetBlacklist(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

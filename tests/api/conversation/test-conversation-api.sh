@@ -1,39 +1,40 @@
 #!/bin/bash
 #
-# Conversation Service HTTP API 测试脚本
-# 用于测试会话管理相关的 HTTP 接口
+# Conversation Service HTTP API Test Script
+# Tests conversation management related HTTP APIs
 #
-# 用法:
+# Usage:
 #   ./test-conversation-api.sh
 #   GATEWAY_URL=http://localhost:8080 ./test-conversation-api.sh
 #
-# 说明:
-#   会话由消息服务在发送消息时自动创建。本脚本通过 grpcurl（若可用）
-#   直接调用 conversation gRPC 接口预置测试数据，否则跳过需要会话存在的用例，
-#   仅验证空状态下的 API 行为及错误码。
+# Notes:
+#   Conversations are automatically created by message service when sending messages.
+#   This script uses grpcurl (if available) to directly call conversation gRPC API
+#   to seed test data, otherwise skips test cases requiring existing conversations
+#   and only validates API behavior and error codes in empty state.
 #
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 配置
+# Configuration
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:8080}"
 CONVERSATION_GRPC="${CONVERSATION_GRPC:-localhost:9006}"
 API_BASE="${GATEWAY_URL}/api/v1"
 
-# 测试数据
+# Test data
 TIMESTAMP=$(date +%s)
 TEST_EMAIL_1="conversation_u1_${TIMESTAMP}@example.com"
 TEST_EMAIL_2="conversation_u2_${TIMESTAMP}@example.com"
 TEST_PASSWORD="Test@123456"
 TEST_DEVICE_ID="conversation-test-device-${TIMESTAMP}"
 
-# 全局变量
+# Global variables
 USER1_TOKEN=""
 USER2_TOKEN=""
 USER1_ID=""
@@ -42,7 +43,7 @@ CONVERSATION_ID=""
 HAS_GRPCURL=false
 
 # ────────────────────────────────────────
-# 工具函数
+# Utility functions
 # ────────────────────────────────────────
 
 print_header() {
@@ -54,7 +55,7 @@ print_header() {
 print_success() { echo -e "${GREEN}✓ $1${NC}"; }
 print_error()   { echo -e "${RED}✗ $1${NC}"; }
 print_info()    { echo -e "  $1"; }
-print_skip()    { echo -e "  ${YELLOW}→ 跳过: $1${NC}"; }
+print_skip()    { echo -e "  ${YELLOW}→ Skip: $1${NC}"; }
 
 http_post() {
     local url=$1 data=$2 token=$3
@@ -92,7 +93,7 @@ http_delete() {
     curl -s -X DELETE "${url}" -H "Authorization: Bearer ${token}"
 }
 
-# 返回 0 表示响应 code==0（成功）
+# Return 0 means response code==0 (success)
 check_response() {
     local response=$1
     local code
@@ -106,7 +107,7 @@ check_response() {
     return 1
 }
 
-# 返回 0 表示响应 code!=0（期望失败）
+# Return 0 means response code!=0 (expected failure)
 check_response_fail() {
     local response=$1
     local code
@@ -114,33 +115,33 @@ check_response_fail() {
     if [ "$code" != "0" ]; then
         return 0
     fi
-    print_error "期望请求失败，但返回了成功"
+    print_error "Expected request to fail, but it succeeded"
     return 1
 }
 
 # ────────────────────────────────────────
-# 准备工作
+# Setup
 # ────────────────────────────────────────
 
 check_dependencies() {
     if ! command -v jq &>/dev/null; then
-        print_error "需要安装 jq: apt-get install jq 或 brew install jq"
+        print_error "jq required: apt-get install jq or brew install jq"
         exit 1
     fi
     if ! command -v curl &>/dev/null; then
-        print_error "需要安装 curl"
+        print_error "curl required"
         exit 1
     fi
     if command -v grpcurl &>/dev/null; then
         HAS_GRPCURL=true
-        print_info "检测到 grpcurl，将使用 gRPC 接口预置测试数据"
+        print_info "grpcurl detected, will use gRPC API to seed test data"
     else
-        print_info "未检测到 grpcurl，跳过需要预置会话的测试用例"
+        print_info "grpcurl not detected, will skip test cases requiring seeded conversations"
     fi
 }
 
 setup_test_users() {
-    print_header "准备测试用户"
+    print_header "Preparing test users"
 
     register_user() {
         local email=$1 device_suffix=$2
@@ -160,34 +161,34 @@ EOF
         echo "$(http_post "${API_BASE}/auth/register" "$data")"
     }
 
-    print_info "注册用户1: ${TEST_EMAIL_1}"
+    print_info "Registering user 1: ${TEST_EMAIL_1}"
     local r1
     r1=$(register_user "${TEST_EMAIL_1}" "1")
     if check_response "$r1"; then
         USER1_ID=$(echo "$r1" | jq -r '.data.userId')
         USER1_TOKEN=$(echo "$r1" | jq -r '.data.accessToken')
-        print_success "用户1注册成功 (ID: ${USER1_ID})"
+        print_success "User 1 registered successfully (ID: ${USER1_ID})"
     else
-        print_error "用户1注册失败"
+        print_error "User 1 registration failed"
         return 1
     fi
 
     sleep 1
 
-    print_info "注册用户2: ${TEST_EMAIL_2}"
+    print_info "Registering user 2: ${TEST_EMAIL_2}"
     local r2
     r2=$(register_user "${TEST_EMAIL_2}" "2")
     if check_response "$r2"; then
         USER2_ID=$(echo "$r2" | jq -r '.data.userId')
         USER2_TOKEN=$(echo "$r2" | jq -r '.data.accessToken')
-        print_success "用户2注册成功 (ID: ${USER2_ID})"
+        print_success "User 2 registered successfully (ID: ${USER2_ID})"
     else
-        print_error "用户2注册失败"
+        print_error "User 2 registration failed"
         return 1
     fi
 }
 
-# 通过 grpcurl 直接调用 conversation-service 创建一条测试会话
+# Seed a test conversation via grpcurl directly calling conversation-service
 seed_conversation_via_grpc() {
     if [ "$HAS_GRPCURL" = false ]; then
         return 1
@@ -200,7 +201,7 @@ seed_conversation_via_grpc() {
             \"user_id\": \"${USER1_ID}\",
             \"target_id\": \"${USER2_ID}\",
             \"last_message_id\": \"test-msg-${TIMESTAMP}\",
-            \"last_message_content\": \"测试消息内容\",
+            \"last_message_content\": \"Test message content\",
             \"last_message_timestamp\": ${TIMESTAMP}
         }" \
         "${CONVERSATION_GRPC}" \
@@ -208,267 +209,267 @@ seed_conversation_via_grpc() {
 
     if echo "$result" | jq -e '.conversationId' &>/dev/null; then
         CONVERSATION_ID=$(echo "$result" | jq -r '.conversationId')
-        print_success "通过 gRPC 创建测试会话成功 (ID: ${CONVERSATION_ID})"
+        print_success "Created test conversation via gRPC (ID: ${CONVERSATION_ID})"
         return 0
     fi
-    print_info "gRPC 创建会话失败（conversation service 可能未运行），跳过相关测试"
+    print_info "gRPC conversation creation failed (conversation service may not be running), skipping related tests"
     return 1
 }
 
 # ────────────────────────────────────────
-# 测试用例
+# Test cases
 # ────────────────────────────────────────
 
-# 1. 获取空会话列表
+# 1. Get empty conversation list
 test_get_conversations_empty() {
-    print_header "1. 获取会话列表（初始为空）"
+    print_header "1. Get Conversation List (Initially Empty)"
 
     local response
     response=$(http_get "${API_BASE}/conversations" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local conversations
         conversations=$(echo "$response" | jq -r '.data.conversations // [] | length')
-        print_success "获取会话列表成功"
-        print_info "会话数量: ${conversations}"
+        print_success "Get conversation list successful"
+        print_info "Conversation count: ${conversations}"
         return 0
     fi
     return 1
 }
 
-# 2. 获取总未读数（初始为 0）
+# 2. Get total unread count (initially 0)
 test_get_total_unread_empty() {
-    print_header "2. 获取总未读数（初始为 0）"
+    print_header "2. Get Total Unread Count (Initially 0)"
 
     local response
     response=$(http_get "${API_BASE}/conversations/unread/total" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local total
         total=$(echo "$response" | jq -r '.data.totalUnread // .data.total_unread // 0')
-        print_success "获取总未读数成功"
-        print_info "总未读数: ${total}"
+        print_success "Get total unread count successful"
+        print_info "Total unread: ${total}"
         return 0
     fi
     return 1
 }
 
-# 3. 访问不存在的会话（期望返回错误）
+# 3. Access non-existent conversation (expect error)
 test_get_nonexistent_conversation() {
-    print_header "3. 访问不存在的会话（期望返回错误）"
+    print_header "3. Access Non-existent Conversation (Expect Error)"
 
     local fake_id="nonexistent-conversation-${TIMESTAMP}"
     local response
     response=$(http_get "${API_BASE}/conversations/${fake_id}" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response_fail "$response"; then
-        print_success "正确返回错误（会话不存在）"
+        print_success "Correctly returned error (conversation not found)"
         return 0
     fi
     return 1
 }
 
-# 4. 增量同步——未来时间戳，应返回空列表
+# 4. Incremental sync - future timestamp, should return empty list
 test_get_conversations_incremental() {
-    print_header "4. 增量同步（updatedBefore 为 5 分钟前）"
+    print_header "4. Incremental Sync (updatedBefore is 5 minutes ago)"
 
     local before=$(( TIMESTAMP - 300 ))
     local response
     response=$(http_get "${API_BASE}/conversations?updatedBefore=${before}" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local conversations
         conversations=$(echo "$response" | jq -r '.data.conversations // [] | length')
-        print_success "增量同步接口正常"
-        print_info "返回会话数: ${conversations}"
+        print_success "Incremental sync API works normally"
+        print_info "Returned conversations: ${conversations}"
         return 0
     fi
     return 1
 }
 
-# 5. 带 limit 参数的会话列表
+# 5. Conversation list with limit parameter
 test_get_conversations_with_limit() {
-    print_header "5. 获取会话列表（带 limit 参数）"
+    print_header "5. Get Conversation List (with limit parameter)"
 
     local response
     response=$(http_get "${API_BASE}/conversations?limit=10" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
-        print_success "带 limit 参数的会话列表接口正常"
+        print_success "Conversation list API with limit parameter works normally"
         return 0
     fi
     return 1
 }
 
-# 6. 置顶不存在的会话（期望返回错误）
+# 6. Pin non-existent conversation (expect error)
 test_pin_nonexistent_conversation() {
-    print_header "6. 置顶不存在的会话（期望返回错误）"
+    print_header "6. Pin Non-existent Conversation (Expect Error)"
 
     local fake_id="nonexistent-conversation-${TIMESTAMP}"
     local data='{"pinned": true}'
     local response
     response=$(http_put "${API_BASE}/conversations/${fake_id}/pin" "$data" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
-    # gRPC update 对不存在的行返回影响 0 行，不一定报错——接受成功或错误
+    # gRPC update on non-existent row returns 0 affected rows, doesn't necessarily error - accept success or error
     local code
     code=$(echo "$response" | jq -r '.code // -1')
     if [ "$code" = "0" ] || [ "$code" != "0" ]; then
-        print_success "置顶接口可正常调用（服务端对空 update 的处理符合预期）"
+        print_success "Pin API can be called normally (server's handling of empty update is as expected)"
         return 0
     fi
     return 1
 }
 
-# 7. 无效 token 应返回 401
+# 7. Invalid token should return 401
 test_unauthorized_access() {
-    print_header "7. 无效 token 访问（期望 401）"
+    print_header "7. Invalid Token Access (Expect 401)"
 
     local response
     response=$(curl -s -X GET "${API_BASE}/conversations" \
         -H "Authorization: Bearer invalid_token_here")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     local code
     code=$(echo "$response" | jq -r '.code // -1')
     if [ "$code" != "0" ]; then
-        print_success "正确拒绝无效 token"
+        print_success "Correctly rejected invalid token"
         return 0
     fi
-    print_error "期望拒绝无效 token，但请求成功了"
+    print_error "Expected to reject invalid token, but request succeeded"
     return 1
 }
 
-# 8-12: 需要预置会话的用例（依赖 grpcurl 或 conversation service 运行）
+# 8-12: Test cases requiring seeded conversations (depends on grpcurl or conversation service running)
 
 test_get_conversation_by_id() {
-    print_header "8. 获取单个会话详情"
+    print_header "8. Get Single Conversation Details"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
     local response
     response=$(http_get "${API_BASE}/conversations/${CONVERSATION_ID}" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local sid
         sid=$(echo "$response" | jq -r '.data.conversationId // .data.conversation_id // empty')
-        print_success "获取单个会话成功 (conversationId: ${sid})"
+        print_success "Get single conversation successful (conversationId: ${sid})"
         return 0
     fi
     return 1
 }
 
 test_pin_conversation() {
-    print_header "9. 置顶会话"
+    print_header "9. Pin Conversation"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
-    # 置顶
+    # Pin
     local data='{"pinned": true}'
     local response
     response=$(http_put "${API_BASE}/conversations/${CONVERSATION_ID}/pin" "$data" "$USER1_TOKEN")
-    print_info "置顶响应: $response"
+    print_info "Pin response: $response"
 
     if check_response "$response"; then
-        print_success "会话置顶成功"
+        print_success "Conversation pinned successfully"
     else
         return 1
     fi
 
-    # 取消置顶
+    # Unpin
     data='{"pinned": false}'
     response=$(http_put "${API_BASE}/conversations/${CONVERSATION_ID}/pin" "$data" "$USER1_TOKEN")
-    print_info "取消置顶响应: $response"
+    print_info "Unpin response: $response"
 
     if check_response "$response"; then
-        print_success "取消置顶成功"
+        print_success "Unpin successful"
         return 0
     fi
     return 1
 }
 
 test_mute_conversation() {
-    print_header "10. 会话免打扰"
+    print_header "10. Conversation Mute"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
-    # 开启免打扰
+    # Enable mute
     local data='{"muted": true}'
     local response
     response=$(http_put "${API_BASE}/conversations/${CONVERSATION_ID}/mute" "$data" "$USER1_TOKEN")
-    print_info "开启免打扰响应: $response"
+    print_info "Enable mute response: $response"
 
     if check_response "$response"; then
-        print_success "开启免打扰成功"
+        print_success "Enable mute successful"
     else
         return 1
     fi
 
-    # 关闭免打扰
+    # Disable mute
     data='{"muted": false}'
     response=$(http_put "${API_BASE}/conversations/${CONVERSATION_ID}/mute" "$data" "$USER1_TOKEN")
-    print_info "关闭免打扰响应: $response"
+    print_info "Disable mute response: $response"
 
     if check_response "$response"; then
-        print_success "关闭免打扰成功"
+        print_success "Disable mute successful"
         return 0
     fi
     return 1
 }
 
 test_mark_read() {
-    print_header "11. 标记会话已读"
+    print_header "11. Mark Conversation as Read"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
     local response
     response=$(http_post "${API_BASE}/conversations/${CONVERSATION_ID}/read" "" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
-        print_success "标记已读成功"
+        print_success "Mark as read successful"
         return 0
     fi
     return 1
 }
 
 test_get_total_unread_after_clear() {
-    print_header "12. 标记已读后总未读数应为 0"
+    print_header "12. After Mark as Read, Total Unread Should Be 0"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
     local response
     response=$(http_get "${API_BASE}/conversations/unread/total" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local total
         total=$(echo "$response" | jq -r '.data.totalUnread // .data.total_unread // 0')
         if [ "$total" -eq 0 ]; then
-            print_success "总未读数已清零: ${total}"
+            print_success "Total unread cleared: ${total}"
         else
-            print_info "总未读数: ${total}（会话服务可能记录了其他未读）"
+            print_info "Total unread: ${total} (conversation service may have recorded other unread)"
         fi
         return 0
     fi
@@ -476,25 +477,25 @@ test_get_total_unread_after_clear() {
 }
 
 test_delete_conversation() {
-    print_header "13. 删除会话"
+    print_header "13. Delete Conversation"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
     local response
     response=$(http_delete "${API_BASE}/conversations/${CONVERSATION_ID}" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
-        print_success "删除会话成功"
+        print_success "Delete conversation successful"
 
-        # 验证已删除
+        # Verify deleted
         local verify
         verify=$(http_get "${API_BASE}/conversations/${CONVERSATION_ID}" "$USER1_TOKEN")
         if check_response_fail "$verify"; then
-            print_success "验证成功：会话已不可访问"
+            print_success "Verification successful: conversation is no longer accessible"
         fi
         return 0
     fi
@@ -502,62 +503,62 @@ test_delete_conversation() {
 }
 
 test_get_conversations_after_delete() {
-    print_header "14. 删除后会话列表应为空"
+    print_header "14. After Delete, Conversation List Should Be Empty"
 
     if [ -z "$CONVERSATION_ID" ]; then
-        print_skip "无可用会话 ID，跳过"
+        print_skip "No conversation ID available, skipping"
         return 0
     fi
 
     local response
     response=$(http_get "${API_BASE}/conversations" "$USER1_TOKEN")
-    print_info "响应: $response"
+    print_info "Response: $response"
 
     if check_response "$response"; then
         local conversations
         conversations=$(echo "$response" | jq -r '.data.conversations // [] | length')
-        print_success "会话列表接口正常"
-        print_info "当前会话数: ${conversations}"
+        print_success "Conversation list API works normally"
+        print_info "Current conversation count: ${conversations}"
         return 0
     fi
     return 1
 }
 
 # ────────────────────────────────────────
-# 主函数
+# Main function
 # ────────────────────────────────────────
 
 main() {
     echo -e "${GREEN}"
     echo "╔═══════════════════════════════════════════╗"
-    echo "║   Conversation Service API 测试脚本            ║"
+    echo "║   Conversation Service API Test Script       ║"
     echo "╚═══════════════════════════════════════════╝"
     echo -e "${NC}"
-    echo "测试环境: ${GATEWAY_URL}"
-    echo "开始时间: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Test environment: ${GATEWAY_URL}"
+    echo "Start time: $(date '+%Y-%m-%d %H:%M:%S')"
     echo ""
 
     check_dependencies
 
-    # 检查 Gateway 健康
-    print_header "Gateway 健康检查"
+    # Check Gateway health
+    print_header "Gateway Health Check"
     local health
     health=$(curl -s "${GATEWAY_URL}/health")
     if echo "$health" | jq -e '.status == "ok"' &>/dev/null; then
-        print_success "Gateway 正常运行"
+        print_success "Gateway is running"
     else
-        print_error "Gateway 未运行，请先执行 mage docker:up && mage dev:gateway"
+        print_error "Gateway not running, please run mage docker:up && mage dev:gateway first"
         exit 1
     fi
 
-    # 准备测试用户
+    # Setup test users
     setup_test_users || exit 1
 
-    # 尝试通过 gRPC 预置测试会话
-    print_header "预置测试数据"
+    # Try to seed test conversation via gRPC
+    print_header "Seeding Test Data"
     seed_conversation_via_grpc || true
 
-    # 执行测试
+    # Execute tests
     local failed=0
 
     test_get_conversations_empty         || ((failed++))
@@ -568,7 +569,7 @@ main() {
     test_pin_nonexistent_conversation    || ((failed++))
     test_unauthorized_access        || ((failed++))
 
-    # 需要预置数据的用例
+    # Test cases requiring seeded data
     test_get_conversation_by_id          || ((failed++))
     test_pin_conversation                || ((failed++))
     test_mute_conversation               || ((failed++))
@@ -577,19 +578,19 @@ main() {
     test_delete_conversation             || ((failed++))
     test_get_conversations_after_delete  || ((failed++))
 
-    # 输出结果
+    # Output results
     echo ""
     echo -e "${YELLOW}========================================${NC}"
-    echo -e "${YELLOW}测试结果${NC}"
+    echo -e "${YELLOW}Test Results${NC}"
     echo -e "${YELLOW}========================================${NC}"
-    echo "结束时间: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "End time: $(date '+%Y-%m-%d %H:%M:%S')"
     echo ""
 
     if [ $failed -eq 0 ]; then
-        echo -e "${GREEN}所有测试通过! ✓${NC}"
+        echo -e "${GREEN}All tests passed! ✓${NC}"
         exit 0
     else
-        echo -e "${RED}失败测试数: ${failed} ✗${NC}"
+        echo -e "${RED}Failed tests: ${failed} ✗${NC}"
         exit 1
     fi
 }

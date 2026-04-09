@@ -1,5 +1,5 @@
-# LiveKit Server 配置
-# 文档: https://docs.livekit.io/oss/deployment/config/
+# LiveKit Server Configuration
+# Documentation: https://docs.livekit.io/oss/deployment/config/
 
 port: 7880
 bind_addresses:
@@ -9,21 +9,21 @@ bind_addresses:
 keys:
   devkey: secret
 
-# 日志级别
+# Logging level
 logging:
   level: info
   pion_level: error
 
-# 房间配置
+# Room configuration
 room:
-  # 空房间自动关闭等待时间（秒），0=不关闭
+  # Auto-close empty room timeout (seconds), 0=never close
   empty_timeout: 300
-  # 每个房间最大参与者数
+  # Max participants per room
   max_participants: 100
-  # 自动创建房间
+  # Auto-create rooms
   auto_create: true
 
-# WebRTC 配置
+# WebRTC configuration
 rtc:
   udp_port: 7882
   tcp_port: 7881

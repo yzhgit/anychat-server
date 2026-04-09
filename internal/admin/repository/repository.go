@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// AdminUserRepository 管理员用户仓库
+// AdminUserRepository admin user repository
 type AdminUserRepository interface {
 	Create(user *model.AdminUser) error
 	GetByID(id string) (*model.AdminUser, error)
@@ -67,7 +67,7 @@ func (r *adminUserRepository) UpdateLastLogin(id string) error {
 		Update("last_login_at", gorm.Expr("NOW()")).Error
 }
 
-// AuditLogRepository 审计日志仓库
+// AuditLogRepository audit log repository
 type AuditLogRepository interface {
 	Create(log *model.AuditLog) error
 	List(adminID, action string, page, pageSize int) ([]*model.AuditLog, int64, error)
@@ -105,7 +105,7 @@ func (r *auditLogRepository) List(adminID, action string, page, pageSize int) ([
 	return logs, total, nil
 }
 
-// SystemConfigRepository 系统配置仓库
+// SystemConfigRepository system config repository
 type SystemConfigRepository interface {
 	GetAll() ([]*model.SystemConfig, error)
 	GetByKey(key string) (*model.SystemConfig, error)

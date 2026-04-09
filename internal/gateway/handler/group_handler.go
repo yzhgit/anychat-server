@@ -19,18 +19,18 @@ func NewGroupHandler(clientManager *client.Manager) *GroupHandler {
 	return &GroupHandler{clientManager: clientManager}
 }
 
-// CreateGroup 创建群组
-// @Summary      创建群组
-// @Description  创建一个新的群组，至少需要2个成员（包括创建者）
-// @Tags         群组
+// CreateGroup create group
+// @Summary      create group
+// @Description  Create a new group, requires at least 2 members (including creator)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      groupdto.CreateGroupRequest  true  "群组信息"
-// @Success      200      {object}  response.Response{data=groupdto.GroupResponse}  "创建成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      groupdto.CreateGroupRequest  true  "group info"
+// @Success      200      {object}  response.Response{data=groupdto.GroupResponse}  "create success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /groups [post]
 func (h *GroupHandler) CreateGroup(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -72,17 +72,17 @@ func (h *GroupHandler) CreateGroup(c *gin.Context) {
 	response.Success(c, groupResp)
 }
 
-// GetGroupInfo 获取群组信息
-// @Summary      获取群组信息
-// @Description  获取指定群组的详细信息
-// @Tags         群组
+// GetGroupInfo get group info
+// @Summary      get group info
+// @Description  Get detailed info of specified group
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      string  true  "群组ID"
+// @Param        id   path      string  true  "group ID"
 // @Success      200  {object}  response.Response{data=groupdto.GroupResponse}
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      404  {object}  response.Response  "群组不存在"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      404  {object}  response.Response  "group not found"
 // @Router       /groups/{id} [get]
 func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -114,7 +114,7 @@ func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 		UpdatedAt:    resp.UpdatedAt.AsTime(),
 	}
 
-	// 获取用户在群内的角色
+	// Get user's role in the group
 	if memberResp, _ := h.clientManager.Group().IsMember(c.Request.Context(), &grouppb.IsMemberRequest{
 		GroupId: groupID,
 		UserId:  userID,
@@ -125,19 +125,19 @@ func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// UpdateGroup 更新群信息
-// @Summary      更新群信息
-// @Description  更新群组的名称、头像、公告等信息（需要管理员权限）
-// @Tags         群组
+// UpdateGroup update group info
+// @Summary      update group info
+// @Description  Update group name, avatar, announcement etc (requires admin permission)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path      string                        true  "群组ID"
-// @Param        request  body      groupdto.UpdateGroupRequest  true  "更新信息"
-// @Success      200      {object}  response.Response  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "无权限"
+// @Param        id       path      string                        true  "group ID"
+// @Param        request  body      groupdto.UpdateGroupRequest  true  "update info"
+// @Success      200      {object}  response.Response  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "no permission"
 // @Router       /groups/{id} [put]
 func (h *GroupHandler) UpdateGroup(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -166,17 +166,17 @@ func (h *GroupHandler) UpdateGroup(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// DissolveGroup 解散群组
-// @Summary      解散群组
-// @Description  解散群组（仅群主可操作）
-// @Tags         群组
+// DissolveGroup dissolve group
+// @Summary      dissolve group
+// @Description  Dissolve group (owner only)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      string  true  "群组ID"
-// @Success      200  {object}  response.Response  "解散成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      403  {object}  response.Response  "无权限"
+// @Param        id   path      string  true  "group ID"
+// @Success      200  {object}  response.Response  "dissolve success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      403  {object}  response.Response  "no permission"
 // @Router       /groups/{id} [delete]
 func (h *GroupHandler) DissolveGroup(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -195,16 +195,16 @@ func (h *GroupHandler) DissolveGroup(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetMyGroups 获取我的群组列表
-// @Summary      获取我的群组列表
-// @Description  获取当前用户加入的所有群组列表
-// @Tags         群组
+// GetMyGroups get my groups
+// @Summary      get my groups
+// @Description  Get all groups the current user has joined
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        lastUpdateTime  query  int  false  "最后更新时间戳（增量同步）"
+// @Param        lastUpdateTime  query  int  false  "last update timestamp (incremental sync)"
 // @Success      200  {object}  response.Response{data=groupdto.GroupListResponse}
-// @Failure      401  {object}  response.Response  "未授权"
+// @Failure      401  {object}  response.Response  "unauthorized"
 // @Router       /groups [get]
 func (h *GroupHandler) GetMyGroups(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -229,19 +229,19 @@ func (h *GroupHandler) GetMyGroups(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetGroupMembers 获取群成员列表
-// @Summary      获取群成员列表
-// @Description  获取指定群组的成员列表，支持分页
-// @Tags         群组
+// GetGroupMembers get group members
+// @Summary      get group members
+// @Description  Get members of specified group, supports pagination
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id        path   string  true   "群组ID"
-// @Param        page      query  int     false  "页码"  default(1)
-// @Param        pageSize  query  int     false  "每页数量"  default(20)
+// @Param        id        path   string  true   "group ID"
+// @Param        page      query  int     false  "page number"  default(1)
+// @Param        pageSize  query  int     false  "page size"  default(20)
 // @Success      200  {object}  response.Response{data=groupdto.GroupMemberListResponse}
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      404  {object}  response.Response  "群组不存在"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      404  {object}  response.Response  "group not found"
 // @Router       /groups/{id}/members [get]
 func (h *GroupHandler) GetGroupMembers(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -275,18 +275,18 @@ func (h *GroupHandler) GetGroupMembers(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// InviteMembers 邀请成员
-// @Summary      邀请成员
-// @Description  邀请用户加入群组
-// @Tags         群组
+// InviteMembers invite members
+// @Summary      invite members
+// @Description  Invite users to join group
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                         true  "群组ID"
-// @Param        request  body  groupdto.InviteMembersRequest  true  "邀请信息"
-// @Success      200      {object}  response.Response  "邀请成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
+// @Param        id       path  string                         true  "group ID"
+// @Param        request  body  groupdto.InviteMembersRequest  true  "invite info"
+// @Success      200      {object}  response.Response  "invite success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
 // @Router       /groups/{id}/members [post]
 func (h *GroupHandler) InviteMembers(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -312,18 +312,18 @@ func (h *GroupHandler) InviteMembers(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// RemoveMember 移除成员
-// @Summary      移除成员
-// @Description  从群组中移除成员（需要管理员权限）
-// @Tags         群组
+// RemoveMember remove member
+// @Summary      remove member
+// @Description  Remove member from group (requires admin permission)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id      path  string  true  "群组ID"
-// @Param        userId  path  string  true  "要移除的用户ID"
-// @Success      200     {object}  response.Response  "移除成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      403     {object}  response.Response  "无权限"
+// @Param        id      path  string  true  "group ID"
+// @Param        userId  path  string  true  "user ID to remove"
+// @Success      200     {object}  response.Response  "remove success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      403     {object}  response.Response  "no permission"
 // @Router       /groups/{id}/members/{userId} [delete]
 func (h *GroupHandler) RemoveMember(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -344,16 +344,16 @@ func (h *GroupHandler) RemoveMember(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// QuitGroup 退出群组
-// @Summary      退出群组
-// @Description  退出指定群组
-// @Tags         群组
+// QuitGroup quit group
+// @Summary      quit group
+// @Description  Quit specified group
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      string  true  "群组ID"
-// @Success      200  {object}  response.Response  "退出成功"
-// @Failure      401  {object}  response.Response  "未授权"
+// @Param        id   path      string  true  "group ID"
+// @Success      200  {object}  response.Response  "quit success"
+// @Failure      401  {object}  response.Response  "unauthorized"
 // @Router       /groups/{id}/quit [post]
 func (h *GroupHandler) QuitGroup(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -372,20 +372,20 @@ func (h *GroupHandler) QuitGroup(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UpdateMemberRole 更新成员角色
-// @Summary      更新成员角色
-// @Description  设置或取消群管理员（仅群主可操作）
-// @Tags         群组
+// UpdateMemberRole update member role
+// @Summary      update member role
+// @Description  Set or remove group admin (owner only)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                              true  "群组ID"
-// @Param        userId   path  string                              true  "用户ID"
-// @Param        request  body  groupdto.UpdateMemberRoleRequest  true  "角色信息"
-// @Success      200      {object}  response.Response  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "无权限"
+// @Param        id       path  string                              true  "group ID"
+// @Param        userId   path  string                              true  "user ID"
+// @Param        request  body  groupdto.UpdateMemberRoleRequest  true  "role info"
+// @Success      200      {object}  response.Response  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "no permission"
 // @Router       /groups/{id}/members/{userId}/role [put]
 func (h *GroupHandler) UpdateMemberRole(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -413,18 +413,18 @@ func (h *GroupHandler) UpdateMemberRole(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UpdateMemberNickname 更新群昵称
-// @Summary      更新群昵称
-// @Description  设置自己在群内的昵称
-// @Tags         群组
+// UpdateMemberNickname update member nickname
+// @Summary      update member nickname
+// @Description  Set your nickname in the group
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                                  true  "群组ID"
-// @Param        request  body  groupdto.UpdateMemberNicknameRequest  true  "昵称信息"
-// @Success      200      {object}  response.Response  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
+// @Param        id       path  string                                  true  "group ID"
+// @Param        request  body  groupdto.UpdateMemberNicknameRequest  true  "nickname info"
+// @Success      200      {object}  response.Response  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
 // @Router       /groups/{id}/nickname [put]
 func (h *GroupHandler) UpdateMemberNickname(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -450,19 +450,19 @@ func (h *GroupHandler) UpdateMemberNickname(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// TransferOwnership 转让群主
-// @Summary      转让群主
-// @Description  将群主转让给其他成员（仅群主可操作）
-// @Tags         群组
+// TransferOwnership transfer ownership
+// @Summary      transfer ownership
+// @Description  Transfer group owner to another member (owner only)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                                true  "群组ID"
-// @Param        request  body  groupdto.TransferOwnershipRequest  true  "转让信息"
-// @Success      200      {object}  response.Response  "转让成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "无权限"
+// @Param        id       path  string                                true  "group ID"
+// @Param        request  body  groupdto.TransferOwnershipRequest  true  "transfer info"
+// @Success      200      {object}  response.Response  "transfer success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "no permission"
 // @Router       /groups/{id}/transfer [post]
 func (h *GroupHandler) TransferOwnership(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -488,18 +488,18 @@ func (h *GroupHandler) TransferOwnership(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// JoinGroup 加入群组
-// @Summary      加入群组
-// @Description  申请加入指定群组
-// @Tags         群组
+// JoinGroup join group
+// @Summary      join group
+// @Description  Request to join specified group
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                      true  "群组ID"
-// @Param        request  body  groupdto.JoinGroupRequest  true  "申请信息"
-// @Success      200      {object}  response.Response{data=groupdto.JoinGroupResponse}  "申请成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
+// @Param        id       path  string                      true  "group ID"
+// @Param        request  body  groupdto.JoinGroupRequest  true  "join request"
+// @Success      200      {object}  response.Response{data=groupdto.JoinGroupResponse}  "request success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
 // @Router       /groups/{id}/join [post]
 func (h *GroupHandler) JoinGroup(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -528,28 +528,28 @@ func (h *GroupHandler) JoinGroup(c *gin.Context) {
 	}
 
 	if resp.NeedVerify {
-		result.Message = "申请已提交，等待审核"
+		result.Message = "Request submitted, awaiting review"
 	} else {
-		result.Message = "成功加入群组"
+		result.Message = "Successfully joined group"
 	}
 
 	response.Success(c, result)
 }
 
-// HandleJoinRequest 处理入群申请
-// @Summary      处理入群申请
-// @Description  接受或拒绝入群申请（需要管理员权限）
-// @Tags         群组
+// HandleJoinRequest handle join request
+// @Summary      handle join request
+// @Description  Accept or reject join request (requires admin permission)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id         path  string                                true  "群组ID"
-// @Param        requestId  path  int                                   true  "申请ID"
-// @Param        request    body  groupdto.HandleJoinRequestRequest  true  "处理信息"
-// @Success      200        {object}  response.Response  "处理成功"
-// @Failure      400        {object}  response.Response  "参数错误"
-// @Failure      401        {object}  response.Response  "未授权"
-// @Failure      403        {object}  response.Response  "无权限"
+// @Param        id         path  string                                true  "group ID"
+// @Param        requestId  path  int                                   true  "request ID"
+// @Param        request    body  groupdto.HandleJoinRequestRequest  true  "handle info"
+// @Success      200        {object}  response.Response  "handle success"
+// @Failure      400        {object}  response.Response  "parameter error"
+// @Failure      401        {object}  response.Response  "unauthorized"
+// @Failure      403        {object}  response.Response  "no permission"
 // @Router       /groups/{id}/requests/{requestId} [put]
 func (h *GroupHandler) HandleJoinRequest(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -579,7 +579,7 @@ func (h *GroupHandler) HandleJoinRequest(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// MuteMember 禁言成员
+// MuteMember mute member
 func (h *GroupHandler) MuteMember(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -610,7 +610,7 @@ func (h *GroupHandler) MuteMember(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UnmuteMember 解除成员禁言
+// UnmuteMember unban member
 func (h *GroupHandler) UnmuteMember(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -628,18 +628,18 @@ func (h *GroupHandler) UnmuteMember(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetJoinRequests 获取入群申请列表
-// @Summary      获取入群申请列表
-// @Description  获取指定群组的入群申请列表（需要管理员权限）
-// @Tags         群组
+// GetJoinRequests get join requests
+// @Summary      get join requests
+// @Description  Get join requests for specified group (requires admin permission)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id      path   string  true   "群组ID"
-// @Param        status  query  string  false  "申请状态（pending/accepted/rejected）"
+// @Param        id      path   string  true   "group ID"
+// @Param        status  query  string  false  "request status (pending/accepted/rejected)"
 // @Success      200     {object}  response.Response{data=groupdto.JoinRequestListResponse}
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      403     {object}  response.Response  "无权限"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      403     {object}  response.Response  "no permission"
 // @Router       /groups/{id}/requests [get]
 func (h *GroupHandler) GetJoinRequests(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -664,7 +664,7 @@ func (h *GroupHandler) GetJoinRequests(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// PinGroupMessage 置顶群消息
+// PinGroupMessage pin group message
 func (h *GroupHandler) PinGroupMessage(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -687,7 +687,7 @@ func (h *GroupHandler) PinGroupMessage(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UnpinGroupMessage 取消置顶群消息
+// UnpinGroupMessage unpin group message
 func (h *GroupHandler) UnpinGroupMessage(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -705,7 +705,7 @@ func (h *GroupHandler) UnpinGroupMessage(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetPinnedMessages 获取群置顶消息列表
+// GetPinnedMessages get group pinned messages
 func (h *GroupHandler) GetPinnedMessages(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -721,7 +721,7 @@ func (h *GroupHandler) GetPinnedMessages(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// SetGroupMute 设置全体禁言
+// SetGroupMute set group mute
 func (h *GroupHandler) SetGroupMute(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -744,7 +744,7 @@ func (h *GroupHandler) SetGroupMute(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// UpdateGroupSettings 更新群设置
+// UpdateGroupSettings update group settings
 func (h *GroupHandler) UpdateGroupSettings(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 	groupID := c.Param("id")
@@ -771,7 +771,7 @@ func (h *GroupHandler) UpdateGroupSettings(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetGroupSettings 获取群设置
+// GetGroupSettings get group settings
 func (h *GroupHandler) GetGroupSettings(c *gin.Context) {
 	groupID := c.Param("id")
 	resp, err := h.clientManager.Group().GetGroupSettings(c.Request.Context(), &grouppb.GetGroupSettingsRequest{
@@ -796,19 +796,19 @@ func int32Ptr(v int32) *int32 {
 	return &v
 }
 
-// UpdateMemberRemark 设置/清空群备注
-// @Summary      设置群备注
-// @Description  为指定群设置仅对自己可见的备注名，传空字符串可清空备注
-// @Tags         群组
+// UpdateMemberRemark set/clear group remark
+// @Summary      set group remark
+// @Description  Set a remark for the group that only you can see, pass empty string to clear
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  string                              true  "群组ID"
-// @Param        request  body  groupdto.UpdateMemberRemarkRequest  true  "备注信息"
-// @Success      200      {object}  response.Response  "设置成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      403      {object}  response.Response  "不是群成员"
+// @Param        id       path  string                              true  "group ID"
+// @Param        request  body  groupdto.UpdateMemberRemarkRequest  true  "remark info"
+// @Success      200      {object}  response.Response  "set success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      403      {object}  response.Response  "not a group member"
 // @Router       /groups/{id}/remark [put]
 func (h *GroupHandler) UpdateMemberRemark(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -833,17 +833,17 @@ func (h *GroupHandler) UpdateMemberRemark(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetGroupQRCode 获取群二维码
-// @Summary      获取群二维码
-// @Description  获取当前有效的群二维码，不存在或快过期时自动创建/续期（所有群成员可用）
-// @Tags         群组
+// GetGroupQRCode get group QR code
+// @Summary      get group QR code
+// @Description  Get current valid group QR code, auto create/renew if not exists or expiring soon (all members)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id  path  string  true  "群组ID"
+// @Param        id  path  string  true  "group ID"
 // @Success      200  {object}  response.Response{data=groupdto.GroupQRCodeResponse}
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      403  {object}  response.Response  "不是群成员"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      403  {object}  response.Response  "not a group member"
 // @Router       /groups/{id}/qrcode [get]
 func (h *GroupHandler) GetGroupQRCode(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -865,17 +865,17 @@ func (h *GroupHandler) GetGroupQRCode(c *gin.Context) {
 	})
 }
 
-// RefreshGroupQRCode 刷新群二维码
-// @Summary      刷新群二维码
-// @Description  刷新群二维码，使旧码立即失效并生成新码（仅群主或管理员可用）
-// @Tags         群组
+// RefreshGroupQRCode refresh group QR code
+// @Summary      refresh group QR code
+// @Description  Refresh group QR code, invalidate old one and generate new one (owner/admin only)
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id  path  string  true  "群组ID"
+// @Param        id  path  string  true  "group ID"
 // @Success      200  {object}  response.Response{data=groupdto.GroupQRCodeResponse}
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      403  {object}  response.Response  "无权限"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      403  {object}  response.Response  "no permission"
 // @Router       /groups/{id}/qrcode/refresh [post]
 func (h *GroupHandler) RefreshGroupQRCode(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -897,15 +897,15 @@ func (h *GroupHandler) RefreshGroupQRCode(c *gin.Context) {
 	})
 }
 
-// GetGroupPreviewByQRCode 通过二维码获取群信息预览（无需鉴权）
-// @Summary      群信息预览
-// @Description  通过二维码 Token 获取群名称、头像、成员数和加群验证方式
-// @Tags         群组
+// GetGroupPreviewByQRCode get group preview via QR code (no auth required)
+// @Summary      group preview
+// @Description  Get group name, avatar, member count and join verification via QR code token
+// @Tags         group
 // @Accept       json
 // @Produce      json
-// @Param        token  query  string  true  "二维码Token"
+// @Param        token  query  string  true  "QR code token"
 // @Success      200  {object}  response.Response{data=groupdto.GroupQRCodePreviewResponse}
-// @Failure      400  {object}  response.Response  "参数错误或二维码失效"
+// @Failure      400  {object}  response.Response  "invalid parameter or QR code expired"
 // @Router       /groups/preview [get]
 func (h *GroupHandler) GetGroupPreviewByQRCode(c *gin.Context) {
 	token := c.Query("token")
@@ -931,17 +931,17 @@ func (h *GroupHandler) GetGroupPreviewByQRCode(c *gin.Context) {
 	})
 }
 
-// JoinGroupByQRCode 扫码加入群组
-// @Summary      扫码加入群组
-// @Description  通过二维码 Token 加入群组，根据群设置直接加入或提交申请
-// @Tags         群组
+// JoinGroupByQRCode join group via QR code
+// @Summary      join group via QR code
+// @Description  Join group via QR code token, join directly or submit request based on group settings
+// @Tags         group
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object{token=string}  true  "二维码Token"
+// @Param        request  body  object{token=string}  true  "QR code token"
 // @Success      200      {object}  response.Response{data=groupdto.JoinGroupByQRCodeResponse}
-// @Failure      400      {object}  response.Response  "二维码无效或已过期"
-// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      400      {object}  response.Response  "QR code invalid or expired"
+// @Failure      401      {object}  response.Response  "unauthorized"
 // @Router       /groups/join-by-qrcode [post]
 func (h *GroupHandler) JoinGroupByQRCode(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)

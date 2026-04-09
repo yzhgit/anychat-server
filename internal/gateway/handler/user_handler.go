@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// UserHandler user HTTP处理器
+// UserHandler user HTTP handler
 type UserHandler struct {
 	clientManager *client.Manager
 }
 
-// UpdateProfileRequest 更新资料请求
+// UpdateProfileRequest update profile request
 type UpdateProfileRequest struct {
 	Nickname  *string    `json:"nickname" example:"张三"`
 	Avatar    *string    `json:"avatar" example:"https://example.com/avatar.jpg"`
@@ -27,7 +27,7 @@ type UpdateProfileRequest struct {
 	Region    *string    `json:"region" example:"北京"`
 }
 
-// UserProfile 用户资料
+// UserProfile user profile
 type UserProfile struct {
 	UserID    string     `json:"userId" example:"user-123"`
 	Nickname  string     `json:"nickname" example:"张三"`
@@ -42,13 +42,13 @@ type UserProfile struct {
 	CreatedAt time.Time  `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 }
 
-// UserSearchResult 用户搜索结果
+// UserSearchResult user search result
 type UserSearchResult struct {
 	Total int64            `json:"total" example:"100"`
 	Users []UserSearchItem `json:"users"`
 }
 
-// UserSearchItem 搜索结果项
+// UserSearchItem search result item
 type UserSearchItem struct {
 	UserID    string `json:"userId" example:"user-123"`
 	Nickname  string `json:"nickname" example:"张三"`
@@ -56,7 +56,7 @@ type UserSearchItem struct {
 	Signature string `json:"signature" example:"这是我的个性签名"`
 }
 
-// UserSettings 用户设置
+// UserSettings user settings
 type UserSettings struct {
 	UserID                string `json:"userId" example:"user-123"`
 	NotificationEnabled   bool   `json:"notificationEnabled" example:"true"`
@@ -69,7 +69,7 @@ type UserSettings struct {
 	Language              string `json:"language" example:"zh-CN"`
 }
 
-// UpdateSettingsRequest 更新设置请求
+// UpdateSettingsRequest update settings request
 type UpdateSettingsRequest struct {
 	NotificationEnabled   *bool   `json:"notificationEnabled" example:"true"`
 	SoundEnabled          *bool   `json:"soundEnabled" example:"true"`
@@ -81,20 +81,20 @@ type UpdateSettingsRequest struct {
 	Language              *string `json:"language" example:"zh-CN"`
 }
 
-// UpdatePushTokenRequest 更新推送Token请求
+// UpdatePushTokenRequest update push token request
 type UpdatePushTokenRequest struct {
 	DeviceID  string `json:"deviceId" binding:"required" example:"device-uuid-123"`
 	PushToken string `json:"pushToken" binding:"required" example:"push-token-xxx"`
 	Platform  string `json:"platform" binding:"required" example:"ios" enums:"ios,android"`
 }
 
-// BindPhoneRequest 绑定手机号请求
+// BindPhoneRequest bind phone request
 type BindPhoneRequest struct {
 	PhoneNumber string `json:"phoneNumber" binding:"required" example:"13800138000"`
 	VerifyCode  string `json:"verifyCode" binding:"required" example:"123456"`
 }
 
-// ChangePhoneRequest 更换手机号请求
+// ChangePhoneRequest change phone request
 type ChangePhoneRequest struct {
 	OldPhoneNumber string  `json:"oldPhoneNumber" binding:"required" example:"13800138000"`
 	NewPhoneNumber string  `json:"newPhoneNumber" binding:"required" example:"13900139000"`
@@ -102,13 +102,13 @@ type ChangePhoneRequest struct {
 	OldVerifyCode  *string `json:"oldVerifyCode,omitempty" example:"123456"`
 }
 
-// BindEmailRequest 绑定邮箱请求
+// BindEmailRequest bind email request
 type BindEmailRequest struct {
 	Email      string `json:"email" binding:"required" example:"user@example.com"`
 	VerifyCode string `json:"verifyCode" binding:"required" example:"123456"`
 }
 
-// ChangeEmailRequest 更换邮箱请求
+// ChangeEmailRequest change email request
 type ChangeEmailRequest struct {
 	OldEmail      string  `json:"oldEmail" binding:"required" example:"old@example.com"`
 	NewEmail      string  `json:"newEmail" binding:"required" example:"new@example.com"`
@@ -116,23 +116,23 @@ type ChangeEmailRequest struct {
 	OldVerifyCode *string `json:"oldVerifyCode,omitempty" example:"123456"`
 }
 
-// NewUserHandler 创建user处理器
+// NewUserHandler creates user handler
 func NewUserHandler(clientManager *client.Manager) *UserHandler {
 	return &UserHandler{
 		clientManager: clientManager,
 	}
 }
 
-// GetProfile 获取个人资料
-// @Summary      获取个人资料
-// @Description  获取当前登录用户的详细资料
-// @Tags         用户
+// GetProfile get personal profile
+// @Summary      get personal profile
+// @Description  Get detailed profile of currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  response.Response{data=UserProfile}  "获取成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Success      200  {object}  response.Response{data=UserProfile}  "get success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /users/me [get]
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -170,18 +170,18 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// UpdateProfile 更新个人资料
-// @Summary      更新个人资料
-// @Description  更新当前登录用户的个人资料
-// @Tags         用户
+// UpdateProfile update personal profile
+// @Summary      update personal profile
+// @Description  Update personal profile of currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      UpdateProfileRequest  true  "资料信息"
-// @Success      200      {object}  response.Response{data=UserProfile}  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      UpdateProfileRequest  true  "profile info"
+// @Success      200      {object}  response.Response{data=UserProfile}  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	var req UpdateProfileRequest
@@ -231,18 +231,18 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// GetUserInfo 获取用户信息
-// @Summary      获取用户信息
-// @Description  获取指定用户的公开信息
-// @Tags         用户
+// GetUserInfo get user info
+// @Summary      get user info
+// @Description  Get public info of specified user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        userId  path      string  true  "用户ID"
-// @Success      200     {object}  response.Response{data=UserSearchItem}  "获取成功"
-// @Failure      401     {object}  response.Response  "未授权"
-// @Failure      404     {object}  response.Response  "用户不存在"
-// @Failure      500     {object}  response.Response  "服务器错误"
+// @Param        userId  path      string  true  "user ID"
+// @Success      200     {object}  response.Response{data=UserSearchItem}  "get success"
+// @Failure      401     {object}  response.Response  "unauthorized"
+// @Failure      404     {object}  response.Response  "user not found"
+// @Failure      500     {object}  response.Response  "server error"
 // @Router       /users/{userId} [get]
 func (h *UserHandler) GetUserInfo(c *gin.Context) {
 	targetUserID := c.Param("userId")
@@ -270,20 +270,20 @@ func (h *UserHandler) GetUserInfo(c *gin.Context) {
 	})
 }
 
-// SearchUsers 搜索用户
-// @Summary      搜索用户
-// @Description  通过关键字搜索用户（支持昵称、手机号、用户ID）
-// @Tags         用户
+// SearchUsers search users
+// @Summary      search users
+// @Description  Search users by keyword (supports nickname, phone, user ID)
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        keyword   query     string  true   "搜索关键字"
-// @Param        page      query     int     false  "页码" default(1)
-// @Param        pageSize  query     int     false  "每页数量" default(20)
-// @Success      200       {object}  response.Response{data=UserSearchResult}  "搜索成功"
-// @Failure      400       {object}  response.Response  "参数错误"
-// @Failure      401       {object}  response.Response  "未授权"
-// @Failure      500       {object}  response.Response  "服务器错误"
+// @Param        keyword   query     string  true   "search keyword"
+// @Param        page      query     int     false  "page number" default(1)
+// @Param        pageSize  query     int     false  "page size" default(20)
+// @Success      200       {object}  response.Response{data=UserSearchResult}  "search success"
+// @Failure      400       {object}  response.Response  "parameter error"
+// @Failure      401       {object}  response.Response  "unauthorized"
+// @Failure      500       {object}  response.Response  "server error"
 // @Router       /users/search [get]
 func (h *UserHandler) SearchUsers(c *gin.Context) {
 	keyword := c.Query("keyword")
@@ -322,16 +322,16 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 	})
 }
 
-// GetSettings 获取用户设置
-// @Summary      获取用户设置
-// @Description  获取当前用户的偏好设置
-// @Tags         用户
+// GetSettings get user settings
+// @Summary      get user settings
+// @Description  Get current user's preference settings
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  response.Response{data=UserSettings}  "获取成功"
-// @Failure      401  {object}  response.Response  "未授权"
-// @Failure      500  {object}  response.Response  "服务器错误"
+// @Success      200  {object}  response.Response{data=UserSettings}  "get success"
+// @Failure      401  {object}  response.Response  "unauthorized"
+// @Failure      500  {object}  response.Response  "server error"
 // @Router       /users/me/settings [get]
 func (h *UserHandler) GetSettings(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
@@ -358,18 +358,18 @@ func (h *UserHandler) GetSettings(c *gin.Context) {
 	})
 }
 
-// UpdateSettings 更新用户设置
-// @Summary      更新用户设置
-// @Description  更新当前用户的偏好设置
-// @Tags         用户
+// UpdateSettings update user settings
+// @Summary      update user settings
+// @Description  Update current user's preference settings
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      UpdateSettingsRequest  true  "设置信息"
-// @Success      200      {object}  response.Response{data=UserSettings}  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      UpdateSettingsRequest  true  "settings info"
+// @Success      200      {object}  response.Response{data=UserSettings}  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/settings [put]
 func (h *UserHandler) UpdateSettings(c *gin.Context) {
 	var req UpdateSettingsRequest
@@ -411,7 +411,7 @@ func (h *UserHandler) UpdateSettings(c *gin.Context) {
 	})
 }
 
-// RefreshQRCode 刷新二维码
+// RefreshQRCode refresh QR code
 func (h *UserHandler) RefreshQRCode(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
 
@@ -430,7 +430,7 @@ func (h *UserHandler) RefreshQRCode(c *gin.Context) {
 	})
 }
 
-// GetUserByQRCode 通过二维码获取用户
+// GetUserByQRCode get user via QR code
 func (h *UserHandler) GetUserByQRCode(c *gin.Context) {
 	qrcode := c.Query("qrcode")
 	if qrcode == "" {
@@ -455,18 +455,18 @@ func (h *UserHandler) GetUserByQRCode(c *gin.Context) {
 	})
 }
 
-// UpdatePushToken 更新推送Token
-// @Summary      更新推送Token
-// @Description  更新设备的推送通知Token
-// @Tags         用户
+// UpdatePushToken update push token
+// @Summary      update push token
+// @Description  Update device push notification token
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      UpdatePushTokenRequest  true  "推送Token信息"
-// @Success      200      {object}  response.Response  "更新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      UpdatePushTokenRequest  true  "push token info"
+// @Success      200      {object}  response.Response  "update success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/push-token [post]
 func (h *UserHandler) UpdatePushToken(c *gin.Context) {
 	var req UpdatePushTokenRequest
@@ -493,19 +493,19 @@ func (h *UserHandler) UpdatePushToken(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// BindPhone 绑定手机号
-// @Summary      绑定手机号
-// @Description  为当前登录用户绑定手机号
-// @Tags         用户
+// BindPhone bind phone
+// @Summary      bind phone
+// @Description  Bind phone number for currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      BindPhoneRequest  true  "绑定手机号信息"
-// @Success      200      {object}  response.Response{data=object}  "绑定成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      409      {object}  response.Response  "手机号已被占用"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      BindPhoneRequest  true  "bind phone info"
+// @Success      200      {object}  response.Response{data=object}  "bind success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      409      {object}  response.Response  "phone number already in use"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/phone/bind [post]
 func (h *UserHandler) BindPhone(c *gin.Context) {
 	var req BindPhoneRequest
@@ -531,19 +531,19 @@ func (h *UserHandler) BindPhone(c *gin.Context) {
 	})
 }
 
-// ChangePhone 更换手机号
-// @Summary      更换手机号
-// @Description  为当前登录用户更换已绑定手机号
-// @Tags         用户
+// ChangePhone change phone
+// @Summary      change phone
+// @Description  Change bound phone number for currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      ChangePhoneRequest  true  "更换手机号信息"
-// @Success      200      {object}  response.Response{data=object}  "更换成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      409      {object}  response.Response  "手机号已被占用"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      ChangePhoneRequest  true  "change phone info"
+// @Success      200      {object}  response.Response{data=object}  "change success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      409      {object}  response.Response  "phone number already in use"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/phone/change [post]
 func (h *UserHandler) ChangePhone(c *gin.Context) {
 	var req ChangePhoneRequest
@@ -577,19 +577,19 @@ func (h *UserHandler) ChangePhone(c *gin.Context) {
 	})
 }
 
-// BindEmail 绑定邮箱
-// @Summary      绑定邮箱
-// @Description  为当前登录用户绑定邮箱
-// @Tags         用户
+// BindEmail bind email
+// @Summary      bind email
+// @Description  Bind email for currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      BindEmailRequest  true  "绑定邮箱信息"
-// @Success      200      {object}  response.Response{data=object}  "绑定成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      409      {object}  response.Response  "邮箱已被占用"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      BindEmailRequest  true  "bind email info"
+// @Success      200      {object}  response.Response{data=object}  "bind success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      409      {object}  response.Response  "email already in use"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/email/bind [post]
 func (h *UserHandler) BindEmail(c *gin.Context) {
 	var req BindEmailRequest
@@ -615,19 +615,19 @@ func (h *UserHandler) BindEmail(c *gin.Context) {
 	})
 }
 
-// ChangeEmail 更换邮箱
-// @Summary      更换邮箱
-// @Description  为当前登录用户更换已绑定邮箱
-// @Tags         用户
+// ChangeEmail change email
+// @Summary      change email
+// @Description  Change bound email for currently logged in user
+// @Tags         user
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      ChangeEmailRequest  true  "更换邮箱信息"
-// @Success      200      {object}  response.Response{data=object}  "更换成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      409      {object}  response.Response  "邮箱已被占用"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      ChangeEmailRequest  true  "change email info"
+// @Success      200      {object}  response.Response{data=object}  "change success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      409      {object}  response.Response  "email already in use"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /users/me/email/change [post]
 func (h *UserHandler) ChangeEmail(c *gin.Context) {
 	var req ChangeEmailRequest

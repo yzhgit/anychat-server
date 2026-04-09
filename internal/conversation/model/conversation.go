@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Conversation 会话模型
+// Conversation is the conversation model
 type Conversation struct {
 	ConversationID     string     `gorm:"column:conversation_id;primaryKey"`
 	ConversationType   string     `gorm:"column:conversation_type;not null"` // single/group/system
@@ -17,18 +17,18 @@ type Conversation struct {
 	IsPinned           bool       `gorm:"column:is_pinned;default:false"`
 	IsMuted            bool       `gorm:"column:is_muted;default:false"`
 	PinTime            *time.Time `gorm:"column:pin_time"`
-	BurnAfterReading   int32      `gorm:"column:burn_after_reading;default:0"`   // 阅后即焚时长(秒),0表示未启用
-	AutoDeleteDuration int32      `gorm:"column:auto_delete_duration;default:0"` // 自动删除时长(秒),0表示未启用
+	BurnAfterReading   int32      `gorm:"column:burn_after_reading;default:0"`   // burn after reading duration (seconds), 0 means not enabled
+	AutoDeleteDuration int32      `gorm:"column:auto_delete_duration;default:0"` // auto delete duration (seconds), 0 means not enabled
 	CreatedAt          time.Time  `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt          time.Time  `gorm:"column:updated_at;autoUpdateTime"`
 }
 
-// TableName 指定表名
+// TableName specifies the table name
 func (Conversation) TableName() string {
 	return "conversations"
 }
 
-// ConversationType 会话类型常量
+// ConversationType is the conversation type constant
 const (
 	ConversationTypeSingle = "single"
 	ConversationTypeGroup  = "group"

@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ConversationService 会话服务接口
+// ConversationService is the interface for conversation service
 type ConversationService interface {
 	GetConversations(ctx context.Context, req *conversationpb.GetConversationsRequest) (*conversationpb.GetConversationsResponse, error)
 	GetConversation(ctx context.Context, userID, conversationID string) (*conversationpb.Conversation, error)
@@ -31,13 +31,13 @@ type ConversationService interface {
 	IncrUnread(ctx context.Context, userID, conversationID string, count int32) error
 }
 
-// conversationServiceImpl 会话服务实现
+// conversationServiceImpl is the implementation of conversation service
 type conversationServiceImpl struct {
 	conversationRepo repository.ConversationRepository
 	notificationPub  notification.Publisher
 }
 
-// NewConversationService 创建会话服务
+// NewConversationService creates a new conversation service
 func NewConversationService(
 	conversationRepo repository.ConversationRepository,
 	notificationPub notification.Publisher,
@@ -48,7 +48,7 @@ func NewConversationService(
 	}
 }
 
-// GetConversations 获取用户会话列表
+// GetConversations retrieves the list of user conversations
 func (s *conversationServiceImpl) GetConversations(ctx context.Context, req *conversationpb.GetConversationsRequest) (*conversationpb.GetConversationsResponse, error) {
 	limit := int(req.Limit)
 	if limit <= 0 {
@@ -77,7 +77,7 @@ func (s *conversationServiceImpl) GetConversations(ctx context.Context, req *con
 	}, nil
 }
 
-// GetConversation 获取单个会话
+// GetConversation retrieves a single conversation
 func (s *conversationServiceImpl) GetConversation(ctx context.Context, userID, conversationID string) (*conversationpb.Conversation, error) {
 	conversation, err := s.conversationRepo.GetByID(ctx, conversationID)
 	if err == gorm.ErrRecordNotFound {
@@ -92,9 +92,9 @@ func (s *conversationServiceImpl) GetConversation(ctx context.Context, userID, c
 	return toProtoConversation(conversation), nil
 }
 
-// CreateOrUpdateConversation 创建或更新会话（消息到达时调用）
+// CreateOrUpdateConversation creates or updates a conversation (called when message arrives)
 func (s *conversationServiceImpl) CreateOrUpdateConversation(ctx context.Context, req *conversationpb.CreateOrUpdateConversationRequest) (*conversationpb.Conversation, error) {
-	// 先尝试查找已有会话
+	// Try to find existing conversation first
 	existing, err := s.conversationRepo.GetByUserAndTarget(ctx, req.UserId, req.ConversationType, req.TargetId)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("failed to check existing conversation: %w", err)
@@ -107,7 +107,7 @@ func (s *conversationServiceImpl) CreateOrUpdateConversation(ctx context.Context
 	}
 
 	if existing != nil {
-		// 更新已有会话的最后消息信息
+		// Update existing conversation's last message info
 		existing.LastMessageID = req.LastMessageId
 		existing.LastMessageContent = req.LastMessageContent
 		existing.LastMessageTime = msgTime
@@ -117,7 +117,7 @@ func (s *conversationServiceImpl) CreateOrUpdateConversation(ctx context.Context
 		return toProtoConversation(existing), nil
 	}
 
-	// 创建新会话
+	// Create new conversation
 	conversation := &model.Conversation{
 		ConversationID:     uuid.New().String(),
 		ConversationType:   req.ConversationType,
@@ -135,13 +135,13 @@ func (s *conversationServiceImpl) CreateOrUpdateConversation(ctx context.Context
 	return toProtoConversation(conversation), nil
 }
 
-// DeleteConversation 删除会话并发送通知
+// DeleteConversation deletes a conversation and sends notification
 func (s *conversationServiceImpl) DeleteConversation(ctx context.Context, userID, conversationID string) error {
 	if err := s.conversationRepo.Delete(ctx, userID, conversationID); err != nil {
 		return fmt.Errorf("failed to delete conversation: %w", err)
 	}
 
-	// 发布会话删除通知（多端同步）
+	// Publish conversation deletion notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationDeleted, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID)
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
@@ -153,7 +153,7 @@ func (s *conversationServiceImpl) DeleteConversation(ctx context.Context, userID
 	return nil
 }
 
-// SetPinned 设置置顶状态并发送通知
+// SetPinned sets pinned status and sends notification
 func (s *conversationServiceImpl) SetPinned(ctx context.Context, userID, conversationID string, pinned bool) error {
 	var pinTime *time.Time
 	if pinned {
@@ -165,7 +165,7 @@ func (s *conversationServiceImpl) SetPinned(ctx context.Context, userID, convers
 		return fmt.Errorf("failed to set pinned: %w", err)
 	}
 
-	// 发布置顶状态同步通知（多端同步）
+	// Publish pinned status sync notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationPinUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID).
 		AddPayloadField("is_pinned", pinned)
@@ -178,13 +178,13 @@ func (s *conversationServiceImpl) SetPinned(ctx context.Context, userID, convers
 	return nil
 }
 
-// SetMuted 设置免打扰状态并发送通知
+// SetMuted sets muted status and sends notification
 func (s *conversationServiceImpl) SetMuted(ctx context.Context, userID, conversationID string, muted bool) error {
 	if err := s.conversationRepo.SetMuted(ctx, userID, conversationID, muted); err != nil {
 		return fmt.Errorf("failed to set muted: %w", err)
 	}
 
-	// 发布免打扰设置同步通知（多端同步）
+	// Publish muted setting sync notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationMuteUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID).
 		AddPayloadField("is_muted", muted)
@@ -197,13 +197,13 @@ func (s *conversationServiceImpl) SetMuted(ctx context.Context, userID, conversa
 	return nil
 }
 
-// SetBurnAfterReading 设置阅后即焚时长并发送通知
+// SetBurnAfterReading sets burn after reading duration and sends notification
 func (s *conversationServiceImpl) SetBurnAfterReading(ctx context.Context, userID, conversationID string, duration int32) error {
 	if err := s.conversationRepo.SetBurnAfterReading(ctx, userID, conversationID, duration); err != nil {
 		return fmt.Errorf("failed to set burn after reading: %w", err)
 	}
 
-	// 发布阅后即焚配置变更通知（多端同步）
+	// Publish burn after reading config change notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationBurnUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID).
 		AddPayloadField("burn_after_reading", duration)
@@ -216,13 +216,13 @@ func (s *conversationServiceImpl) SetBurnAfterReading(ctx context.Context, userI
 	return nil
 }
 
-// SetAutoDelete 设置自动删除时长并发送通知
+// SetAutoDelete sets auto delete duration and sends notification
 func (s *conversationServiceImpl) SetAutoDelete(ctx context.Context, userID, conversationID string, duration int32) error {
 	if err := s.conversationRepo.SetAutoDelete(ctx, userID, conversationID, duration); err != nil {
 		return fmt.Errorf("failed to set auto delete: %w", err)
 	}
 
-	// 发布自动删除配置变更通知（多端同步）
+	// Publish auto delete config change notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationAutoDeleteUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID).
 		AddPayloadField("auto_delete_duration", duration)
@@ -235,19 +235,19 @@ func (s *conversationServiceImpl) SetAutoDelete(ctx context.Context, userID, con
 	return nil
 }
 
-// ClearUnread 清除未读数并发送通知
+// ClearUnread clears unread count and sends notification
 func (s *conversationServiceImpl) ClearUnread(ctx context.Context, userID, conversationID string) error {
 	if err := s.conversationRepo.ClearUnread(ctx, userID, conversationID); err != nil {
 		return fmt.Errorf("failed to clear unread: %w", err)
 	}
 
-	// 获取最新总未读数
+	// Get latest total unread count
 	total, err := s.conversationRepo.SumUnread(ctx, userID)
 	if err != nil {
 		logger.Warn("Failed to get total unread after clear", zap.String("userID", userID), zap.Error(err))
 	}
 
-	// 发布未读数更新通知（多端同步）
+	// Publish unread count update notification (multi-device sync)
 	notif := notification.NewNotification(notification.TypeConversationUnreadUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID).
 		AddPayloadField("unread_count", 0).
@@ -261,7 +261,7 @@ func (s *conversationServiceImpl) ClearUnread(ctx context.Context, userID, conve
 	return nil
 }
 
-// GetTotalUnread 获取用户总未读数
+// GetTotalUnread gets user's total unread count
 func (s *conversationServiceImpl) GetTotalUnread(ctx context.Context, userID string) (int32, error) {
 	total, err := s.conversationRepo.SumUnread(ctx, userID)
 	if err != nil {
@@ -270,13 +270,13 @@ func (s *conversationServiceImpl) GetTotalUnread(ctx context.Context, userID str
 	return total, nil
 }
 
-// IncrUnread 增加未读数并发送通知
+// IncrUnread increments unread count and sends notification
 func (s *conversationServiceImpl) IncrUnread(ctx context.Context, userID, conversationID string, count int32) error {
 	if err := s.conversationRepo.IncrUnread(ctx, userID, conversationID, count); err != nil {
 		return fmt.Errorf("failed to incr conversation unread: %w", err)
 	}
 
-	// 发布未读数更新通知
+	// Publish unread count update notification
 	notif := notification.NewNotification(notification.TypeConversationUnreadUpdated, userID, notification.PriorityNormal).
 		AddPayloadField("conversation_id", conversationID)
 	if err := s.notificationPub.PublishToUser(userID, notif); err != nil {
@@ -288,7 +288,7 @@ func (s *conversationServiceImpl) IncrUnread(ctx context.Context, userID, conver
 	return nil
 }
 
-// toProtoConversation 将model.Conversation转换为protobuf Conversation
+// toProtoConversation converts model.Conversation to protobuf Conversation
 func toProtoConversation(s *model.Conversation) *conversationpb.Conversation {
 	pb := &conversationpb.Conversation{
 		ConversationId:     s.ConversationID,

@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-// Response 统一响应结构
+// Response unified response structure
 type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-// Success 成功响应
+// Success returns a success response
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		Code:    0,
@@ -21,7 +21,7 @@ func Success(c *gin.Context, data interface{}) {
 	})
 }
 
-// SuccessWithMessage 成功响应（自定义消息）
+// SuccessWithMessage returns a success response with custom message
 func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		Code:    0,
@@ -30,7 +30,7 @@ func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 	})
 }
 
-// Error 错误响应
+// Error returns an error response
 func Error(c *gin.Context, code int, message string) {
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
@@ -39,7 +39,7 @@ func Error(c *gin.Context, code int, message string) {
 	})
 }
 
-// ErrorWithData 错误响应（带数据）
+// ErrorWithData returns an error response with data
 func ErrorWithData(c *gin.Context, code int, message string, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
@@ -48,7 +48,7 @@ func ErrorWithData(c *gin.Context, code int, message string, data interface{}) {
 	})
 }
 
-// BadRequest 400错误
+// BadRequest returns 400 error
 func BadRequest(c *gin.Context, message string) {
 	c.JSON(http.StatusBadRequest, Response{
 		Code:    http.StatusBadRequest,
@@ -57,7 +57,7 @@ func BadRequest(c *gin.Context, message string) {
 	})
 }
 
-// Unauthorized 401错误
+// Unauthorized returns 401 error
 func Unauthorized(c *gin.Context, message string) {
 	c.JSON(http.StatusUnauthorized, Response{
 		Code:    http.StatusUnauthorized,
@@ -66,7 +66,7 @@ func Unauthorized(c *gin.Context, message string) {
 	})
 }
 
-// Forbidden 403错误
+// Forbidden returns 403 error
 func Forbidden(c *gin.Context, message string) {
 	c.JSON(http.StatusForbidden, Response{
 		Code:    http.StatusForbidden,
@@ -75,7 +75,7 @@ func Forbidden(c *gin.Context, message string) {
 	})
 }
 
-// NotFound 404错误
+// NotFound returns 404 error
 func NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, Response{
 		Code:    http.StatusNotFound,
@@ -84,7 +84,7 @@ func NotFound(c *gin.Context, message string) {
 	})
 }
 
-// InternalError 500错误
+// InternalError returns 500 error
 func InternalError(c *gin.Context, message string) {
 	c.JSON(http.StatusInternalServerError, Response{
 		Code:    http.StatusInternalServerError,
@@ -93,7 +93,7 @@ func InternalError(c *gin.Context, message string) {
 	})
 }
 
-// ParamError 参数错误
+// ParamError returns parameter error
 func ParamError(c *gin.Context, message string) {
 	c.JSON(http.StatusOK, Response{
 		Code:    400,
@@ -102,7 +102,7 @@ func ParamError(c *gin.Context, message string) {
 	})
 }
 
-// PageData 分页数据结构
+// PageData paginated data structure
 type PageData struct {
 	Total    int64       `json:"total"`
 	Page     int         `json:"page"`
@@ -110,7 +110,7 @@ type PageData struct {
 	List     interface{} `json:"list"`
 }
 
-// SuccessWithPage 分页成功响应
+// SuccessWithPage returns a paginated success response
 func SuccessWithPage(c *gin.Context, total int64, page, pageSize int, list interface{}) {
 	Success(c, PageData{
 		Total:    total,

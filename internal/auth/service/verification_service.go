@@ -174,7 +174,7 @@ func (s *verifyServiceImpl) SendCode(ctx context.Context, req *dto.SendCodeReque
 		CodeID:    codeID,
 		ExpiresIn: int64(s.config.ExpireSeconds),
 		Sent:      true,
-		Message:   "验证码已发送",
+		Message:   "verification code sent",
 	}, nil
 }
 
@@ -202,7 +202,7 @@ func (s *verifyServiceImpl) VerifyCode(ctx context.Context, req *dto.VerifyCodeR
 			return &dto.VerifyCodeResponse{
 				Valid:   true,
 				CodeID:  "dev-bypass",
-				Message: "验证成功",
+				Message: "verification successful",
 			}, nil
 		}
 		return nil, s.resolveMissingCodeError(ctx, target, req.TargetType, req.Purpose)
@@ -257,7 +257,7 @@ func (s *verifyServiceImpl) VerifyCode(ctx context.Context, req *dto.VerifyCodeR
 	return &dto.VerifyCodeResponse{
 		Valid:   true,
 		CodeID:  codeID,
-		Message: "验证成功",
+		Message: "verification successful",
 	}, nil
 }
 
@@ -285,8 +285,8 @@ func (s *verifyServiceImpl) dispatchCode(ctx context.Context, target, targetType
 	}
 
 	templateID := ""
-	emailSubject := "AnyChat 验证码"
-	emailContent := fmt.Sprintf("您的验证码为：%s，5分钟内有效。", code)
+	emailSubject := "AnyChat Verification Code"
+	emailContent := fmt.Sprintf("Your verification code is: %s, valid for 5 minutes.", code)
 	if s.templateRepo != nil {
 		template, err := s.templateRepo.GetByPurpose(ctx, purpose)
 		if err == nil {
@@ -440,15 +440,15 @@ func (s *verifyServiceImpl) validateAndNormalizeTarget(target, targetType string
 	switch targetType {
 	case model.TargetTypeSMS:
 		if !validator.ValidatePhone(normalized) {
-			return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "手机号格式不正确")
+			return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "invalid phone number format")
 		}
 	case model.TargetTypeEmail:
 		normalized = strings.ToLower(normalized)
 		if !validator.ValidateEmail(normalized) {
-			return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "邮箱格式不正确")
+			return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "invalid email format")
 		}
 	default:
-		return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "目标类型不正确")
+		return "", pkgerrors.NewBusiness(pkgerrors.CodeTargetFormatInvalid, "invalid target type")
 	}
 	return normalized, nil
 }
@@ -464,7 +464,7 @@ func (s *verifyServiceImpl) validatePurpose(purpose string) error {
 		model.PurposeChangeEmail:
 		return nil
 	default:
-		return pkgerrors.NewBusiness(pkgerrors.CodeParamError, "验证码用途不支持")
+		return pkgerrors.NewBusiness(pkgerrors.CodeParamError, "verification purpose not supported")
 	}
 }
 

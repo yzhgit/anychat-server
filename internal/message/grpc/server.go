@@ -17,27 +17,27 @@ import (
 
 const operatorUserIDMetadataKey = "x-user-id"
 
-// Server Message gRPC服务器
+// Server Message gRPC server
 type Server struct {
 	messagepb.UnimplementedMessageServiceServer
 	messageService service.MessageService
 }
 
-// NewServer 创建gRPC服务器
+// NewServer creates gRPC server
 func NewServer(messageService service.MessageService) *Server {
 	return &Server{
 		messageService: messageService,
 	}
 }
 
-// SendMessage 发送消息
+// SendMessage sends a message
 func (s *Server) SendMessage(ctx context.Context, req *messagepb.SendMessageRequest) (*messagepb.SendMessageResponse, error) {
 	logger.Info("SendMessage called",
 		zap.String("senderId", req.SenderId),
 		zap.String("conversationId", req.ConversationId),
 		zap.String("contentType", req.ContentType))
 
-	// 参数验证
+	// Parameter validation
 	if req.SenderId == "" {
 		return nil, status.Error(codes.InvalidArgument, "sender_id is required")
 	}
@@ -63,7 +63,7 @@ func (s *Server) SendMessage(ctx context.Context, req *messagepb.SendMessageRequ
 	return resp, nil
 }
 
-// SendTyping 发送正在输入状态
+// SendTyping sends typing status
 func (s *Server) SendTyping(ctx context.Context, req *messagepb.SendTypingRequest) (*commonpb.Empty, error) {
 	logger.Info("SendTyping called",
 		zap.String("fromUserId", req.FromUserId),
@@ -85,13 +85,13 @@ func (s *Server) SendTyping(ctx context.Context, req *messagepb.SendTypingReques
 	return &commonpb.Empty{}, nil
 }
 
-// GetMessages 获取消息列表
+// GetMessages retrieves message list
 func (s *Server) GetMessages(ctx context.Context, req *messagepb.GetMessagesRequest) (*messagepb.GetMessagesResponse, error) {
 	logger.Info("GetMessages called",
 		zap.String("conversationId", req.ConversationId),
 		zap.Int32("limit", req.Limit))
 
-	// 参数验证
+	// Parameter validation
 	if req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
 	}
@@ -105,11 +105,11 @@ func (s *Server) GetMessages(ctx context.Context, req *messagepb.GetMessagesRequ
 	return resp, nil
 }
 
-// GetMessageById 根据ID获取消息
+// GetMessageById retrieves message by ID
 func (s *Server) GetMessageById(ctx context.Context, req *messagepb.GetMessageByIdRequest) (*messagepb.Message, error) {
 	logger.Info("GetMessageById called", zap.String("messageId", req.MessageId))
 
-	// 参数验证
+	// Parameter validation
 	if req.MessageId == "" {
 		return nil, status.Error(codes.InvalidArgument, "message_id is required")
 	}
@@ -123,14 +123,14 @@ func (s *Server) GetMessageById(ctx context.Context, req *messagepb.GetMessageBy
 	return msg, nil
 }
 
-// RecallMessage 撤回消息
+// RecallMessage recalls a message
 func (s *Server) RecallMessage(ctx context.Context, req *messagepb.RecallMessageRequest) (*commonpb.Empty, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("RecallMessage called",
 		zap.String("messageId", req.MessageId),
 		zap.String("userId", operatorUserID))
 
-	// 参数验证
+	// Parameter validation
 	if req.MessageId == "" {
 		return nil, status.Error(codes.InvalidArgument, "message_id is required")
 	}
@@ -147,14 +147,14 @@ func (s *Server) RecallMessage(ctx context.Context, req *messagepb.RecallMessage
 	return &commonpb.Empty{}, nil
 }
 
-// DeleteMessage 删除消息
+// DeleteMessage deletes a message
 func (s *Server) DeleteMessage(ctx context.Context, req *messagepb.DeleteMessageRequest) (*commonpb.Empty, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("DeleteMessage called",
 		zap.String("messageId", req.MessageId),
 		zap.String("userId", operatorUserID))
 
-	// 参数验证
+	// Parameter validation
 	if req.MessageId == "" {
 		return nil, status.Error(codes.InvalidArgument, "message_id is required")
 	}
@@ -183,7 +183,7 @@ func getOperatorUserID(ctx context.Context) string {
 	return values[0]
 }
 
-// MarkAsRead 标记消息已读
+// MarkAsRead marks messages as read
 func (s *Server) MarkAsRead(ctx context.Context, req *messagepb.MarkAsReadRequest) (*commonpb.Empty, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("MarkAsRead called",
@@ -191,7 +191,7 @@ func (s *Server) MarkAsRead(ctx context.Context, req *messagepb.MarkAsReadReques
 		zap.String("userId", operatorUserID),
 		zap.Int64("lastReadSeq", req.LastReadSeq))
 
-	// 参数验证
+	// Parameter validation
 	if req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
 	}
@@ -208,7 +208,7 @@ func (s *Server) MarkAsRead(ctx context.Context, req *messagepb.MarkAsReadReques
 	return &commonpb.Empty{}, nil
 }
 
-// MarkMessagesRead 批量按消息ID标记已读
+// MarkMessagesRead marks messages as read by message IDs
 func (s *Server) MarkMessagesRead(ctx context.Context, req *messagepb.MarkMessagesReadRequest) (*messagepb.MarkMessagesReadResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("MarkMessagesRead called",
@@ -235,7 +235,7 @@ func (s *Server) MarkMessagesRead(ctx context.Context, req *messagepb.MarkMessag
 	return resp, nil
 }
 
-// AckReadTriggers 阅后即焚阅读触发回执
+// AckReadTriggers acknowledges burn-after-reading triggers
 func (s *Server) AckReadTriggers(ctx context.Context, req *messagepb.AckReadTriggersRequest) (*messagepb.AckReadTriggersResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("AckReadTriggers called",
@@ -258,14 +258,14 @@ func (s *Server) AckReadTriggers(ctx context.Context, req *messagepb.AckReadTrig
 	return resp, nil
 }
 
-// GetUnreadCount 获取未读消息数
+// GetUnreadCount retrieves unread message count
 func (s *Server) GetUnreadCount(ctx context.Context, req *messagepb.GetUnreadCountRequest) (*messagepb.GetUnreadCountResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("GetUnreadCount called",
 		zap.String("conversationId", req.ConversationId),
 		zap.String("userId", operatorUserID))
 
-	// 参数验证
+	// Parameter validation
 	if req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
 	}
@@ -282,14 +282,14 @@ func (s *Server) GetUnreadCount(ctx context.Context, req *messagepb.GetUnreadCou
 	return resp, nil
 }
 
-// GetReadReceipts 获取已读回执
+// GetReadReceipts retrieves read receipts
 func (s *Server) GetReadReceipts(ctx context.Context, req *messagepb.GetReadReceiptsRequest) (*messagepb.GetReadReceiptsResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("GetReadReceipts called",
 		zap.String("conversationId", req.ConversationId),
 		zap.String("userId", operatorUserID))
 
-	// 参数验证
+	// Parameter validation
 	if req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
 	}
@@ -307,11 +307,11 @@ func (s *Server) GetReadReceipts(ctx context.Context, req *messagepb.GetReadRece
 	return resp, nil
 }
 
-// GetConversationSequence 获取会话序列号
+// GetConversationSequence retrieves conversation sequence
 func (s *Server) GetConversationSequence(ctx context.Context, req *messagepb.GetConversationSequenceRequest) (*messagepb.GetConversationSequenceResponse, error) {
 	logger.Info("GetConversationSequence called", zap.String("conversationId", req.ConversationId))
 
-	// 参数验证
+	// Parameter validation
 	if req.ConversationId == "" {
 		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
 	}
@@ -327,14 +327,14 @@ func (s *Server) GetConversationSequence(ctx context.Context, req *messagepb.Get
 	}, nil
 }
 
-// SearchMessages 搜索消息
+// SearchMessages searches messages
 func (s *Server) SearchMessages(ctx context.Context, req *messagepb.SearchMessagesRequest) (*messagepb.SearchMessagesResponse, error) {
 	operatorUserID := getOperatorUserID(ctx)
 	logger.Info("SearchMessages called",
 		zap.String("userId", operatorUserID),
 		zap.String("keyword", req.Keyword))
 
-	// 参数验证
+	// Parameter validation
 	if operatorUserID == "" {
 		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
 	}

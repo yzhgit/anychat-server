@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// GroupQRCodeRepository 群二维码仓库接口
+// GroupQRCodeRepository defines the group QR code repository interface
 type GroupQRCodeRepository interface {
 	Create(ctx context.Context, qrcode *model.GroupQRCode) error
 	GetActiveByGroupID(ctx context.Context, groupID string) (*model.GroupQRCode, error)
@@ -26,12 +26,12 @@ func NewGroupQRCodeRepository(db *gorm.DB) GroupQRCodeRepository {
 	return &groupQRCodeRepositoryImpl{db: db}
 }
 
-// Create 创建二维码记录
+// Create creates a QR code record
 func (r *groupQRCodeRepositoryImpl) Create(ctx context.Context, qrcode *model.GroupQRCode) error {
 	return r.db.WithContext(ctx).Create(qrcode).Error
 }
 
-// GetActiveByGroupID 获取群的当前有效二维码
+// GetActiveByGroupID gets current active QR code for group
 func (r *groupQRCodeRepositoryImpl) GetActiveByGroupID(ctx context.Context, groupID string) (*model.GroupQRCode, error) {
 	var qr model.GroupQRCode
 	err := r.db.WithContext(ctx).
@@ -44,7 +44,7 @@ func (r *groupQRCodeRepositoryImpl) GetActiveByGroupID(ctx context.Context, grou
 	return &qr, nil
 }
 
-// GetByToken 根据 token 查询二维码
+// GetByToken gets QR code by token
 func (r *groupQRCodeRepositoryImpl) GetByToken(ctx context.Context, token string) (*model.GroupQRCode, error) {
 	var qr model.GroupQRCode
 	err := r.db.WithContext(ctx).
@@ -56,7 +56,7 @@ func (r *groupQRCodeRepositoryImpl) GetByToken(ctx context.Context, token string
 	return &qr, nil
 }
 
-// InvalidateByGroupID 将群内所有活跃二维码标记为失效
+// InvalidateByGroupID marks all active QR codes for group as invalid
 func (r *groupQRCodeRepositoryImpl) InvalidateByGroupID(ctx context.Context, groupID string) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupQRCode{}).
@@ -67,7 +67,7 @@ func (r *groupQRCodeRepositoryImpl) InvalidateByGroupID(ctx context.Context, gro
 		}).Error
 }
 
-// UpdateExpireAt 续期二维码
+// UpdateExpireAt renews QR code expiration
 func (r *groupQRCodeRepositoryImpl) UpdateExpireAt(ctx context.Context, token string, expireAt time.Time) error {
 	return r.db.WithContext(ctx).
 		Model(&model.GroupQRCode{}).

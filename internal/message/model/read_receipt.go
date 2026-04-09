@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// MessageReadReceipt 消息已读回执
+// MessageReadReceipt message read receipt
 type MessageReadReceipt struct {
 	ID                int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	ConversationID    string    `gorm:"column:conversation_id;not null;uniqueIndex:uk_conversation_user" json:"conversationId"`
@@ -14,7 +14,7 @@ type MessageReadReceipt struct {
 	ReadAt            time.Time `gorm:"column:read_at;not null;default:CURRENT_TIMESTAMP" json:"readAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (MessageReadReceipt) TableName() string {
 	return "message_read_receipts"
 }

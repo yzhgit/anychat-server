@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Message 消息模型
+// Message message model
 type Message struct {
 	ID                         int64      `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	MessageID                  string     `gorm:"column:message_id;not null;uniqueIndex" json:"messageId"`
@@ -17,55 +17,55 @@ type Message struct {
 	Sequence                   int64      `gorm:"column:sequence;not null;uniqueIndex:uk_conversation_sequence" json:"sequence"`
 	ReplyTo                    *string    `gorm:"column:reply_to" json:"replyTo,omitempty"`
 	AtUsers                    []string   `gorm:"column:at_users;type:text[]" json:"atUsers,omitempty"`
-	Status                     int16      `gorm:"column:status;default:0" json:"status"`                                             // 0-正常 1-撤回 2-删除
-	BurnAfterReadingSeconds    int32      `gorm:"column:burn_after_reading_seconds;default:0" json:"burnAfterReadingSeconds"`        // 阅后即焚时长快照(秒),0表示不启用
-	AutoDeleteExpireTime       *time.Time `gorm:"column:auto_delete_expire_time" json:"autoDeleteExpireTime,omitempty"`              // 自动删除策略过期时间
-	BurnAfterReadingExpireTime *time.Time `gorm:"column:burn_after_reading_expire_time" json:"burnAfterReadingExpireTime,omitempty"` // 阅后即焚策略过期时间
-	ExpireTime                 *time.Time `gorm:"column:expire_time;index:idx_expire_time" json:"expireTime,omitempty"`              // 消息过期时间,为NULL表示永不过期
+	Status                     int16      `gorm:"column:status;default:0" json:"status"`                                             // 0-normal 1-recalled 2-deleted
+	BurnAfterReadingSeconds    int32      `gorm:"column:burn_after_reading_seconds;default:0" json:"burnAfterReadingSeconds"`        // burn-after-reading duration snapshot (seconds), 0 means not enabled
+	AutoDeleteExpireTime       *time.Time `gorm:"column:auto_delete_expire_time" json:"autoDeleteExpireTime,omitempty"`              // auto-delete policy expiration time
+	BurnAfterReadingExpireTime *time.Time `gorm:"column:burn_after_reading_expire_time" json:"burnAfterReadingExpireTime,omitempty"` // burn-after-reading policy expiration time
+	ExpireTime                 *time.Time `gorm:"column:expire_time;index:idx_expire_time" json:"expireTime,omitempty"`              // message expiration time, NULL means never expires
 	CreatedAt                  time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP;index:idx_created_at" json:"createdAt"`
 	UpdatedAt                  time.Time  `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName returns table name
 func (Message) TableName() string {
 	return "messages"
 }
 
-// MessageStatus 消息状态
+// MessageStatus message status
 const (
-	MessageStatusNormal  = 0 // 正常
-	MessageStatusRecall  = 1 // 撤回
-	MessageStatusDeleted = 2 // 删除
+	MessageStatusNormal  = 0 // normal
+	MessageStatusRecall  = 1 // recalled
+	MessageStatusDeleted = 2 // deleted
 )
 
-// ConversationType 会话类型
+// ConversationType conversation type
 const (
-	ConversationTypeSingle = "single" // 单聊
-	ConversationTypeGroup  = "group"  // 群聊
+	ConversationTypeSingle = "single" // single chat
+	ConversationTypeGroup  = "group"  // group chat
 )
 
-// ContentType 内容类型
+// ContentType content type
 const (
-	ContentTypeText     = "text"     // 文本
-	ContentTypeImage    = "image"    // 图片
-	ContentTypeVideo    = "video"    // 视频
-	ContentTypeAudio    = "audio"    // 语音
-	ContentTypeFile     = "file"     // 文件
-	ContentTypeLocation = "location" // 位置
-	ContentTypeCard     = "card"     // 名片
+	ContentTypeText     = "text"     // text
+	ContentTypeImage    = "image"    // image
+	ContentTypeVideo    = "video"    // video
+	ContentTypeAudio    = "audio"    // voice
+	ContentTypeFile     = "file"     // file
+	ContentTypeLocation = "location" // location
+	ContentTypeCard     = "card"     // contact card
 )
 
-// IsNormal 是否正常消息
+// IsNormal checks if message is normal
 func (m *Message) IsNormal() bool {
 	return m.Status == MessageStatusNormal
 }
 
-// IsRecalled 是否已撤回
+// IsRecalled checks if message is recalled
 func (m *Message) IsRecalled() bool {
 	return m.Status == MessageStatusRecall
 }
 
-// IsDeleted 是否已删除
+// IsDeleted checks if message is deleted
 func (m *Message) IsDeleted() bool {
 	return m.Status == MessageStatusDeleted
 }

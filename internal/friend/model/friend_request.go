@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// FriendRequest 好友申请模型
+// FriendRequest is the friend request model
 type FriendRequest struct {
 	ID         int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	FromUserID string    `gorm:"column:from_user_id;not null;index" json:"fromUserId"`
@@ -14,38 +14,38 @@ type FriendRequest struct {
 	UpdatedAt  time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
-// TableName 表名
+// TableName is the table name
 func (FriendRequest) TableName() string {
 	return "friend_requests"
 }
 
-// FriendRequestStatus 好友申请状态
+// FriendRequestStatus is the friend request status constant
 const (
-	FriendRequestStatusPending  = "pending"  // 待处理
-	FriendRequestStatusAccepted = "accepted" // 已接受
-	FriendRequestStatusRejected = "rejected" // 已拒绝
-	FriendRequestStatusExpired  = "expired"  // 已过期
+	FriendRequestStatusPending  = "pending"  // pending
+	FriendRequestStatusAccepted = "accepted" // accepted
+	FriendRequestStatusRejected = "rejected" // rejected
+	FriendRequestStatusExpired  = "expired"  // expired
 )
 
-// FriendRequestSource 好友申请来源
+// FriendRequestSource is the friend request source constant
 const (
-	FriendRequestSourceSearch   = "search"   // 搜索
-	FriendRequestSourceQRCode   = "qrcode"   // 二维码
-	FriendRequestSourceGroup    = "group"    // 群组
-	FriendRequestSourceContacts = "contacts" // 通讯录
+	FriendRequestSourceSearch   = "search"   // search
+	FriendRequestSourceQRCode   = "qrcode"   // qrcode
+	FriendRequestSourceGroup    = "group"    // group
+	FriendRequestSourceContacts = "contacts" // contacts
 )
 
-// IsPending 是否待处理
+// IsPending returns true if the request is pending
 func (fr *FriendRequest) IsPending() bool {
 	return fr.Status == FriendRequestStatusPending
 }
 
-// IsAccepted 是否已接受
+// IsAccepted returns true if the request is accepted
 func (fr *FriendRequest) IsAccepted() bool {
 	return fr.Status == FriendRequestStatusAccepted
 }
 
-// IsRejected 是否已拒绝
+// IsRejected returns true if the request is rejected
 func (fr *FriendRequest) IsRejected() bool {
 	return fr.Status == FriendRequestStatusRejected
 }

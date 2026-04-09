@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// BlacklistRepository 黑名单仓库接口
+// BlacklistRepository is the blacklist repository interface
 type BlacklistRepository interface {
 	Create(ctx context.Context, blacklist *model.Blacklist) error
 	GetByUserAndBlocked(ctx context.Context, userID, blockedUserID string) (*model.Blacklist, error)
@@ -17,22 +17,22 @@ type BlacklistRepository interface {
 	WithTx(tx *gorm.DB) BlacklistRepository
 }
 
-// blacklistRepositoryImpl 黑名单仓库实现
+// blacklistRepositoryImpl is the blacklist repository implementation
 type blacklistRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewBlacklistRepository 创建黑名单仓库
+// NewBlacklistRepository creates a new blacklist repository
 func NewBlacklistRepository(db *gorm.DB) BlacklistRepository {
 	return &blacklistRepositoryImpl{db: db}
 }
 
-// Create 添加黑名单
+// Create adds to blacklist
 func (r *blacklistRepositoryImpl) Create(ctx context.Context, blacklist *model.Blacklist) error {
 	return r.db.WithContext(ctx).Create(blacklist).Error
 }
 
-// GetByUserAndBlocked 获取黑名单记录
+// GetByUserAndBlocked retrieves a blacklist record
 func (r *blacklistRepositoryImpl) GetByUserAndBlocked(ctx context.Context, userID, blockedUserID string) (*model.Blacklist, error) {
 	var blacklist model.Blacklist
 	err := r.db.WithContext(ctx).
@@ -44,7 +44,7 @@ func (r *blacklistRepositoryImpl) GetByUserAndBlocked(ctx context.Context, userI
 	return &blacklist, nil
 }
 
-// GetBlacklist 获取黑名单列表
+// GetBlacklist retrieves the blacklist
 func (r *blacklistRepositoryImpl) GetBlacklist(ctx context.Context, userID string) ([]*model.Blacklist, error) {
 	var blacklist []*model.Blacklist
 	err := r.db.WithContext(ctx).
@@ -54,14 +54,14 @@ func (r *blacklistRepositoryImpl) GetBlacklist(ctx context.Context, userID strin
 	return blacklist, err
 }
 
-// Delete 删除黑名单
+// Delete removes from blacklist
 func (r *blacklistRepositoryImpl) Delete(ctx context.Context, userID, blockedUserID string) error {
 	return r.db.WithContext(ctx).
 		Where("user_id = ? AND blocked_user_id = ?", userID, blockedUserID).
 		Delete(&model.Blacklist{}).Error
 }
 
-// IsBlocked 检查是否被拉黑（双向检查：A拉黑B 或 B拉黑A）
+// IsBlocked checks if user is blocked (bidirectional check: A blocks B or B blocks A)
 func (r *blacklistRepositoryImpl) IsBlocked(ctx context.Context, userID, targetUserID string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -72,7 +72,7 @@ func (r *blacklistRepositoryImpl) IsBlocked(ctx context.Context, userID, targetU
 	return count > 0, err
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *blacklistRepositoryImpl) WithTx(tx *gorm.DB) BlacklistRepository {
 	return &blacklistRepositoryImpl{db: tx}
 }

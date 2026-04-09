@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// PushLog 推送日志模型
+// PushLog push log model
 type PushLog struct {
 	ID           int64     `gorm:"primaryKey;autoIncrement"`
 	UserID       string    `gorm:"column:user_id;not null;index"`

@@ -1,5 +1,5 @@
--- 删除文件上传追踪表
+-- Drop file upload tracking table
 DROP TABLE IF EXISTS file_uploads;
 
--- 删除文件元数据表
+-- Drop file metadata table
 DROP TABLE IF EXISTS files;

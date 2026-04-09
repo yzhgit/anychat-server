@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminConfigHandler 系统配置处理器
+// AdminConfigHandler system config handler
 type AdminConfigHandler struct {
 	svc service.AdminService
 }
@@ -17,12 +17,12 @@ func NewAdminConfigHandler(svc service.AdminService) *AdminConfigHandler {
 	return &AdminConfigHandler{svc: svc}
 }
 
-// ListConfigs 获取所有系统配置
-// @Summary      获取系统配置
-// @Tags         管理后台-系统配置
+// ListConfigs get all system configs
+// @Summary      get system config
+// @Tags         admin-system-config
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200  {object}  response.Response{data=object}  "成功"
+// @Success      200  {object}  response.Response{data=object}  "success"
 // @Router       /admin/config [get]
 func (h *AdminConfigHandler) ListConfigs(c *gin.Context) {
 	configs, err := h.svc.GetAllConfigs(c.Request.Context())
@@ -37,15 +37,15 @@ type updateConfigRequest struct {
 	Value string `json:"value" binding:"required"`
 }
 
-// UpdateConfig 更新系统配置
-// @Summary      更新系统配置
-// @Tags         管理后台-系统配置
+// UpdateConfig update system config
+// @Summary      update system config
+// @Tags         admin-system-config
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        key      path  string              true  "配置键"
-// @Param        request  body  updateConfigRequest true  "配置值"
-// @Success      200  {object}  response.Response  "成功"
+// @Param        key      path  string              true  "config key"
+// @Param        request  body  updateConfigRequest true  "config value"
+// @Success      200  {object}  response.Response  "success"
 // @Router       /admin/config/{key} [put]
 func (h *AdminConfigHandler) UpdateConfig(c *gin.Context) {
 	adminID := getAdminID(c)
@@ -63,7 +63,7 @@ func (h *AdminConfigHandler) UpdateConfig(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// AdminManageHandler 管理员账号管理处理器
+// AdminManageHandler admin account management handler
 type AdminManageHandler struct {
 	svc service.AdminService
 }
@@ -72,12 +72,12 @@ func NewAdminManageHandler(svc service.AdminService) *AdminManageHandler {
 	return &AdminManageHandler{svc: svc}
 }
 
-// ListAdmins 查询管理员列表
-// @Summary      管理员列表
-// @Tags         管理后台-管理员管理
+// ListAdmins query admin list
+// @Summary      admin list
+// @Tags         admin-admin-management
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200  {object}  response.Response{data=object}  "成功"
+// @Success      200  {object}  response.Response{data=object}  "success"
 // @Router       /admin/admins [get]
 func (h *AdminManageHandler) ListAdmins(c *gin.Context) {
 	admins, total, err := h.svc.ListAdmins(c.Request.Context(), 1, 100)
@@ -106,14 +106,14 @@ type createAdminRequest struct {
 	Role     string `json:"role"`
 }
 
-// CreateAdmin 创建管理员
-// @Summary      创建管理员
-// @Tags         管理后台-管理员管理
+// CreateAdmin create admin
+// @Summary      create admin
+// @Tags         admin-admin-management
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        request  body  createAdminRequest  true  "管理员信息"
-// @Success      200  {object}  response.Response  "成功"
+// @Param        request  body  createAdminRequest  true  "admin info"
+// @Success      200  {object}  response.Response  "success"
 // @Router       /admin/admins [post]
 func (h *AdminManageHandler) CreateAdmin(c *gin.Context) {
 	var req createAdminRequest
@@ -136,15 +136,15 @@ type updateAdminStatusRequest struct {
 	Status int8 `json:"status" binding:"required"`
 }
 
-// UpdateAdminStatus 启用/禁用管理员
-// @Summary      更新管理员状态
-// @Tags         管理后台-管理员管理
+// UpdateAdminStatus enable/disable admin
+// @Summary      update admin status
+// @Tags         admin-admin-management
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        adminId  path  string                    true  "管理员ID"
-// @Param        request  body  updateAdminStatusRequest  true  "状态"
-// @Success      200  {object}  response.Response  "成功"
+// @Param        adminId  path  string                    true  "admin ID"
+// @Param        request  body  updateAdminStatusRequest  true  "status"
+// @Success      200  {object}  response.Response  "success"
 // @Router       /admin/admins/{adminId}/status [put]
 func (h *AdminManageHandler) UpdateAdminStatus(c *gin.Context) {
 	id := c.Param("adminId")

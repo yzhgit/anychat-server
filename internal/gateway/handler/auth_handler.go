@@ -10,12 +10,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// AuthHandler auth HTTP处理器
+// AuthHandler auth HTTP handler
 type AuthHandler struct {
 	clientManager *client.Manager
 }
 
-// SendCodeRequest 发送验证码请求
+// SendCodeRequest send verification code request
 type SendCodeRequest struct {
 	Target     string `json:"target" binding:"required" example:"13800138000"`
 	TargetType string `json:"targetType" binding:"required" example:"sms" enums:"sms,email"`
@@ -23,7 +23,7 @@ type SendCodeRequest struct {
 	DeviceID   string `json:"deviceId" example:"device-uuid-123"`
 }
 
-// RegisterRequest 用户注册请求
+// RegisterRequest user registration request
 type RegisterRequest struct {
 	PhoneNumber   *string `json:"phoneNumber" example:"13800138000"`
 	Email         *string `json:"email" example:"user@example.com"`
@@ -35,7 +35,7 @@ type RegisterRequest struct {
 	ClientVersion string  `json:"clientVersion" binding:"required" example:"1.0.0"`
 }
 
-// LoginRequest 用户登录请求
+// LoginRequest user login request
 type LoginRequest struct {
 	Account       string `json:"account" binding:"required" example:"13800138000"`
 	Password      string `json:"password" binding:"required" example:"password123"`
@@ -45,31 +45,31 @@ type LoginRequest struct {
 	IpAddress     string `json:"ipAddress"`
 }
 
-// RefreshTokenRequest 刷新令牌请求
+// RefreshTokenRequest refresh token request
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refreshToken" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
-// LogoutRequest 登出请求
+// LogoutRequest logout request
 type LogoutRequest struct {
 	DeviceID string `json:"deviceId" binding:"required" example:"device-uuid-123"`
 }
 
-// ChangePasswordRequest 修改密码请求
+// ChangePasswordRequest change password request
 type ChangePasswordRequest struct {
 	DeviceID    string `json:"deviceId" binding:"required" example:"device-uuid-123"`
 	OldPassword string `json:"oldPassword" binding:"required" example:"oldpass123"`
 	NewPassword string `json:"newPassword" binding:"required" example:"newpass123"`
 }
 
-// ResetPasswordRequest 重置密码请求（忘记密码）
+// ResetPasswordRequest reset password request (forgot password)
 type ResetPasswordRequest struct {
 	Account     string `json:"account" binding:"required" example:"13800138000"`
 	VerifyCode  string `json:"verifyCode" binding:"required" example:"123456"`
 	NewPassword string `json:"newPassword" binding:"required" example:"NewPass123"`
 }
 
-// AuthResponse 认证响应
+// AuthResponse auth response
 type AuthResponse struct {
 	UserID       string    `json:"userId" example:"user-123"`
 	AccessToken  string    `json:"accessToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
@@ -78,13 +78,13 @@ type AuthResponse struct {
 	User         *UserInfo `json:"user,omitempty"`
 }
 
-// SendCodeResponse 发送验证码响应
+// SendCodeResponse send verification code response
 type SendCodeResponse struct {
 	CodeID    string `json:"codeId" example:"vc_20260405_xxx"`
 	ExpiresIn int64  `json:"expiresIn" example:"300"`
 }
 
-// UserInfo 用户信息
+// UserInfo user info
 type UserInfo struct {
 	UserID   string  `json:"userId" example:"user-123"`
 	Nickname string  `json:"nickname" example:"张三"`
@@ -93,24 +93,24 @@ type UserInfo struct {
 	Email    *string `json:"email,omitempty" example:"user@example.com"`
 }
 
-// NewAuthHandler 创建auth处理器
+// NewAuthHandler creates auth handler
 func NewAuthHandler(clientManager *client.Manager) *AuthHandler {
 	return &AuthHandler{
 		clientManager: clientManager,
 	}
 }
 
-// SendCode 发送验证码
-// @Summary      发送验证码
-// @Description  发送注册、找回密码或绑定场景使用的短信/邮箱验证码
-// @Tags         认证
+// SendCode send verification code
+// @Summary      send verification code
+// @Description  Send SMS/email verification code for registration, password recovery or binding scenarios
+// @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      SendCodeRequest  true  "验证码请求"
-// @Success      200      {object}  response.Response{data=SendCodeResponse}  "发送成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      429      {object}  response.Response  "请求过于频繁"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      SendCodeRequest  true  "verification code request"
+// @Success      200      {object}  response.Response{data=SendCodeResponse}  "send success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      429      {object}  response.Response  "too many requests"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/send-code [post]
 func (h *AuthHandler) SendCode(c *gin.Context) {
 	var req SendCodeRequest
@@ -138,17 +138,17 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 	})
 }
 
-// Register 用户注册
-// @Summary      用户注册
-// @Description  用户通过手机号或邮箱注册新账号
-// @Tags         认证
+// Register user registration
+// @Summary      user registration
+// @Description  User registers new account via phone or email
+// @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      RegisterRequest  true  "注册信息"
-// @Success      200      {object}  response.Response{data=AuthResponse}  "注册成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      409      {object}  response.Response  "用户已存在"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      RegisterRequest  true  "registration info"
+// @Success      200      {object}  response.Response{data=AuthResponse}  "registration success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      409      {object}  response.Response  "user already exists"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -158,7 +158,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	resp, err := h.clientManager.Auth().Register(c.Request.Context(), &authpb.RegisterRequest{
 		PhoneNumber:   req.PhoneNumber,
 		Email:         req.Email,
@@ -183,17 +183,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
-// Login 用户登录
-// @Summary      用户登录
-// @Description  用户通过账号密码登录
-// @Tags         认证
+// Login user login
+// @Summary      user login
+// @Description  User login via account and password
+// @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      LoginRequest  true  "登录信息"
-// @Success      200      {object}  response.Response{data=AuthResponse}  "登录成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "账号或密码错误"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      LoginRequest  true  "login info"
+// @Success      200      {object}  response.Response{data=AuthResponse}  "login success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "incorrect account or password"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
@@ -203,7 +203,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	resp, err := h.clientManager.Auth().Login(c.Request.Context(), &authpb.LoginRequest{
 		Account:       req.Account,
 		Password:      req.Password,
@@ -238,18 +238,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// Logout 用户登出
-// @Summary      用户登出
-// @Description  用户登出，使当前设备的令牌失效
-// @Tags         认证
+// Logout user logout
+// @Summary      user logout
+// @Description  User logout, invalidate token for current device
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      LogoutRequest  true  "登出信息"
-// @Success      200      {object}  response.Response  "登出成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      LogoutRequest  true  "logout info"
+// @Success      200      {object}  response.Response  "logout success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	var req LogoutRequest
@@ -261,7 +261,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	userID := gwmiddleware.GetUserID(c)
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	_, err := h.clientManager.Auth().Logout(c.Request.Context(), &authpb.LogoutRequest{
 		UserId:   userID,
 		DeviceId: req.DeviceID,
@@ -275,17 +275,17 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// RefreshToken 刷新Token
-// @Summary      刷新访问令牌
-// @Description  使用刷新令牌获取新的访问令牌
-// @Tags         认证
+// RefreshToken refresh access token
+// @Summary      refresh access token
+// @Description  Use refresh token to get new access token
+// @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      RefreshTokenRequest  true  "刷新令牌"
-// @Success      200      {object}  response.Response{data=AuthResponse}  "刷新成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "刷新令牌无效"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      RefreshTokenRequest  true  "refresh token"
+// @Success      200      {object}  response.Response{data=AuthResponse}  "refresh success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "invalid refresh token"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	var req RefreshTokenRequest
@@ -295,7 +295,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	resp, err := h.clientManager.Auth().RefreshToken(c.Request.Context(), &authpb.RefreshTokenRequest{
 		RefreshToken: req.RefreshToken,
 	})
@@ -312,18 +312,18 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	})
 }
 
-// ChangePassword 修改密码
-// @Summary      修改密码
-// @Description  用户修改登录密码
-// @Tags         认证
+// ChangePassword change password
+// @Summary      change password
+// @Description  User changes login password
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      ChangePasswordRequest  true  "修改密码信息"
-// @Success      200      {object}  response.Response  "修改成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "未授权或原密码错误"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      ChangePasswordRequest  true  "change password info"
+// @Success      200      {object}  response.Response  "change success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "unauthorized or wrong original password"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/password/change [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req ChangePasswordRequest
@@ -335,7 +335,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	userID := gwmiddleware.GetUserID(c)
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	_, err := h.clientManager.Auth().ChangePassword(c.Request.Context(), &authpb.ChangePasswordRequest{
 		UserId:      userID,
 		DeviceId:    req.DeviceID,
@@ -351,17 +351,17 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// ResetPassword 重置密码
-// @Summary      重置密码
-// @Description  用户忘记密码，通过验证码重置密码
-// @Tags         认证
+// ResetPassword reset password
+// @Summary      reset password
+// @Description  User forgets password, reset via verification code
+// @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request  body      ResetPasswordRequest  true  "重置密码信息"
-// @Success      200      {object}  response.Response  "重置成功"
-// @Failure      400      {object}  response.Response  "参数错误"
-// @Failure      401      {object}  response.Response  "验证码错误"
-// @Failure      500      {object}  response.Response  "服务器错误"
+// @Param        request  body      ResetPasswordRequest  true  "reset password info"
+// @Success      200      {object}  response.Response  "reset success"
+// @Failure      400      {object}  response.Response  "parameter error"
+// @Failure      401      {object}  response.Response  "verification code error"
+// @Failure      500      {object}  response.Response  "server error"
 // @Router       /auth/password/reset [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
@@ -371,7 +371,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// 调用auth-service gRPC
+	// Call auth-service gRPC
 	_, err := h.clientManager.Auth().ResetPassword(c.Request.Context(), &authpb.ResetPasswordRequest{
 		Account:     req.Account,
 		VerifyCode:  req.VerifyCode,
@@ -386,7 +386,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// handleGRPCError 处理gRPC错误
+// handleGRPCError handle gRPC errors
 func handleGRPCError(c *gin.Context, err error) {
 	st, ok := status.FromError(err)
 	if !ok {

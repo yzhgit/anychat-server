@@ -13,20 +13,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// UserServer user gRPC服务器
+// UserServer user gRPC server
 type UserServer struct {
 	userpb.UnimplementedUserServiceServer
 	userService service.UserService
 }
 
-// NewUserServer 创建user gRPC服务器
+// NewUserServer creates user gRPC server
 func NewUserServer(userService service.UserService) *UserServer {
 	return &UserServer{
 		userService: userService,
 	}
 }
 
-// GetProfile 获取个人资料
+// GetProfile retrieves personal profile
 func (s *UserServer) GetProfile(ctx context.Context, req *userpb.GetProfileRequest) (*userpb.UserProfileResponse, error) {
 	resp, err := s.userService.GetProfile(ctx, req.UserId)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *UserServer) GetProfile(ctx context.Context, req *userpb.GetProfileReque
 	return pbResp, nil
 }
 
-// UpdateProfile 更新个人资料
+// UpdateProfile updates personal profile
 func (s *UserServer) UpdateProfile(ctx context.Context, req *userpb.UpdateProfileRequest) (*userpb.UserProfileResponse, error) {
 	dtoReq := &dto.UpdateProfileRequest{}
 
@@ -111,7 +111,7 @@ func (s *UserServer) UpdateProfile(ctx context.Context, req *userpb.UpdateProfil
 	return pbResp, nil
 }
 
-// GetUserInfo 获取用户信息
+// GetUserInfo retrieves user info
 func (s *UserServer) GetUserInfo(ctx context.Context, req *userpb.GetUserInfoRequest) (*userpb.UserInfoResponse, error) {
 	resp, err := s.userService.GetUserInfo(ctx, req.UserId, req.TargetUserId)
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *UserServer) GetUserInfo(ctx context.Context, req *userpb.GetUserInfoReq
 	}, nil
 }
 
-// SearchUsers 搜索用户
+// SearchUsers searches for users
 func (s *UserServer) SearchUsers(ctx context.Context, req *userpb.SearchUsersRequest) (*userpb.SearchUsersResponse, error) {
 	dtoReq := &dto.SearchUsersRequest{
 		Keyword:  req.Keyword,
@@ -159,7 +159,7 @@ func (s *UserServer) SearchUsers(ctx context.Context, req *userpb.SearchUsersReq
 	}, nil
 }
 
-// GetSettings 获取用户设置
+// GetSettings retrieves user settings
 func (s *UserServer) GetSettings(ctx context.Context, req *userpb.GetSettingsRequest) (*userpb.UserSettingsResponse, error) {
 	resp, err := s.userService.GetSettings(ctx, req.UserId)
 	if err != nil {
@@ -179,7 +179,7 @@ func (s *UserServer) GetSettings(ctx context.Context, req *userpb.GetSettingsReq
 	}, nil
 }
 
-// UpdateSettings 更新用户设置
+// UpdateSettings updates user settings
 func (s *UserServer) UpdateSettings(ctx context.Context, req *userpb.UpdateSettingsRequest) (*userpb.UserSettingsResponse, error) {
 	dtoReq := &dto.UpdateSettingsRequest{}
 
@@ -226,7 +226,7 @@ func (s *UserServer) UpdateSettings(ctx context.Context, req *userpb.UpdateSetti
 	}, nil
 }
 
-// RefreshQRCode 刷新二维码
+// RefreshQRCode refreshes QR code
 func (s *UserServer) RefreshQRCode(ctx context.Context, req *userpb.RefreshQRCodeRequest) (*userpb.QRCodeResponse, error) {
 	resp, err := s.userService.RefreshQRCode(ctx, req.UserId)
 	if err != nil {
@@ -239,7 +239,7 @@ func (s *UserServer) RefreshQRCode(ctx context.Context, req *userpb.RefreshQRCod
 	}, nil
 }
 
-// GetUserByQRCode 通过二维码获取用户
+// GetUserByQRCode retrieves user by QR code
 func (s *UserServer) GetUserByQRCode(ctx context.Context, req *userpb.GetUserByQRCodeRequest) (*userpb.UserInfoResponse, error) {
 	resp, err := s.userService.GetUserByQRCode(ctx, req.Qrcode)
 	if err != nil {
@@ -254,7 +254,7 @@ func (s *UserServer) GetUserByQRCode(ctx context.Context, req *userpb.GetUserByQ
 	}, nil
 }
 
-// UpdatePushToken 更新推送Token
+// UpdatePushToken updates push token
 func (s *UserServer) UpdatePushToken(ctx context.Context, req *userpb.UpdatePushTokenRequest) (*commonpb.Empty, error) {
 	dtoReq := &dto.UpdatePushTokenRequest{
 		DeviceID:  req.DeviceId,
@@ -270,7 +270,7 @@ func (s *UserServer) UpdatePushToken(ctx context.Context, req *userpb.UpdatePush
 	return &commonpb.Empty{}, nil
 }
 
-// BindPhone 绑定手机号
+// BindPhone binds phone number
 func (s *UserServer) BindPhone(ctx context.Context, req *userpb.BindPhoneRequest) (*userpb.BindPhoneResponse, error) {
 	resp, err := s.userService.BindPhone(ctx, req.UserId, &dto.BindPhoneRequest{
 		PhoneNumber: req.PhoneNumber,
@@ -286,7 +286,7 @@ func (s *UserServer) BindPhone(ctx context.Context, req *userpb.BindPhoneRequest
 	}, nil
 }
 
-// ChangePhone 更换手机号
+// ChangePhone changes phone number
 func (s *UserServer) ChangePhone(ctx context.Context, req *userpb.ChangePhoneRequest) (*userpb.ChangePhoneResponse, error) {
 	dtoReq := &dto.ChangePhoneRequest{
 		OldPhoneNumber: req.OldPhoneNumber,
@@ -309,7 +309,7 @@ func (s *UserServer) ChangePhone(ctx context.Context, req *userpb.ChangePhoneReq
 	}, nil
 }
 
-// BindEmail 绑定邮箱
+// BindEmail binds email
 func (s *UserServer) BindEmail(ctx context.Context, req *userpb.BindEmailRequest) (*userpb.BindEmailResponse, error) {
 	resp, err := s.userService.BindEmail(ctx, req.UserId, &dto.BindEmailRequest{
 		Email:      req.Email,
@@ -325,7 +325,7 @@ func (s *UserServer) BindEmail(ctx context.Context, req *userpb.BindEmailRequest
 	}, nil
 }
 
-// ChangeEmail 更换邮箱
+// ChangeEmail changes email
 func (s *UserServer) ChangeEmail(ctx context.Context, req *userpb.ChangeEmailRequest) (*userpb.ChangeEmailResponse, error) {
 	dtoReq := &dto.ChangeEmailRequest{
 		OldEmail:      req.OldEmail,
@@ -348,7 +348,7 @@ func (s *UserServer) ChangeEmail(ctx context.Context, req *userpb.ChangeEmailReq
 	}, nil
 }
 
-// InitUserData 初始化用户数据（供auth-service调用）
+// InitUserData initializes user data (called by auth-service)
 func (s *UserServer) InitUserData(ctx context.Context, req *userpb.InitUserDataRequest) (*commonpb.Empty, error) {
 	err := s.userService.InitUserData(ctx, req.UserId, req.Nickname)
 	if err != nil {
@@ -358,7 +358,7 @@ func (s *UserServer) InitUserData(ctx context.Context, req *userpb.InitUserDataR
 	return &commonpb.Empty{}, nil
 }
 
-// convertError 将业务错误转换为gRPC错误
+// convertError converts business error to gRPC error
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
 		switch bizErr.Code {

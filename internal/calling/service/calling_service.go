@@ -24,7 +24,7 @@ import (
 
 const tokenTTL = 2 * time.Hour
 
-// CallingService 音视频服务接口
+// CallingService is the audio/video service interface
 type CallingService interface {
 	InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*callingpb.InitiateCallResponse, error)
 	JoinCall(ctx context.Context, callID, userID string) (*callingpb.JoinCallResponse, error)
@@ -50,7 +50,7 @@ type callingServiceImpl struct {
 	notificationPub notification.Publisher
 }
 
-// NewCallingService 创建音视频服务
+// NewCallingService creates an audio/video service
 func NewCallingService(
 	serverURL, apiKey, apiSecret string,
 	friendClient friendpb.FriendServiceClient,
@@ -71,7 +71,7 @@ func NewCallingService(
 	}
 }
 
-// ── 通话相关 ──────────────────────────────────────────────
+// ── Call Related ──────────────────────────────────────────────
 
 func (s *callingServiceImpl) InitiateCall(ctx context.Context, callerID, calleeID, callType string) (*callingpb.InitiateCallResponse, error) {
 	if callerID == "" || calleeID == "" {
@@ -98,7 +98,7 @@ func (s *callingServiceImpl) InitiateCall(ctx context.Context, callerID, calleeI
 	callID := uuid.NewString()
 	roomName := "call_" + callID
 
-	// 创建 LiveKit Room（设置 EmptyTimeout 为5分钟，等待被叫接听）
+	// Create LiveKit Room (set EmptyTimeout to 5 minutes, waiting for callee to answer)
 	emptyTimeout := uint32(300)
 	_, err = s.roomClient.CreateRoom(ctx, &lkproto.CreateRoomRequest{
 		Name:         roomName,
@@ -109,13 +109,13 @@ func (s *callingServiceImpl) InitiateCall(ctx context.Context, callerID, calleeI
 		return nil, status.Errorf(codes.Internal, "create room: %v", err)
 	}
 
-	// 生成主叫 Token
+	// Generate caller token
 	token, err := s.generateToken(roomName, callerID, true)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "generate token: %v", err)
 	}
 
-	// 持久化通话会话
+	// Persist call session
 	session := &model.CallSession{
 		CallID:   callID,
 		CallerID: callerID,
@@ -129,7 +129,7 @@ func (s *callingServiceImpl) InitiateCall(ctx context.Context, callerID, calleeI
 		return nil, status.Errorf(codes.Internal, "save session: %v", err)
 	}
 
-	// 通知被叫方
+	// Notify callee
 	notif := notification.NewNotification(notification.TypeLiveKitCallInvite, callerID, notification.PriorityHigh).
 		AddPayloadField("call_id", callID).
 		AddPayloadField("caller_id", callerID).
@@ -157,13 +157,13 @@ func (s *callingServiceImpl) JoinCall(ctx context.Context, callID, userID string
 		return nil, status.Error(codes.PermissionDenied, "not the callee of this call")
 	}
 
-	// 生成被叫 Token
+	// Generate callee token
 	token, err := s.generateToken(session.RoomName, userID, false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "generate token: %v", err)
 	}
 
-	// 更新会话状态
+	// Update session status
 	now := time.Now()
 	session.Status = "connected"
 	session.ConnectedAt = &now
@@ -171,7 +171,7 @@ func (s *callingServiceImpl) JoinCall(ctx context.Context, callID, userID string
 		logger.Warn("JoinCall: update session failed", zap.Error(err))
 	}
 
-	// 通知主叫方
+	// Notify caller
 	notif := notification.NewNotification(notification.TypeLiveKitCallStatus, userID, notification.PriorityHigh).
 		AddPayloadField("call_id", callID).
 		AddPayloadField("status", "connected")
@@ -204,10 +204,10 @@ func (s *callingServiceImpl) RejectCall(ctx context.Context, callID, userID stri
 		logger.Warn("RejectCall: update session failed", zap.Error(err))
 	}
 
-	// 删除 Room（无需等待）
+	// Delete Room (no need to wait)
 	go s.deleteRoom(session.RoomName)
 
-	// 通知主叫方
+	// Notify caller
 	notif := notification.NewNotification(notification.TypeLiveKitCallRejected, userID, notification.PriorityHigh).
 		AddPayloadField("call_id", callID).
 		AddPayloadField("callee_id", userID)
@@ -245,7 +245,7 @@ func (s *callingServiceImpl) EndCall(ctx context.Context, callID, userID string)
 
 	go s.deleteRoom(session.RoomName)
 
-	// 通知对方
+	// Notify peer
 	targetID := session.CallerID
 	if userID == session.CallerID {
 		targetID = session.CalleeID
@@ -282,7 +282,7 @@ func (s *callingServiceImpl) ListCallLogs(ctx context.Context, userID string, pa
 	return &callingpb.ListCallLogsResponse{Sessions: pbSessions, Total: total}, nil
 }
 
-// ── 会议室相关 ────────────────────────────────────────────
+// ── Meeting room related ────────────────────────────────────────────
 
 func (s *callingServiceImpl) CreateMeeting(ctx context.Context, creatorID, title, password string, maxParticipants int) (*callingpb.CreateMeetingResponse, error) {
 	roomID := uuid.NewString()
@@ -315,7 +315,7 @@ func (s *callingServiceImpl) CreateMeeting(ctx context.Context, creatorID, title
 		return nil, status.Errorf(codes.Internal, "save meeting: %v", err)
 	}
 
-	// 创建者拥有 RoomAdmin 权限
+	// Creator has RoomAdmin permission
 	token, err := s.generateToken(roomName, creatorID, true)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "generate token: %v", err)
@@ -393,10 +393,10 @@ func (s *callingServiceImpl) ListMeetings(ctx context.Context, page, pageSize in
 	return &callingpb.ListMeetingsResponse{Meetings: pbMeetings, Total: total}, nil
 }
 
-// ── 内部辅助 ──────────────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────
 
-// generateToken 生成 LiveKit JWT
-// isAdmin=true 时附加 RoomAdmin 权限（会议室创建者/通话主叫方）
+// generateToken generates LiveKit JWT
+// isAdmin=true grants RoomAdmin permission (meeting creator/call initiator)
 func (s *callingServiceImpl) generateToken(roomName, identity string, isAdmin bool) (string, error) {
 	at := auth.NewAccessToken(s.apiKey, s.apiSecret)
 	grant := &auth.VideoGrant{
@@ -423,7 +423,7 @@ func hashPassword(password string) string {
 	return fmt.Sprintf("%x", h)
 }
 
-// ── Proto 转换 ────────────────────────────────────────────
+// ── Proto conversion ────────────────────────────────────────────
 
 func toProtoCallSession(s *model.CallSession) *callingpb.CallSession {
 	pb := &callingpb.CallSession{

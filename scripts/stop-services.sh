@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# 停止所有微服务
+# Stop all microservices
 #
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -17,27 +17,27 @@ print_success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
-echo -e "${YELLOW}正在停止所有微服务...${NC}\n"
+echo -e "${YELLOW}Stopping all microservices...${NC}\n"
 
-# 停止所有微服务进程
+# Stop all microservice processes
 pkill -f "auth-service|user-service|gateway-service|friend-service|group-service|file-service|message-service|conversation-service|push-service|calling-service|sync-service|admin-service|version-service" 2>/dev/null || true
 
-# 等待进程结束
+# Wait for processes to end
 sleep 2
 
-# 检查是否还有进程
+# Check if any processes remain
 remaining=$(ps aux | grep -E "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|conversation-service|push-service|calling-service|sync-service|admin-service|version-service" | grep -v grep || echo "")
 
 if [ -z "$remaining" ]; then
-    print_success "所有微服务已停止"
+    print_success "All microservices stopped"
 else
-    print_info "仍有进程运行，强制停止..."
+    print_info "Some processes still running, forcing stop..."
     pkill -9 -f "auth-service|user-service|friend-service|group-service|file-service|gateway-service|message-service|conversation-service|push-service|calling-service|sync-service|admin-service|version-service" 2>/dev/null || true
     sleep 1
-    print_success "强制停止完成"
+    print_success "Force stop completed"
 fi
 
-# 清理 PID 文件
+# Clean up PID files
 rm -f \
     /tmp/auth-service.pid \
     /tmp/user-service.pid \
@@ -54,17 +54,17 @@ rm -f \
     /tmp/gateway-service.pid \
     2>/dev/null
 
-# 显示端口状态
+# Show port status
 echo ""
-print_info "端口状态检查:"
+print_info "Port status check:"
 for port in \
     9001 9002 9003 9004 9005 9006 9007 9008 9009 9010 9011 9012 \
     8080; do
     if lsof -i :$port 2>/dev/null | grep LISTEN > /dev/null; then
-        echo "  端口 $port: 仍被占用"
+        echo "  Port $port: still in use"
     else
-        echo "  端口 $port: 空闲 ✓"
+        echo "  Port $port: free ✓"
     fi
 done
 
-echo -e "\n${GREEN}完成！${NC}"
+echo -e "\n${GREEN}Done!${NC}"

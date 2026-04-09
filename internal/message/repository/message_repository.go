@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// MessageRepository 消息仓库接口
+// MessageRepository message repository interface
 type MessageRepository interface {
 	Create(ctx context.Context, message *model.Message) error
 	CreateBatch(ctx context.Context, messages []*model.Message) error
@@ -23,36 +23,36 @@ type MessageRepository interface {
 	CountUnreadByConversation(ctx context.Context, conversationID string, lastReadSeq int64) (int64, error)
 	SearchMessages(ctx context.Context, keyword string, conversationID *string, contentType *string, limit, offset int) ([]*model.Message, int64, error)
 	GetByReplyTo(ctx context.Context, replyToMessageID string) ([]*model.Message, error)
-	// GetExpiredMessages 获取过期消息（分页）
+	// GetExpiredMessages retrieves expired messages (paginated)
 	GetExpiredMessages(ctx context.Context, before time.Time, limit int) ([]*model.Message, error)
-	// BatchUpdateStatus 批量更新消息状态
+	// BatchUpdateStatus batch updates message status
 	BatchUpdateStatus(ctx context.Context, messageIDs []string, status int16) error
-	// GetExpiredMessageIDs 获取过期消息ID列表（用于通知）
+	// GetExpiredMessageIDs retrieves expired message IDs (for notification)
 	GetExpiredMessageIDs(ctx context.Context, before time.Time, limit int) ([]string, error)
 	WithTx(tx *gorm.DB) MessageRepository
 }
 
-// messageRepositoryImpl 消息仓库实现
+// messageRepositoryImpl message repository implementation
 type messageRepositoryImpl struct {
 	db *gorm.DB
 }
 
-// NewMessageRepository 创建消息仓库
+// NewMessageRepository creates message repository
 func NewMessageRepository(db *gorm.DB) MessageRepository {
 	return &messageRepositoryImpl{db: db}
 }
 
-// Create 创建消息
+// Create creates a message
 func (r *messageRepositoryImpl) Create(ctx context.Context, message *model.Message) error {
 	return r.db.WithContext(ctx).Create(message).Error
 }
 
-// CreateBatch 批量创建消息
+// CreateBatch creates messages in batch
 func (r *messageRepositoryImpl) CreateBatch(ctx context.Context, messages []*model.Message) error {
 	return r.db.WithContext(ctx).Create(messages).Error
 }
 
-// GetByID 根据ID获取消息
+// GetByID retrieves message by ID
 func (r *messageRepositoryImpl) GetByID(ctx context.Context, id int64) (*model.Message, error) {
 	var message model.Message
 	err := r.db.WithContext(ctx).
@@ -64,7 +64,7 @@ func (r *messageRepositoryImpl) GetByID(ctx context.Context, id int64) (*model.M
 	return &message, nil
 }
 
-// GetByMessageID 根据消息ID获取消息
+// GetByMessageID retrieves message by message ID
 func (r *messageRepositoryImpl) GetByMessageID(ctx context.Context, messageID string) (*model.Message, error) {
 	var message model.Message
 	err := r.db.WithContext(ctx).
@@ -76,7 +76,7 @@ func (r *messageRepositoryImpl) GetByMessageID(ctx context.Context, messageID st
 	return &message, nil
 }
 
-// GetByConversation 获取会话消息列表（支持序列号范围查询）
+// GetByConversation retrieves conversation messages (supports sequence range query)
 func (r *messageRepositoryImpl) GetByConversation(ctx context.Context, conversationID string, startSeq, endSeq int64, limit int, reverse bool) ([]*model.Message, error) {
 	var messages []*model.Message
 	query := r.db.WithContext(ctx).
@@ -103,7 +103,7 @@ func (r *messageRepositoryImpl) GetByConversation(ctx context.Context, conversat
 	return messages, err
 }
 
-// GetLatestByConversation 获取会话最新消息
+// GetLatestByConversation retrieves latest messages of conversation
 func (r *messageRepositoryImpl) GetLatestByConversation(ctx context.Context, conversationID string, limit int) ([]*model.Message, error) {
 	var messages []*model.Message
 	err := r.db.WithContext(ctx).
@@ -114,7 +114,7 @@ func (r *messageRepositoryImpl) GetLatestByConversation(ctx context.Context, con
 	return messages, err
 }
 
-// GetBySender 根据发送者获取消息列表
+// GetBySender retrieves messages by sender
 func (r *messageRepositoryImpl) GetBySender(ctx context.Context, senderID string, limit, offset int) ([]*model.Message, error) {
 	var messages []*model.Message
 	err := r.db.WithContext(ctx).
@@ -126,7 +126,7 @@ func (r *messageRepositoryImpl) GetBySender(ctx context.Context, senderID string
 	return messages, err
 }
 
-// UpdateStatus 更新消息状态
+// UpdateStatus updates message status
 func (r *messageRepositoryImpl) UpdateStatus(ctx context.Context, messageID string, status int16) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Message{}).
@@ -134,12 +134,12 @@ func (r *messageRepositoryImpl) UpdateStatus(ctx context.Context, messageID stri
 		Update("status", status).Error
 }
 
-// Delete 删除消息（软删除）
+// Delete deletes a message (soft delete)
 func (r *messageRepositoryImpl) Delete(ctx context.Context, messageID string) error {
 	return r.UpdateStatus(ctx, messageID, model.MessageStatusDeleted)
 }
 
-// CountByConversation 统计会话消息数量
+// CountByConversation counts messages in conversation
 func (r *messageRepositoryImpl) CountByConversation(ctx context.Context, conversationID string) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -149,7 +149,7 @@ func (r *messageRepositoryImpl) CountByConversation(ctx context.Context, convers
 	return count, err
 }
 
-// CountUnreadByConversation 统计会话未读消息数量
+// CountUnreadByConversation counts unread messages in conversation
 func (r *messageRepositoryImpl) CountUnreadByConversation(ctx context.Context, conversationID string, lastReadSeq int64) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
@@ -159,7 +159,7 @@ func (r *messageRepositoryImpl) CountUnreadByConversation(ctx context.Context, c
 	return count, err
 }
 
-// SearchMessages 搜索消息
+// SearchMessages searches messages
 func (r *messageRepositoryImpl) SearchMessages(ctx context.Context, keyword string, conversationID *string, contentType *string, limit, offset int) ([]*model.Message, int64, error) {
 	var messages []*model.Message
 	var total int64
@@ -168,27 +168,27 @@ func (r *messageRepositoryImpl) SearchMessages(ctx context.Context, keyword stri
 		Model(&model.Message{}).
 		Where("status = ?", model.MessageStatusNormal)
 
-	// 关键词搜索（使用JSONB包含查询）
+	// Keyword search (using JSONB contains query)
 	if keyword != "" {
 		query = query.Where("content::text ILIKE ?", "%"+keyword+"%")
 	}
 
-	// 会话过滤
+	// Conversation filter
 	if conversationID != nil && *conversationID != "" {
 		query = query.Where("conversation_id = ?", *conversationID)
 	}
 
-	// 内容类型过滤
+	// Content type filter
 	if contentType != nil && *contentType != "" {
 		query = query.Where("content_type = ?", *contentType)
 	}
 
-	// 统计总数
+	// Count total
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// 分页查询
+	// Paginated query
 	err := query.
 		Order("created_at DESC").
 		Limit(limit).
@@ -198,7 +198,7 @@ func (r *messageRepositoryImpl) SearchMessages(ctx context.Context, keyword stri
 	return messages, total, err
 }
 
-// GetByReplyTo 获取回复某条消息的所有消息
+// GetByReplyTo retrieves all messages replying to a message
 func (r *messageRepositoryImpl) GetByReplyTo(ctx context.Context, replyToMessageID string) ([]*model.Message, error) {
 	var messages []*model.Message
 	err := r.db.WithContext(ctx).
@@ -208,7 +208,7 @@ func (r *messageRepositoryImpl) GetByReplyTo(ctx context.Context, replyToMessage
 	return messages, err
 }
 
-// GetExpiredMessages 获取过期消息（分页）
+// GetExpiredMessages retrieves expired messages (paginated)
 func (r *messageRepositoryImpl) GetExpiredMessages(ctx context.Context, before time.Time, limit int) ([]*model.Message, error) {
 	var messages []*model.Message
 	err := r.db.WithContext(ctx).
@@ -219,7 +219,7 @@ func (r *messageRepositoryImpl) GetExpiredMessages(ctx context.Context, before t
 	return messages, err
 }
 
-// BatchUpdateStatus 批量更新消息状态
+// BatchUpdateStatus batch updates message status
 func (r *messageRepositoryImpl) BatchUpdateStatus(ctx context.Context, messageIDs []string, status int16) error {
 	if len(messageIDs) == 0 {
 		return nil
@@ -230,7 +230,7 @@ func (r *messageRepositoryImpl) BatchUpdateStatus(ctx context.Context, messageID
 		Update("status", status).Error
 }
 
-// GetExpiredMessageIDs 获取过期消息ID列表（用于通知）
+// GetExpiredMessageIDs retrieves expired message IDs (for notification)
 func (r *messageRepositoryImpl) GetExpiredMessageIDs(ctx context.Context, before time.Time, limit int) ([]string, error) {
 	var messageIDs []string
 	err := r.db.WithContext(ctx).
@@ -242,7 +242,7 @@ func (r *messageRepositoryImpl) GetExpiredMessageIDs(ctx context.Context, before
 	return messageIDs, err
 }
 
-// WithTx 使用事务
+// WithTx uses transaction
 func (r *messageRepositoryImpl) WithTx(tx *gorm.DB) MessageRepository {
 	return &messageRepositoryImpl{db: tx}
 }

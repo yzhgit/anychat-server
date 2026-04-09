@@ -1,6 +1,6 @@
 package dto
 
-// GenerateUploadTokenRequest 生成上传凭证请求
+// GenerateUploadTokenRequest generate upload token request
 type GenerateUploadTokenRequest struct {
 	FileName     string `json:"fileName" binding:"required" example:"photo.jpg"`
 	FileSize     int64  `json:"fileSize" binding:"required,gt=0" example:"1024000"`
@@ -9,19 +9,19 @@ type GenerateUploadTokenRequest struct {
 	ExpiresHours *int32 `json:"expiresHours,omitempty" example:"0"`
 }
 
-// GenerateUploadTokenResponse 生成上传凭证响应
+// GenerateUploadTokenResponse generate upload token response
 type GenerateUploadTokenResponse struct {
 	FileID    string `json:"fileId" example:"file-123"`
 	UploadURL string `json:"uploadUrl" example:"https://minio:9000/..."`
 	ExpiresIn int64  `json:"expiresIn" example:"3600"`
 }
 
-// CompleteUploadRequest 完成上传请求
+// CompleteUploadRequest complete upload request
 type CompleteUploadRequest struct {
 	FileID string `json:"fileId" binding:"required" example:"file-123"`
 }
 
-// FileInfoResponse 文件信息响应
+// FileInfoResponse file info response
 type FileInfoResponse struct {
 	FileID        string            `json:"fileId" example:"file-123"`
 	UserID        string            `json:"userId" example:"user-123"`
@@ -40,27 +40,27 @@ type FileInfoResponse struct {
 	ThumbnailURL  string            `json:"thumbnailUrl,omitempty" example:"https://minio:9000/..."`
 }
 
-// GenerateDownloadURLRequest 生成下载链接请求
+// GenerateDownloadURLRequest generate download URL request
 type GenerateDownloadURLRequest struct {
 	FileID         string `json:"fileId" binding:"required" example:"file-123"`
 	ExpiresMinutes *int32 `json:"expiresMinutes,omitempty" example:"60"`
 }
 
-// GenerateDownloadURLResponse 生成下载链接响应
+// GenerateDownloadURLResponse generate download URL response
 type GenerateDownloadURLResponse struct {
 	DownloadURL  string `json:"downloadUrl" example:"https://minio:9000/..."`
 	ExpiresIn    int64  `json:"expiresIn" example:"3600"`
 	ThumbnailURL string `json:"thumbnailUrl,omitempty" example:"https://minio:9000/..."`
 }
 
-// ListFilesRequest 列出文件请求
+// ListFilesRequest list files request
 type ListFilesRequest struct {
 	FileType *string `form:"fileType" example:"image"`
 	Page     int     `form:"page" binding:"required,min=1" example:"1"`
 	PageSize int     `form:"pageSize" binding:"required,min=1,max=100" example:"20"`
 }
 
-// ListFilesResponse 列出文件响应
+// ListFilesResponse list files response
 type ListFilesResponse struct {
 	Files    []*FileInfoResponse `json:"files"`
 	Total    int64               `json:"total" example:"100"`
@@ -68,12 +68,12 @@ type ListFilesResponse struct {
 	PageSize int                 `json:"pageSize" example:"20"`
 }
 
-// DeleteFileRequest 删除文件请求（仅用于内部）
+// DeleteFileRequest delete file request (for internal use only)
 type DeleteFileRequest struct {
 	FileID string `json:"fileId" binding:"required" example:"file-123"`
 }
 
-// DeleteFileResponse 删除文件响应
+// DeleteFileResponse delete file response
 type DeleteFileResponse struct {
 	Success bool `json:"success" example:"true"`
 }

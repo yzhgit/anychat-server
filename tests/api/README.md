@@ -1,155 +1,155 @@
-# HTTP API 测试
+# HTTP API Tests
 
-## 概述
+## Overview
 
-本目录包含 AnyChat 所有服务的 HTTP API 测试脚本。测试通过 Gateway Service 的 HTTP 接口进行，验证对外 API 的功能完整性和正确性。
+This directory contains HTTP API test scripts for all AnyChat services. Tests are conducted through the Gateway Service HTTP interfaces to verify the functionality and correctness of external APIs.
 
-## 目录结构
+## Directory Structure
 
 ```
 api/
-├── README.md           # 本文件
-├── common.sh           # 共享函数库（HTTP请求、打印函数等）
-├── test-all.sh         # 运行所有API测试的入口脚本
+├── README.md           # This file
+├── common.sh           # Shared function library (HTTP requests, print functions, etc.)
+├── test-all.sh         # Entry script to run all API tests
 ├── auth/
-│   └── test-auth-api.sh      # Auth Service API测试（含验证码流程）
+│   └── test-auth-api.sh      # Auth Service API tests (with verification code flow)
 ├── user/
-│   └── test-user-api.sh      # User Service API测试（9个用例）
+│   └── test-user-api.sh      # User Service API tests (9 test cases)
 ├── friend/
-│   └── test-friend-api.sh    # Friend Service API测试（12个用例）
+│   └── test-friend-api.sh    # Friend Service API tests (12 test cases)
 ├── group/
-│   └── test-group-api.sh     # Group Service API测试（15个用例）
+│   └── test-group-api.sh     # Group Service API tests (15 test cases)
 ├── file/
-│   └── test-file-api.sh      # File Service API测试
+│   └── test-file-api.sh      # File Service API tests
 ├── conversation/
-│   └── test-conversation-api.sh   # Conversation Service API测试
+│   └── test-conversation-api.sh   # Conversation Service API tests
 ├── sync/
-│   └── test-sync-api.sh      # Sync Service API测试（7个用例）
+│   └── test-sync-api.sh      # Sync Service API tests (7 test cases)
 ├── push/
-│   └── test-push-api.sh      # Push Service API测试
+│   └── test-push-api.sh      # Push Service API tests
 ├── calling/
-│   └── test-calling-api.sh      # Calling Service API测试（9个用例）
+│   └── test-calling-api.sh      # Calling Service API tests (9 test cases)
 └── admin/
-    └── test-admin-api.sh     # Admin Service API测试
+    └── test-admin-api.sh     # Admin Service API tests
 ```
 
-## 测试范围
+## Test Coverage
 
-### Auth Service (14个测试用例)
-- 健康检查
-- 发送短信验证码
-- 发送邮箱验证码
-- 无效目标格式校验
-- 验证码发送频率限制
-- 错误验证码注册失败
-- 固定验证码注册成功
-- 重置密码验证码发送
-- 用户注册
-- 用户登录
-- 修改密码
-- 新密码登录验证
-- 刷新Token
-- 登出
+### Auth Service (14 test cases)
+- Health check
+- Send SMS verification code
+- Send email verification code
+- Invalid target format validation
+- Verification code sending rate limit
+- Wrong verification code registration failure
+- Fixed verification code registration success
+- Reset password verification code sending
+- User registration
+- User login
+- Change password
+- New password login verification
+- Refresh token
+- Logout
 
-> 验证码发送/消费相关测试已合并到 `tests/api/auth/test-auth-api.sh`，不再单独维护 verify 测试目录。
-> 若需要验证真实邮箱发信，请先为 `auth-service` 配置 `verify.email.*` / `EMAIL_*` SMTP 参数。
+> Verification code sending/consumption tests have been merged into `tests/api/auth/test-auth-api.sh`, no longer maintaining a separate verify test directory.
+> To verify real email sending, configure `auth-service` with `verify.email.*` / `EMAIL_*` SMTP parameters first.
 
-### User Service (9个测试用例)
-- 获取个人资料
-- 更新个人资料
-- 验证资料已更新
-- 搜索用户
-- 获取用户设置
-- 更新用户设置
-- 验证设置已更新
-- 刷新二维码
-- 更新推送Token
+### User Service (9 test cases)
+- Get personal profile
+- Update personal profile
+- Verify profile updated
+- Search users
+- Get user settings
+- Update user settings
+- Verify settings updated
+- Refresh QR code
+- Update push token
 
-### Friend Service (12个测试用例)
-- 发送好友申请
-- 获取收到的好友申请
-- 获取发送的好友申请
-- 接受好友申请
-- 获取好友列表
-- 更新好友备注
-- 增量同步好友列表
-- 添加到黑名单
-- 获取黑名单
-- 从黑名单移除
-- 删除好友
-- 验证好友已删除
+### Friend Service (12 test cases)
+- Send friend request
+- Get received friend requests
+- Get sent friend requests
+- Accept friend request
+- Get friend list
+- Update friend remark
+- Incremental sync friend list
+- Add to blacklist
+- Get blacklist
+- Remove from blacklist
+- Delete friend
+- Verify friend deleted
 
-### Group Service (15个测试用例)
-- 健康检查
-- 创建群组
-- 获取群组信息
-- 获取群成员列表
-- 更新群信息
-- 邀请成员（需要验证）
-- 获取入群申请列表
-- 处理入群申请（接受）
-- 验证成员已加入
-- 更新成员角色
-- 更新群昵称
-- 移除群成员
-- 退出群组
-- 获取我的群组列表
-- 解散群组
+### Group Service (15 test cases)
+- Health check
+- Create group
+- Get group info
+- Get group member list
+- Update group info
+- Invite member (needs verification)
+- Get join request list
+- Process join request (accept)
+- Verify member joined
+- Update member role
+- Update group nickname
+- Remove group member
+- Leave group
+- Get my group list
+- Dissolve group
 
 ### File Service
-- 获取上传Token
-- 完成上传
-- 获取文件信息
-- 获取下载URL
-- 文件列表
-- 删除文件
+- Get upload token
+- Complete upload
+- Get file info
+- Get download URL
+- File list
+- Delete file
 
 ### Conversation Service
-- 获取会话列表
-- 获取单个会话
-- 标记已读
-- 置顶/取消置顶
-- 免打扰设置
-- 删除会话
-- 获取未读总数
+- Get conversation list
+- Get single conversation
+- Mark as read
+- Pin/unpin
+- Mute settings
+- Delete conversation
+- Get unread count
 
-### Sync Service (7个测试用例)
-- 全量同步（空账号）
-- 增量同步（带 lastSyncTime）
-- 未认证同步（返回401）
-- 消息补齐（空会话列表）
-- 未认证消息补齐（返回401）
-- 消息补齐（不存在的会话）
-- 消息补齐（query param 指定 limit）
+### Sync Service (7 test cases)
+- Full sync (empty account)
+- Incremental sync (with lastSyncTime)
+- Unauthenticated sync (returns 401)
+- Message fill (empty conversation list)
+- Unauthenticated message fill (returns 401)
+- Message fill (non-existent conversation)
+- Message fill (query param specifies limit)
 
 ### Push Service
-- 未认证注册设备Token（返回401）
-- 注册设备Token
-- 未认证发送推送（返回401）
-- 发送推送通知
+- Unauthenticated device token registration (returns 401)
+- Register device token
+- Unauthenticated push sending (returns 401)
+- Send push notification
 
-### Calling Service (9个测试用例)
-- 未认证发起通话（返回401）
-- 缺少 calleeId 发起通话（返回400）
-- 获取通话记录（初始为空）
-- 获取不存在的通话（返回错误）
-- 未认证创建会议室（返回401）
-- 创建会议室缺少 title（返回400）
-- 列举会议室
-- 接听不存在的通话（返回错误）
-- 获取不存在的会议室（返回错误）
+### Calling Service (9 test cases)
+- Unauthenticated call initiation (returns 401)
+- Initiate call without calleeId (returns 400)
+- Get call records (initially empty)
+- Get non-existent call (returns error)
+- Unauthenticated create meeting room (returns 400)
+- Create meeting room without title (returns 400)
+- List meeting rooms
+- Answer non-existent call (returns error)
+- Get non-existent meeting room (returns error)
 
 ### Admin Service
-- 管理员登录
-- 获取用户列表
-- 获取系统配置
-- 审计日志查询
+- Admin login
+- Get user list
+- Get system config
+- Audit log query
 
-## 运行测试
+## Running Tests
 
-### 前置条件
+### Prerequisites
 
-1. **安装依赖工具**：
+1. **Install dependencies**:
    ```bash
    # Ubuntu/Debian
    apt-get install jq curl
@@ -158,24 +158,24 @@ api/
    brew install jq
    ```
 
-2. **启动所有服务**：
+2. **Start all services**:
    ```bash
    ./scripts/start-services.sh
    ```
 
-3. **确认服务状态**：
+3. **Verify service status**:
    ```bash
    ./scripts/check-ports.sh
    ```
 
-### 运行所有测试
+### Run All Tests
 
 ```bash
-# 在项目根目录执行
+# Run from project root
 ./tests/api/test-all.sh
 ```
 
-### 运行单个服务测试
+### Run Single Service Tests
 
 ```bash
 # Auth Service
@@ -209,212 +209,212 @@ api/
 ADMIN_URL=http://localhost:8011 ./tests/api/admin/test-admin-api.sh
 ```
 
-### 自定义Gateway地址
+### Custom Gateway Address
 
 ```bash
-# 默认: http://localhost:8080
+# Default: http://localhost:8080
 export GATEWAY_URL="http://192.168.1.100:8080"
 ./tests/api/test-all.sh
 ```
 
-## 测试输出示例
+## Test Output Example
 
 ```
 ╔═══════════════════════════════════════════╗
-║   AnyChat HTTP API 测试套件               ║
+║   AnyChat HTTP API Test Suite              ║
 ╚═══════════════════════════════════════════╝
 
-测试环境: http://localhost:8080
-开始时间: 2026-02-16 19:30:00
+Test environment: http://localhost:8080
+Start time: 2026-02-16 19:30:00
 
-[1/3] 运行 Auth Service API 测试...
-========================================
-0. 健康检查
-========================================
-  响应: {"status":"ok"}
-✓ 健康检查通过
+[1/3] Running Auth Service API tests...
+===========================================
+0. Health Check
+===========================================
+  Response: {"status":"ok"}
+✓ Health check passed
 
-========================================
-1. 用户注册
-========================================
-  注册信息: 手机号=13877123456
-  响应: {"code":0,"message":"success","data":{...}}
-✓ 注册成功
-  用户ID: abc-123-def
+===========================================
+1. User Registration
+===========================================
+  Registration info: phone=13877123456
+  Response: {"code":0,"message":"success","data":{...}}
+✓ Registration successful
+  User ID: abc-123-def
   AccessToken: eyJhbGciOiJIUzI1NiIs...
 ...
 
-✓ Auth Service 测试通过
+✓ Auth Service tests passed
 
-[2/3] 运行 User Service API 测试...
+[2/3] Running User Service API tests...
 ...
 
-[3/3] 运行 Friend Service API 测试...
+[3/3] Running Friend Service API tests...
 ...
 
-═══════════════════════════════════════════
-结束时间: 2026-02-16 19:35:00
+══════════════════════════════════════════
+End time: 2026-02-16 19:35:00
 
 ╔═══════════════════════════════════════════╗
-║   所有测试通过! ✓                          ║
+║   All tests passed! ✓                     ║
 ╚═══════════════════════════════════════════╝
 ```
 
-## 测试原理
+## Test Principles
 
-### 测试协议
-- **协议**: HTTP/REST（通过Gateway Service）
-- **认证**: JWT Bearer Token
-- **数据格式**: JSON
+### Test Protocol
+- **Protocol**: HTTP/REST (via Gateway Service)
+- **Authentication**: JWT Bearer Token
+- **Data Format**: JSON
 
-### 测试流程
-1. **健康检查**: 确认Gateway服务正常
-2. **创建测试用户**: 注册新用户获取Token
-3. **执行测试用例**: 按顺序测试各个API
-4. **验证响应**: 检查返回码、数据格式、业务逻辑
-5. **输出结果**: 彩色输出成功/失败
+### Test Flow
+1. **Health check**: Verify Gateway service is healthy
+2. **Create test user**: Register new user to get token
+3. **Execute test cases**: Test each API in order
+4. **Verify response**: Check return code, data format, business logic
+5. **Output results**: Color-coded output for success/failure
 
-### 共享函数库 (common.sh)
+### Shared Function Library (common.sh)
 
-提供统一的工具函数：
+Provides unified utility functions:
 ```bash
-# HTTP请求
+# HTTP requests
 http_post <url> <data> [token]
 http_get <url> [token]
 http_put <url> <data> <token>
-http_delete <url> <token>
+http_delete <url> [token]
 
-# 响应检查
+# Response checking
 check_response <response>
 
-# 打印输出
+# Print output
 print_header <text>
 print_success <text>
 print_error <text>
 print_info <text>
 ```
 
-## 添加新服务测试
+## Adding New Service Tests
 
-### Step 1: 创建目录
+### Step 1: Create directory
 ```bash
 mkdir -p tests/api/<service-name>
 ```
 
-### Step 2: 创建测试脚本
+### Step 2: Create test script
 ```bash
 cp tests/api/auth/test-auth-api.sh tests/api/<service-name>/test-<service-name>-api.sh
 ```
 
-### Step 3: 修改测试脚本
-- 更新服务名称和API端点
-- 添加服务特定的测试用例
-- 确保使用common.sh中的共享函数
+### Step 3: Modify test script
+- Update service name and API endpoints
+- Add service-specific test cases
+- Ensure using shared functions from common.sh
 
-### Step 4: 更新test-all.sh
-在`tests/api/test-all.sh`中添加新服务的测试调用
+### Step 4: Update test-all.sh
+Add the new service test call in `tests/api/test-all.sh`
 
-### Step 5: 测试验证
+### Step 5: Test verification
 ```bash
 ./tests/api/<service-name>/test-<service-name>-api.sh
 ./tests/api/test-all.sh
 ```
 
-## 测试最佳实践
+## Test Best Practices
 
-### 1. 独立性
-- 每个测试脚本应该独立运行
-- 使用时间戳生成唯一的测试数据
-- 不依赖其他测试的状态
+### 1. Independence
+- Each test script should run independently
+- Use timestamps to generate unique test data
+- Do not depend on other test states
 
-### 2. 幂等性
-- 测试可以重复运行
-- 使用随机数据避免冲突
-- 不影响生产数据
+### 2. Idempotency
+- Tests can be run repeatedly
+- Use random data to avoid conflicts
+- Do not affect production data
 
-### 3. 覆盖全面
-- 测试正常场景和边界情况
-- 验证成功和失败响应
-- 检查错误消息格式
+### 3. Comprehensive Coverage
+- Test normal scenarios and edge cases
+- Verify success and failure responses
+- Check error message format
 
-### 4. 易于调试
-- 使用彩色输出区分成功/失败
-- 打印详细的请求和响应
-- 提供清晰的错误提示
+### 4. Easy Debugging
+- Use color output to distinguish success/failure
+- Print detailed request and response
+- Provide clear error messages
 
-### 5. JSON字段兼容性
-- 同时支持camelCase和snake_case
-- 使用`jq`的`//`运算符提供fallback
-- 验证字段是否为空或null
+### 5. JSON Field Compatibility
+- Support both camelCase and snake_case
+- Use `jq`'s `//` operator for fallback
+- Check if fields are empty or null
 
-示例：
+Example:
 ```bash
 USER_ID=$(echo "$response" | jq -r '.data.userId // .data.user_id // empty')
 if [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
-    print_error "无法获取用户ID"
+    print_error "Unable to get user ID"
     return 1
 fi
 ```
 
-## 故障排查
+## Troubleshooting
 
-### 测试失败常见原因
+### Common Test Failure Reasons
 
-1. **服务未启动**
+1. **Service not started**
    ```bash
-   # 检查服务状态
+   # Check service status
    ./scripts/check-ports.sh
 
-   # 启动服务
+   # Start services
    ./scripts/start-services.sh
    ```
 
-2. **端口冲突**
+2. **Port conflict**
    ```bash
-   # 检查端口占用
+   # Check port usage
    lsof -i :8080
    lsof -i :9001
    ```
 
-3. **数据库未初始化**
+3. **Database not initialized**
    ```bash
-   # 运行数据库迁移
+   # Run database migrations
    mage db:up
    ```
 
-4. **依赖工具缺失**
+4. **Missing dependency tools**
    ```bash
-   # 检查jq
+   # Check jq
    which jq
 
-   # 安装jq
+   # Install jq
    sudo apt-get install jq  # Ubuntu
    brew install jq          # macOS
    ```
 
-5. **Gateway URL错误**
+5. **Wrong Gateway URL**
    ```bash
-   # 检查Gateway
+   # Check Gateway
    curl http://localhost:8080/health
 
-   # 自定义URL
+   # Custom URL
    export GATEWAY_URL="http://your-gateway:8080"
    ```
 
-### 查看详细日志
+### View Detailed Logs
 
-测试脚本会输出详细的请求和响应，可以：
-1. 检查API响应的code和message字段
-2. 验证返回的数据格式
-3. 确认Token是否有效
+Test scripts output detailed requests and responses:
+1. Check API response code and message fields
+2. Verify returned data format
+3. Confirm token is valid
 
-### 单独测试某个用例
+### Test Specific Cases Individually
 
-可以注释掉测试脚本中的其他用例，只运行特定的测试函数。
+You can comment out other test cases in the test script to run only specific test functions.
 
-## CI/CD 集成
+## CI/CD Integration
 
-### GitHub Actions 示例
+### GitHub Actions Example
 
 ```yaml
 name: API Tests
@@ -442,9 +442,9 @@ jobs:
         run: ./tests/api/test-all.sh
 ```
 
-## 参考
+## References
 
-- [设计文档](../../docs/design/backend-design.md)
-- [API快速开始](../../docs/api/QUICKSTART.md)
-- [开发指南](../../docs/development/getting-started.md)
-- [测试策略](../../docs/development/testing-strategy.md)
+- [Design Documents](../../docs/design/backend-design.md)
+- [API Quick Start](../../docs/api/QUICKSTART.md)
+- [Getting Started Guide](../../docs/development/getting-started.md)
+- [Testing Strategy](../../docs/development/testing-strategy.md)

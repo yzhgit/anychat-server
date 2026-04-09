@@ -8,16 +8,16 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// Priority 通知优先级
+// Priority notification priority
 type Priority string
 
 const (
-	PriorityHigh   Priority = "high"   // 高优先级
-	PriorityNormal Priority = "normal" // 普通优先级
-	PriorityLow    Priority = "low"    // 低优先级
+	PriorityHigh   Priority = "high"   // High priority
+	PriorityNormal Priority = "normal" // Normal priority
+	PriorityLow    Priority = "low"    // Low priority
 )
 
-// Notification 通用通知结构
+// Notification common notification structure
 type Notification struct {
 	NotificationID string                 `json:"notification_id"`
 	Type           string                 `json:"type"`
@@ -29,7 +29,7 @@ type Notification struct {
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Publisher 通知发布器接口
+// Publisher notification publisher interface
 type Publisher interface {
 	Publish(notification *Notification) error
 	PublishToUser(userID string, notification *Notification) error
@@ -38,17 +38,17 @@ type Publisher interface {
 	PublishBroadcast(notification *Notification) error
 }
 
-// natsPublisher NATS通知发布器实现
+// natsPublisher NATS notification publisher implementation
 type natsPublisher struct {
 	nc *nats.Conn
 }
 
-// NewPublisher 创建NATS通知发布器
+// NewPublisher creates a new NATS notification publisher
 func NewPublisher(nc *nats.Conn) Publisher {
 	return &natsPublisher{nc: nc}
 }
 
-// Publish 发布通知（通用方法，需要在notification中指定toUserID）
+// Publish publishes a notification (generic method, requires toUserID in notification)
 func (p *natsPublisher) Publish(notification *Notification) error {
 	if notification.ToUserID == "" {
 		return fmt.Errorf("toUserID is required for publishing notification")
@@ -56,7 +56,7 @@ func (p *natsPublisher) Publish(notification *Notification) error {
 	return p.PublishToUser(notification.ToUserID, notification)
 }
 
-// PublishToUser 发布通知给指定用户
+// PublishToUser publishes a notification to a specific user
 func (p *natsPublisher) PublishToUser(userID string, notification *Notification) error {
 	notification.ToUserID = userID
 	if notification.Timestamp == 0 {
@@ -72,7 +72,7 @@ func (p *natsPublisher) PublishToUser(userID string, notification *Notification)
 	return p.nc.Publish(subject, data)
 }
 
-// PublishToUsers 批量发布通知给多个用户
+// PublishToUsers batch publishes notifications to multiple users
 func (p *natsPublisher) PublishToUsers(userIDs []string, notification *Notification) error {
 	if notification.Timestamp == 0 {
 		notification.Timestamp = time.Now().Unix()
@@ -87,7 +87,7 @@ func (p *natsPublisher) PublishToUsers(userIDs []string, notification *Notificat
 	return nil
 }
 
-// PublishToGroup 发布群组通知（会发送给所有订阅该群组的用户）
+// PublishToGroup publishes a group notification (will be sent to all users subscribed to the group)
 func (p *natsPublisher) PublishToGroup(groupID string, notification *Notification) error {
 	if notification.Timestamp == 0 {
 		notification.Timestamp = time.Now().Unix()
@@ -102,7 +102,7 @@ func (p *natsPublisher) PublishToGroup(groupID string, notification *Notificatio
 	return p.nc.Publish(subject, data)
 }
 
-// PublishBroadcast 广播通知给所有用户
+// PublishBroadcast broadcasts a notification to all users
 func (p *natsPublisher) PublishBroadcast(notification *Notification) error {
 	if notification.Timestamp == 0 {
 		notification.Timestamp = time.Now().Unix()
@@ -117,23 +117,23 @@ func (p *natsPublisher) PublishBroadcast(notification *Notification) error {
 	return p.nc.Publish(subject, data)
 }
 
-// BuildUserNotificationSubject 构建用户通知主题
-// 格式: notification.{service}.{event_type}.{user_id}
-// 例如: notification.friend.request.user-123
+// BuildUserNotificationSubject builds user notification subject
+// Format: notification.{service}.{event_type}.{user_id}
+// Example: notification.friend.request.user-123
 func BuildUserNotificationSubject(notificationType, userID string) string {
 	return fmt.Sprintf("notification.%s.%s", notificationType, userID)
 }
 
-// BuildGroupNotificationSubject 构建群组通知主题
-// 格式: notification.{service}.{event_type}.{group_id}
-// 例如: notification.group.member_joined.group-456
+// BuildGroupNotificationSubject builds group notification subject
+// Format: notification.{service}.{event_type}.{group_id}
+// Example: notification.group.member_joined.group-456
 func BuildGroupNotificationSubject(notificationType, groupID string) string {
 	return fmt.Sprintf("notification.%s.%s", notificationType, groupID)
 }
 
-// BuildBroadcastSubject 构建广播通知主题
-// 格式: notification.{service}.{event_type}.broadcast
-// 例如: notification.admin.announcement.broadcast
+// BuildBroadcastSubject builds broadcast notification subject
+// Format: notification.{service}.{event_type}.broadcast
+// Example: notification.admin.announcement.broadcast
 func BuildBroadcastSubject(notificationType string) string {
 	return fmt.Sprintf("notification.%s.broadcast", notificationType)
 }

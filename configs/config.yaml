@@ -44,11 +44,11 @@ livekit:
   api_key: devkey
   api_secret: secret
 
-# 极光推送配置
+# JPush configuration
 jpush:
   app_key: ${JPUSH_APP_KEY:}
   master_secret: ${JPUSH_MASTER_SECRET:}
-  apns_production: false  # true=生产环境 APNs，false=沙箱
+  apns_production: false  # true=production APNs, false=sandbox
 
 jwt:
   secret: your-secret-key-change-in-production
@@ -68,7 +68,7 @@ monitoring:
     enabled: true
     endpoint: http://localhost:14268/api/traces
 
-# 微服务gRPC地址配置
+# Microservice gRPC address configuration
 services:
   auth:
     grpc_addr: ${AUTH_GRPC_ADDR:localhost:9001}
@@ -127,12 +127,12 @@ verify:
     from_name: ${EMAIL_FROM_NAME:AnyChat}
     from_address: ${EMAIL_FROM_ADDRESS:noreply@anychat.com}
 
-# Admin Service配置
+# Admin Service configuration
 admin:
   jwt:
     secret: ${ADMIN_JWT_SECRET:admin-secret-change-in-production}
-    access_token_expire: 28800  # 8小时
+    access_token_expire: 28800  # 8 hours
 
-# Gateway服务配置
+# Gateway service configuration
 gateway:
   http_port: 8080
