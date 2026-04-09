@@ -84,12 +84,25 @@ service GroupService {
 
   // GetGroupSettings 获取群组设置
   rpc GetGroupSettings(GetGroupSettingsRequest) returns (GetGroupSettingsResponse);
+
+  // UpdateMemberRemark 设置/清空群备注（仅对自己可见）
+  rpc UpdateMemberRemark(UpdateMemberRemarkRequest) returns (common.Empty);
+
+  // GetGroupQRCode 获取群二维码（自动续期或创建）
+  rpc GetGroupQRCode(GetGroupQRCodeRequest) returns (GetGroupQRCodeResponse);
+
+  // RefreshGroupQRCode 刷新群二维码（使旧码失效）
+  rpc RefreshGroupQRCode(RefreshGroupQRCodeRequest) returns (GetGroupQRCodeResponse);
+
+  // JoinGroupByQRCode 扫码加入群组
+  rpc JoinGroupByQRCode(JoinGroupByQRCodeRequest) returns (JoinGroupByQRCodeResponse);
 }
 
 // ========== 内部调用消息 ==========
 
 message GetGroupInfoRequest {
   string group_id = 1;
+  optional string user_id = 2;  // 若传入，则 display_name 会反映该用户设置的群备注
 }
 
 message GetGroupInfoResponse {
@@ -106,6 +119,7 @@ message GetGroupInfoResponse {
   int32 status = 10;
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
+  string display_name = 14;  // 展示名：群备注优先，无备注则同 name
 }
 
 message GetGroupMembersRequest {
@@ -157,6 +171,7 @@ message GroupInfo {
   string avatar = 3;
   int32 member_count = 4;
   google.protobuf.Timestamp updated_at = 5;
+  string display_name = 6;  // 展示名：群备注优先，无备注则同 name
 }
 
 // ========== Gateway调用消息 ==========
@@ -344,4 +359,42 @@ message GetGroupSettingsResponse {
   bool allow_add_friend = 5;
   bool allow_member_modify = 6;
   bool show_member_nickname = 7 [deprecated = true];
+}
+
+// ========== 群备注消息 ==========
+
+message UpdateMemberRemarkRequest {
+  string user_id = 1;
+  string group_id = 2;
+  string remark = 3;  // 空字符串表示清空备注
+}
+
+// ========== 群二维码消息 ==========
+
+message GetGroupQRCodeRequest {
+  string user_id = 1;
+  string group_id = 2;
+}
+
+message GetGroupQRCodeResponse {
+  string token = 1;
+  string deep_link = 2;  // 如 anychat://group/join?token=xxx
+  int64 expire_at = 3;   // Unix 时间戳（秒）
+}
+
+message RefreshGroupQRCodeRequest {
+  string user_id = 1;
+  string group_id = 2;
+}
+
+message JoinGroupByQRCodeRequest {
+  string user_id = 1;
+  string token = 2;
+}
+
+message JoinGroupByQRCodeResponse {
+  bool joined = 1;               // true=直接加入，false=已提交申请
+  string group_id = 2;
+  bool need_verify = 3;
+  optional int64 request_id = 4; // need_verify=true 时有效
 }

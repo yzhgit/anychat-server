@@ -15,6 +15,7 @@ type GroupMemberRepository interface {
 	RemoveMember(ctx context.Context, groupID, userID string) error
 	UpdateRole(ctx context.Context, groupID, userID, role string) error
 	UpdateNickname(ctx context.Context, groupID, userID, nickname string) error
+	UpdateRemark(ctx context.Context, groupID, userID, remark string) error
 	UpdateMutedUntil(ctx context.Context, groupID, userID string, mutedUntil *time.Time) error
 	GetMember(ctx context.Context, groupID, userID string) (*model.GroupMember, error)
 	GetMembers(ctx context.Context, groupID string, page, pageSize int) ([]*model.GroupMember, int64, error)
@@ -72,6 +73,17 @@ func (r *groupMemberRepositoryImpl) UpdateNickname(ctx context.Context, groupID,
 		Updates(map[string]interface{}{
 			"group_nickname": nickname,
 			"updated_at":     time.Now(),
+		}).Error
+}
+
+// UpdateRemark 更新群备注（仅对操作者自己可见）
+func (r *groupMemberRepositoryImpl) UpdateRemark(ctx context.Context, groupID, userID, remark string) error {
+	return r.db.WithContext(ctx).
+		Model(&model.GroupMember{}).
+		Where("group_id = ? AND user_id = ?", groupID, userID).
+		Updates(map[string]interface{}{
+			"group_remark": remark,
+			"updated_at":   time.Now(),
 		}).Error
 }
 

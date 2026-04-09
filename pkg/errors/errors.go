@@ -91,7 +91,8 @@ const (
 	CodeJoinRequestProcessed    = 40114 // 入群申请已处理
 	CodeMemberMuted             = 40115 // 群内已被禁言
 	CodeCannotQuitOwnGroup      = 40116 // 不能退出自己的群
-	CodeGroupQRExpired          = 40117 // 群二维码已过期
+	CodeGroupQRExpired  = 40117 // 群二维码已过期
+	CodeGroupQRInvalid  = 40118 // 群二维码无效
 )
 
 // Message Service 错误码 (50xxx)
@@ -245,6 +246,7 @@ var errorMessages = map[int]string{
 	CodeMemberMuted:             "群内已被禁言",
 	CodeCannotQuitOwnGroup:      "不能退出自己的群",
 	CodeGroupQRExpired:          "群二维码已过期",
+	CodeGroupQRInvalid:          "群二维码无效",
 
 	CodeMessageNotFound:         "消息不存在",
 	CodeMessageSendFailed:       "消息发送失败",

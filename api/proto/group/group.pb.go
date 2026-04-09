@@ -72,6 +72,7 @@ func (MuteType) EnumDescriptor() ([]byte, []int) {
 type GetGroupInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	UserId        *string                `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"` // 若传入，则 display_name 会反映该用户设置的群备注
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -113,6 +114,13 @@ func (x *GetGroupInfoRequest) GetGroupId() string {
 	return ""
 }
 
+func (x *GetGroupInfoRequest) GetUserId() string {
+	if x != nil && x.UserId != nil {
+		return *x.UserId
+	}
+	return ""
+}
+
 type GetGroupInfoResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
@@ -128,6 +136,7 @@ type GetGroupInfoResponse struct {
 	Status        int32                  `protobuf:"varint,10,opt,name=status,proto3" json:"status,omitempty"`
 	CreatedAt     *timestamp.Timestamp   `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamp.Timestamp   `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,14,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"` // 展示名：群备注优先，无备注则同 name
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -251,6 +260,13 @@ func (x *GetGroupInfoResponse) GetUpdatedAt() *timestamp.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *GetGroupInfoResponse) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
 }
 
 type GetGroupMembersRequest struct {
@@ -680,6 +696,7 @@ type GroupInfo struct {
 	Avatar        string                 `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	MemberCount   int32                  `protobuf:"varint,4,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`
 	UpdatedAt     *timestamp.Timestamp   `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,6,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"` // 展示名：群备注优先，无备注则同 name
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -747,6 +764,13 @@ func (x *GroupInfo) GetUpdatedAt() *timestamp.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *GroupInfo) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
 }
 
 type CreateGroupRequest struct {
@@ -2509,13 +2533,360 @@ func (x *GetGroupSettingsResponse) GetShowMemberNickname() bool {
 	return false
 }
 
+type UpdateMemberRemarkRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Remark        string                 `protobuf:"bytes,3,opt,name=remark,proto3" json:"remark,omitempty"` // 空字符串表示清空备注
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMemberRemarkRequest) Reset() {
+	*x = UpdateMemberRemarkRequest{}
+	mi := &file_group_group_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMemberRemarkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMemberRemarkRequest) ProtoMessage() {}
+
+func (x *UpdateMemberRemarkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMemberRemarkRequest.ProtoReflect.Descriptor instead.
+func (*UpdateMemberRemarkRequest) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *UpdateMemberRemarkRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateMemberRemarkRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *UpdateMemberRemarkRequest) GetRemark() string {
+	if x != nil {
+		return x.Remark
+	}
+	return ""
+}
+
+type GetGroupQRCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupQRCodeRequest) Reset() {
+	*x = GetGroupQRCodeRequest{}
+	mi := &file_group_group_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupQRCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupQRCodeRequest) ProtoMessage() {}
+
+func (x *GetGroupQRCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupQRCodeRequest.ProtoReflect.Descriptor instead.
+func (*GetGroupQRCodeRequest) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *GetGroupQRCodeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetGroupQRCodeRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+type GetGroupQRCodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	DeepLink      string                 `protobuf:"bytes,2,opt,name=deep_link,json=deepLink,proto3" json:"deep_link,omitempty"`  // 如 anychat://group/join?token=xxx
+	ExpireAt      int64                  `protobuf:"varint,3,opt,name=expire_at,json=expireAt,proto3" json:"expire_at,omitempty"` // Unix 时间戳（秒）
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupQRCodeResponse) Reset() {
+	*x = GetGroupQRCodeResponse{}
+	mi := &file_group_group_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupQRCodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupQRCodeResponse) ProtoMessage() {}
+
+func (x *GetGroupQRCodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupQRCodeResponse.ProtoReflect.Descriptor instead.
+func (*GetGroupQRCodeResponse) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *GetGroupQRCodeResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *GetGroupQRCodeResponse) GetDeepLink() string {
+	if x != nil {
+		return x.DeepLink
+	}
+	return ""
+}
+
+func (x *GetGroupQRCodeResponse) GetExpireAt() int64 {
+	if x != nil {
+		return x.ExpireAt
+	}
+	return 0
+}
+
+type RefreshGroupQRCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshGroupQRCodeRequest) Reset() {
+	*x = RefreshGroupQRCodeRequest{}
+	mi := &file_group_group_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshGroupQRCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshGroupQRCodeRequest) ProtoMessage() {}
+
+func (x *RefreshGroupQRCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshGroupQRCodeRequest.ProtoReflect.Descriptor instead.
+func (*RefreshGroupQRCodeRequest) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *RefreshGroupQRCodeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *RefreshGroupQRCodeRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+type JoinGroupByQRCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinGroupByQRCodeRequest) Reset() {
+	*x = JoinGroupByQRCodeRequest{}
+	mi := &file_group_group_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinGroupByQRCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinGroupByQRCodeRequest) ProtoMessage() {}
+
+func (x *JoinGroupByQRCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinGroupByQRCodeRequest.ProtoReflect.Descriptor instead.
+func (*JoinGroupByQRCodeRequest) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *JoinGroupByQRCodeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *JoinGroupByQRCodeRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type JoinGroupByQRCodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Joined        bool                   `protobuf:"varint,1,opt,name=joined,proto3" json:"joined,omitempty"` // true=直接加入，false=已提交申请
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	NeedVerify    bool                   `protobuf:"varint,3,opt,name=need_verify,json=needVerify,proto3" json:"need_verify,omitempty"`
+	RequestId     *int64                 `protobuf:"varint,4,opt,name=request_id,json=requestId,proto3,oneof" json:"request_id,omitempty"` // need_verify=true 时有效
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinGroupByQRCodeResponse) Reset() {
+	*x = JoinGroupByQRCodeResponse{}
+	mi := &file_group_group_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinGroupByQRCodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinGroupByQRCodeResponse) ProtoMessage() {}
+
+func (x *JoinGroupByQRCodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_group_group_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinGroupByQRCodeResponse.ProtoReflect.Descriptor instead.
+func (*JoinGroupByQRCodeResponse) Descriptor() ([]byte, []int) {
+	return file_group_group_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *JoinGroupByQRCodeResponse) GetJoined() bool {
+	if x != nil {
+		return x.Joined
+	}
+	return false
+}
+
+func (x *JoinGroupByQRCodeResponse) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *JoinGroupByQRCodeResponse) GetNeedVerify() bool {
+	if x != nil {
+		return x.NeedVerify
+	}
+	return false
+}
+
+func (x *JoinGroupByQRCodeResponse) GetRequestId() int64 {
+	if x != nil && x.RequestId != nil {
+		return *x.RequestId
+	}
+	return 0
+}
+
 var File_group_group_proto protoreflect.FileDescriptor
 
 const file_group_group_proto_rawDesc = "" +
 	"\n" +
-	"\x11group/group.proto\x12\ranychat.group\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13common/common.proto\"0\n" +
+	"\x11group/group.proto\x12\ranychat.group\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13common/common.proto\"Z\n" +
 	"\x13GetGroupInfoRequest\x12\x19\n" +
-	"\bgroup_id\x18\x01 \x01(\tR\agroupId\"\xcc\x03\n" +
+	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x1c\n" +
+	"\auser_id\x18\x02 \x01(\tH\x00R\x06userId\x88\x01\x01B\n" +
+	"\n" +
+	"\b_user_id\"\xef\x03\n" +
 	"\x14GetGroupInfoResponse\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -2534,7 +2905,8 @@ const file_group_group_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x9e\x01\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12!\n" +
+	"\fdisplay_name\x18\x0e \x01(\tR\vdisplayName\"\x9e\x01\n" +
 	"\x16GetGroupMembersRequest\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x17\n" +
 	"\x04page\x18\x02 \x01(\x05H\x00R\x04page\x88\x01\x01\x12 \n" +
@@ -2572,14 +2944,15 @@ const file_group_group_proto_rawDesc = "" +
 	"\x06groups\x18\x01 \x03(\v2\x18.anychat.group.GroupInfoR\x06groups\x12\x1f\n" +
 	"\vupdate_time\x18\x02 \x01(\x03R\n" +
 	"updateTime\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x03R\x05total\"\xb0\x01\n" +
+	"\x05total\x18\x03 \x01(\x03R\x05total\"\xd3\x01\n" +
 	"\tGroupInfo\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
 	"\x06avatar\x18\x03 \x01(\tR\x06avatar\x12!\n" +
 	"\fmember_count\x18\x04 \x01(\x05R\vmemberCount\x129\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8e\x01\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12!\n" +
+	"\fdisplay_name\x18\x06 \x01(\tR\vdisplayName\"\x8e\x01\n" +
 	"\x12CreateGroupRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
@@ -2741,10 +3114,35 @@ const file_group_group_proto_rawDesc = "" +
 	"\x12allow_view_history\x18\x04 \x01(\bR\x10allowViewHistory\x12(\n" +
 	"\x10allow_add_friend\x18\x05 \x01(\bR\x0eallowAddFriend\x12.\n" +
 	"\x13allow_member_modify\x18\x06 \x01(\bR\x11allowMemberModify\x124\n" +
-	"\x14show_member_nickname\x18\a \x01(\bB\x02\x18\x01R\x12showMemberNickname*<\n" +
+	"\x14show_member_nickname\x18\a \x01(\bB\x02\x18\x01R\x12showMemberNickname\"g\n" +
+	"\x19UpdateMemberRemarkRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12\x16\n" +
+	"\x06remark\x18\x03 \x01(\tR\x06remark\"K\n" +
+	"\x15GetGroupQRCodeRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"h\n" +
+	"\x16GetGroupQRCodeResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1b\n" +
+	"\tdeep_link\x18\x02 \x01(\tR\bdeepLink\x12\x1b\n" +
+	"\texpire_at\x18\x03 \x01(\x03R\bexpireAt\"O\n" +
+	"\x19RefreshGroupQRCodeRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"I\n" +
+	"\x18JoinGroupByQRCodeRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"\xa2\x01\n" +
+	"\x19JoinGroupByQRCodeResponse\x12\x16\n" +
+	"\x06joined\x18\x01 \x01(\bR\x06joined\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12\x1f\n" +
+	"\vneed_verify\x18\x03 \x01(\bR\n" +
+	"needVerify\x12\"\n" +
+	"\n" +
+	"request_id\x18\x04 \x01(\x03H\x00R\trequestId\x88\x01\x01B\r\n" +
+	"\v_request_id*<\n" +
 	"\bMuteType\x12\x17\n" +
 	"\x13MUTE_TYPE_PERMANENT\x10\x00\x12\x17\n" +
-	"\x13MUTE_TYPE_TEMPORARY\x10\x012\xee\x0f\n" +
+	"\x13MUTE_TYPE_TEMPORARY\x10\x012\xf3\x12\n" +
 	"\fGroupService\x12W\n" +
 	"\fGetGroupInfo\x12\".anychat.group.GetGroupInfoRequest\x1a#.anychat.group.GetGroupInfoResponse\x12`\n" +
 	"\x0fGetGroupMembers\x12%.anychat.group.GetGroupMembersRequest\x1a&.anychat.group.GetGroupMembersResponse\x12K\n" +
@@ -2770,7 +3168,11 @@ const file_group_group_proto_rawDesc = "" +
 	"MuteMember\x12 .anychat.group.MuteMemberRequest\x1a\x15.anychat.common.Empty\x12I\n" +
 	"\fUnmuteMember\x12\".anychat.group.UnmuteMemberRequest\x1a\x15.anychat.common.Empty\x12W\n" +
 	"\x13UpdateGroupSettings\x12).anychat.group.UpdateGroupSettingsRequest\x1a\x15.anychat.common.Empty\x12c\n" +
-	"\x10GetGroupSettings\x12&.anychat.group.GetGroupSettingsRequest\x1a'.anychat.group.GetGroupSettingsResponseB3Z1github.com/anychat/server/api/proto/group;grouppbb\x06proto3"
+	"\x10GetGroupSettings\x12&.anychat.group.GetGroupSettingsRequest\x1a'.anychat.group.GetGroupSettingsResponse\x12U\n" +
+	"\x12UpdateMemberRemark\x12(.anychat.group.UpdateMemberRemarkRequest\x1a\x15.anychat.common.Empty\x12]\n" +
+	"\x0eGetGroupQRCode\x12$.anychat.group.GetGroupQRCodeRequest\x1a%.anychat.group.GetGroupQRCodeResponse\x12e\n" +
+	"\x12RefreshGroupQRCode\x12(.anychat.group.RefreshGroupQRCodeRequest\x1a%.anychat.group.GetGroupQRCodeResponse\x12f\n" +
+	"\x11JoinGroupByQRCode\x12'.anychat.group.JoinGroupByQRCodeRequest\x1a(.anychat.group.JoinGroupByQRCodeResponseB3Z1github.com/anychat/server/api/proto/group;grouppbb\x06proto3"
 
 var (
 	file_group_group_proto_rawDescOnce sync.Once
@@ -2785,7 +3187,7 @@ func file_group_group_proto_rawDescGZIP() []byte {
 }
 
 var file_group_group_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_group_group_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
+var file_group_group_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_group_group_proto_goTypes = []any{
 	(MuteType)(0),                       // 0: anychat.group.MuteType
 	(*GetGroupInfoRequest)(nil),         // 1: anychat.group.GetGroupInfoRequest
@@ -2825,23 +3227,29 @@ var file_group_group_proto_goTypes = []any{
 	(*UpdateGroupSettingsRequest)(nil),  // 35: anychat.group.UpdateGroupSettingsRequest
 	(*GetGroupSettingsRequest)(nil),     // 36: anychat.group.GetGroupSettingsRequest
 	(*GetGroupSettingsResponse)(nil),    // 37: anychat.group.GetGroupSettingsResponse
-	(*timestamp.Timestamp)(nil),         // 38: google.protobuf.Timestamp
-	(*common.UserInfo)(nil),             // 39: anychat.common.UserInfo
-	(*common.Empty)(nil),                // 40: anychat.common.Empty
+	(*UpdateMemberRemarkRequest)(nil),   // 38: anychat.group.UpdateMemberRemarkRequest
+	(*GetGroupQRCodeRequest)(nil),       // 39: anychat.group.GetGroupQRCodeRequest
+	(*GetGroupQRCodeResponse)(nil),      // 40: anychat.group.GetGroupQRCodeResponse
+	(*RefreshGroupQRCodeRequest)(nil),   // 41: anychat.group.RefreshGroupQRCodeRequest
+	(*JoinGroupByQRCodeRequest)(nil),    // 42: anychat.group.JoinGroupByQRCodeRequest
+	(*JoinGroupByQRCodeResponse)(nil),   // 43: anychat.group.JoinGroupByQRCodeResponse
+	(*timestamp.Timestamp)(nil),         // 44: google.protobuf.Timestamp
+	(*common.UserInfo)(nil),             // 45: anychat.common.UserInfo
+	(*common.Empty)(nil),                // 46: anychat.common.Empty
 }
 var file_group_group_proto_depIdxs = []int32{
-	38, // 0: anychat.group.GetGroupInfoResponse.created_at:type_name -> google.protobuf.Timestamp
-	38, // 1: anychat.group.GetGroupInfoResponse.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 0: anychat.group.GetGroupInfoResponse.created_at:type_name -> google.protobuf.Timestamp
+	44, // 1: anychat.group.GetGroupInfoResponse.updated_at:type_name -> google.protobuf.Timestamp
 	5,  // 2: anychat.group.GetGroupMembersResponse.members:type_name -> anychat.group.GroupMember
-	38, // 3: anychat.group.GroupMember.joined_at:type_name -> google.protobuf.Timestamp
-	39, // 4: anychat.group.GroupMember.user_info:type_name -> anychat.common.UserInfo
-	38, // 5: anychat.group.GroupMember.muted_until:type_name -> google.protobuf.Timestamp
+	44, // 3: anychat.group.GroupMember.joined_at:type_name -> google.protobuf.Timestamp
+	45, // 4: anychat.group.GroupMember.user_info:type_name -> anychat.common.UserInfo
+	44, // 5: anychat.group.GroupMember.muted_until:type_name -> google.protobuf.Timestamp
 	10, // 6: anychat.group.GetUserGroupsResponse.groups:type_name -> anychat.group.GroupInfo
-	38, // 7: anychat.group.GroupInfo.updated_at:type_name -> google.protobuf.Timestamp
-	38, // 8: anychat.group.CreateGroupResponse.created_at:type_name -> google.protobuf.Timestamp
+	44, // 7: anychat.group.GroupInfo.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 8: anychat.group.CreateGroupResponse.created_at:type_name -> google.protobuf.Timestamp
 	26, // 9: anychat.group.GetJoinRequestsResponse.requests:type_name -> anychat.group.JoinRequest
-	38, // 10: anychat.group.JoinRequest.created_at:type_name -> google.protobuf.Timestamp
-	39, // 11: anychat.group.JoinRequest.user_info:type_name -> anychat.common.UserInfo
+	44, // 10: anychat.group.JoinRequest.created_at:type_name -> google.protobuf.Timestamp
+	45, // 11: anychat.group.JoinRequest.user_info:type_name -> anychat.common.UserInfo
 	30, // 12: anychat.group.GetPinnedMessagesResponse.messages:type_name -> anychat.group.PinnedMessage
 	0,  // 13: anychat.group.MuteMemberRequest.type:type_name -> anychat.group.MuteType
 	1,  // 14: anychat.group.GroupService.GetGroupInfo:input_type -> anychat.group.GetGroupInfoRequest
@@ -2868,32 +3276,40 @@ var file_group_group_proto_depIdxs = []int32{
 	34, // 35: anychat.group.GroupService.UnmuteMember:input_type -> anychat.group.UnmuteMemberRequest
 	35, // 36: anychat.group.GroupService.UpdateGroupSettings:input_type -> anychat.group.UpdateGroupSettingsRequest
 	36, // 37: anychat.group.GroupService.GetGroupSettings:input_type -> anychat.group.GetGroupSettingsRequest
-	2,  // 38: anychat.group.GroupService.GetGroupInfo:output_type -> anychat.group.GetGroupInfoResponse
-	4,  // 39: anychat.group.GroupService.GetGroupMembers:output_type -> anychat.group.GetGroupMembersResponse
-	7,  // 40: anychat.group.GroupService.IsMember:output_type -> anychat.group.IsMemberResponse
-	9,  // 41: anychat.group.GroupService.GetUserGroups:output_type -> anychat.group.GetUserGroupsResponse
-	12, // 42: anychat.group.GroupService.CreateGroup:output_type -> anychat.group.CreateGroupResponse
-	40, // 43: anychat.group.GroupService.UpdateGroup:output_type -> anychat.common.Empty
-	40, // 44: anychat.group.GroupService.DissolveGroup:output_type -> anychat.common.Empty
-	40, // 45: anychat.group.GroupService.InviteMembers:output_type -> anychat.common.Empty
-	40, // 46: anychat.group.GroupService.RemoveMember:output_type -> anychat.common.Empty
-	40, // 47: anychat.group.GroupService.QuitGroup:output_type -> anychat.common.Empty
-	40, // 48: anychat.group.GroupService.UpdateMemberRole:output_type -> anychat.common.Empty
-	40, // 49: anychat.group.GroupService.UpdateMemberNickname:output_type -> anychat.common.Empty
-	40, // 50: anychat.group.GroupService.TransferOwnership:output_type -> anychat.common.Empty
-	22, // 51: anychat.group.GroupService.JoinGroup:output_type -> anychat.group.JoinGroupResponse
-	40, // 52: anychat.group.GroupService.HandleJoinRequest:output_type -> anychat.common.Empty
-	25, // 53: anychat.group.GroupService.GetJoinRequests:output_type -> anychat.group.GetJoinRequestsResponse
-	40, // 54: anychat.group.GroupService.PinGroupMessage:output_type -> anychat.common.Empty
-	40, // 55: anychat.group.GroupService.UnpinGroupMessage:output_type -> anychat.common.Empty
-	31, // 56: anychat.group.GroupService.GetPinnedMessages:output_type -> anychat.group.GetPinnedMessagesResponse
-	40, // 57: anychat.group.GroupService.SetGroupMute:output_type -> anychat.common.Empty
-	40, // 58: anychat.group.GroupService.MuteMember:output_type -> anychat.common.Empty
-	40, // 59: anychat.group.GroupService.UnmuteMember:output_type -> anychat.common.Empty
-	40, // 60: anychat.group.GroupService.UpdateGroupSettings:output_type -> anychat.common.Empty
-	37, // 61: anychat.group.GroupService.GetGroupSettings:output_type -> anychat.group.GetGroupSettingsResponse
-	38, // [38:62] is the sub-list for method output_type
-	14, // [14:38] is the sub-list for method input_type
+	38, // 38: anychat.group.GroupService.UpdateMemberRemark:input_type -> anychat.group.UpdateMemberRemarkRequest
+	39, // 39: anychat.group.GroupService.GetGroupQRCode:input_type -> anychat.group.GetGroupQRCodeRequest
+	41, // 40: anychat.group.GroupService.RefreshGroupQRCode:input_type -> anychat.group.RefreshGroupQRCodeRequest
+	42, // 41: anychat.group.GroupService.JoinGroupByQRCode:input_type -> anychat.group.JoinGroupByQRCodeRequest
+	2,  // 42: anychat.group.GroupService.GetGroupInfo:output_type -> anychat.group.GetGroupInfoResponse
+	4,  // 43: anychat.group.GroupService.GetGroupMembers:output_type -> anychat.group.GetGroupMembersResponse
+	7,  // 44: anychat.group.GroupService.IsMember:output_type -> anychat.group.IsMemberResponse
+	9,  // 45: anychat.group.GroupService.GetUserGroups:output_type -> anychat.group.GetUserGroupsResponse
+	12, // 46: anychat.group.GroupService.CreateGroup:output_type -> anychat.group.CreateGroupResponse
+	46, // 47: anychat.group.GroupService.UpdateGroup:output_type -> anychat.common.Empty
+	46, // 48: anychat.group.GroupService.DissolveGroup:output_type -> anychat.common.Empty
+	46, // 49: anychat.group.GroupService.InviteMembers:output_type -> anychat.common.Empty
+	46, // 50: anychat.group.GroupService.RemoveMember:output_type -> anychat.common.Empty
+	46, // 51: anychat.group.GroupService.QuitGroup:output_type -> anychat.common.Empty
+	46, // 52: anychat.group.GroupService.UpdateMemberRole:output_type -> anychat.common.Empty
+	46, // 53: anychat.group.GroupService.UpdateMemberNickname:output_type -> anychat.common.Empty
+	46, // 54: anychat.group.GroupService.TransferOwnership:output_type -> anychat.common.Empty
+	22, // 55: anychat.group.GroupService.JoinGroup:output_type -> anychat.group.JoinGroupResponse
+	46, // 56: anychat.group.GroupService.HandleJoinRequest:output_type -> anychat.common.Empty
+	25, // 57: anychat.group.GroupService.GetJoinRequests:output_type -> anychat.group.GetJoinRequestsResponse
+	46, // 58: anychat.group.GroupService.PinGroupMessage:output_type -> anychat.common.Empty
+	46, // 59: anychat.group.GroupService.UnpinGroupMessage:output_type -> anychat.common.Empty
+	31, // 60: anychat.group.GroupService.GetPinnedMessages:output_type -> anychat.group.GetPinnedMessagesResponse
+	46, // 61: anychat.group.GroupService.SetGroupMute:output_type -> anychat.common.Empty
+	46, // 62: anychat.group.GroupService.MuteMember:output_type -> anychat.common.Empty
+	46, // 63: anychat.group.GroupService.UnmuteMember:output_type -> anychat.common.Empty
+	46, // 64: anychat.group.GroupService.UpdateGroupSettings:output_type -> anychat.common.Empty
+	37, // 65: anychat.group.GroupService.GetGroupSettings:output_type -> anychat.group.GetGroupSettingsResponse
+	46, // 66: anychat.group.GroupService.UpdateMemberRemark:output_type -> anychat.common.Empty
+	40, // 67: anychat.group.GroupService.GetGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
+	40, // 68: anychat.group.GroupService.RefreshGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
+	43, // 69: anychat.group.GroupService.JoinGroupByQRCode:output_type -> anychat.group.JoinGroupByQRCodeResponse
+	42, // [42:70] is the sub-list for method output_type
+	14, // [14:42] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name
 	14, // [14:14] is the sub-list for extension extendee
 	0,  // [0:14] is the sub-list for field type_name
@@ -2904,6 +3320,7 @@ func file_group_group_proto_init() {
 	if File_group_group_proto != nil {
 		return
 	}
+	file_group_group_proto_msgTypes[0].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[2].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[4].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[7].OneofWrappers = []any{}
@@ -2915,13 +3332,14 @@ func file_group_group_proto_init() {
 	file_group_group_proto_msgTypes[23].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[25].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[34].OneofWrappers = []any{}
+	file_group_group_proto_msgTypes[42].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_group_group_proto_rawDesc), len(file_group_group_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   37,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

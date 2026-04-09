@@ -118,6 +118,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				// 群组管理
 				groups.POST("", groupHandler.CreateGroup)
 				groups.GET("", groupHandler.GetMyGroups)
+				groups.POST("/join-by-qrcode", groupHandler.JoinGroupByQRCode)
 				groups.GET("/:id", groupHandler.GetGroupInfo)
 				groups.PUT("/:id", groupHandler.UpdateGroup)
 				groups.DELETE("/:id", groupHandler.DissolveGroup)
@@ -130,6 +131,7 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groups.DELETE("/:id/members/:userId/mute", groupHandler.UnmuteMember)
 				groups.PUT("/:id/members/:userId/role", groupHandler.UpdateMemberRole)
 				groups.PUT("/:id/nickname", groupHandler.UpdateMemberNickname)
+				groups.PUT("/:id/remark", groupHandler.UpdateMemberRemark)
 				groups.POST("/:id/quit", groupHandler.QuitGroup)
 				groups.POST("/:id/transfer", groupHandler.TransferOwnership)
 				groups.GET("/:id/settings", groupHandler.GetGroupSettings)
@@ -138,6 +140,10 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				groups.POST("/:id/pin", groupHandler.PinGroupMessage)
 				groups.DELETE("/:id/pin/:messageId", groupHandler.UnpinGroupMessage)
 				groups.GET("/:id/pins", groupHandler.GetPinnedMessages)
+
+				// 二维码
+				groups.GET("/:id/qrcode", groupHandler.GetGroupQRCode)
+				groups.POST("/:id/qrcode/refresh", groupHandler.RefreshGroupQRCode)
 
 				// 入群申请
 				groups.POST("/:id/join", groupHandler.JoinGroup)

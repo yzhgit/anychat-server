@@ -89,9 +89,10 @@ func main() {
 	settingRepo := repository.NewGroupSettingRepository(db)
 	joinRequestRepo := repository.NewGroupJoinRequestRepository(db)
 	pinnedRepo := repository.NewGroupPinnedMessageRepository(db)
+	qrcodeRepo := repository.NewGroupQRCodeRepository(db)
 
 	// 初始化服务
-	groupService := service.NewGroupService(groupRepo, memberRepo, settingRepo, joinRequestRepo, pinnedRepo, messageClient, userClient, notificationPub, db)
+	groupService := service.NewGroupService(groupRepo, memberRepo, settingRepo, joinRequestRepo, pinnedRepo, qrcodeRepo, messageClient, userClient, notificationPub, db)
 
 	// 初始化gRPC服务器
 	grpcServer := initGRPCServer(groupService)

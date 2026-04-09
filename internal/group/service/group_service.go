@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	messagepb "github.com/anychat/server/api/proto/message"
@@ -51,6 +52,14 @@ type GroupService interface {
 	UpdateGroupSettings(ctx context.Context, userID, groupID string, req *dto.UpdateGroupSettingsRequest) error
 	GetGroupSettings(ctx context.Context, groupID string) (*dto.GroupSettingsResponse, error)
 
+	// 群备注
+	UpdateMemberRemark(ctx context.Context, userID, groupID string, req *dto.UpdateMemberRemarkRequest) error
+
+	// 群二维码
+	GetGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
+	RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error)
+	JoinGroupByQRCode(ctx context.Context, userID, token string) (*dto.JoinGroupByQRCodeResponse, error)
+
 	// 内部gRPC方法（供其他服务调用）
 	IsMember(ctx context.Context, groupID, userID string) (bool, string, error)
 }
@@ -62,6 +71,7 @@ type groupServiceImpl struct {
 	settingRepo     repository.GroupSettingRepository
 	joinRequestRepo repository.GroupJoinRequestRepository
 	pinnedRepo      repository.GroupPinnedMessageRepository
+	qrcodeRepo      repository.GroupQRCodeRepository
 	messageClient   messagepb.MessageServiceClient
 	userClient      userpb.UserServiceClient
 	notificationPub notification.Publisher
@@ -75,6 +85,7 @@ func NewGroupService(
 	settingRepo repository.GroupSettingRepository,
 	joinRequestRepo repository.GroupJoinRequestRepository,
 	pinnedRepo repository.GroupPinnedMessageRepository,
+	qrcodeRepo repository.GroupQRCodeRepository,
 	messageClient messagepb.MessageServiceClient,
 	userClient userpb.UserServiceClient,
 	notificationPub notification.Publisher,
@@ -86,6 +97,7 @@ func NewGroupService(
 		settingRepo:     settingRepo,
 		joinRequestRepo: joinRequestRepo,
 		pinnedRepo:      pinnedRepo,
+		qrcodeRepo:      qrcodeRepo,
 		messageClient:   messageClient,
 		userClient:      userClient,
 		notificationPub: notificationPub,
@@ -225,14 +237,19 @@ func (s *groupServiceImpl) GetGroupInfo(ctx context.Context, userID, groupID str
 	// 获取用户在群组中的角色
 	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
 	myRole := ""
+	displayName := group.Name
 	if err == nil {
 		myRole = member.Role
+		if member.GroupRemark != "" {
+			displayName = member.GroupRemark
+		}
 	}
 	joinVerify := s.getGroupJoinVerify(ctx, groupID)
 
 	return &dto.GroupResponse{
 		GroupID:      group.GroupID,
 		Name:         group.Name,
+		DisplayName:  displayName,
 		Avatar:       group.Avatar,
 		Announcement: group.Announcement,
 		Description:  group.Description,
@@ -364,9 +381,15 @@ func (s *groupServiceImpl) GetUserGroups(ctx context.Context, userID string, las
 			continue // 跳过已解散的群组
 		}
 
+		displayName := group.Name
+		if member.GroupRemark != "" {
+			displayName = member.GroupRemark
+		}
+
 		groups = append(groups, &dto.GroupResponse{
 			GroupID:      group.GroupID,
 			Name:         group.Name,
+			DisplayName:  displayName,
 			Avatar:       group.Avatar,
 			Announcement: group.Announcement,
 			Description:  group.Description,
@@ -1284,8 +1307,201 @@ func (s *groupServiceImpl) IsMember(ctx context.Context, groupID, userID string)
 	return true, member.Role, nil
 }
 
-func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID string) bool {
-	settings, err := s.settingRepo.GetSettings(ctx, groupID)
+// UpdateMemberRemark 设置/清空群备注（仅对操作者自己可见）
+func (s *groupServiceImpl) UpdateMemberRemark(ctx context.Context, userID, groupID string, req *dto.UpdateMemberRemarkRequest) error {
+	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
+	if err != nil {
+		return err
+	}
+	if !isMember {
+		return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+	}
+
+	if err := s.memberRepo.UpdateRemark(ctx, groupID, userID, req.Remark); err != nil {
+		logger.Error("Failed to update member remark", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// GetGroupQRCode 获取群二维码（有效则返回，快过期则自动续期，无则创建）
+func (s *groupServiceImpl) GetGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
+	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+	}
+
+	qr, err := s.qrcodeRepo.GetActiveByGroupID(ctx, groupID)
+	if err == nil && qr.IsValid() {
+		// 距过期不足 1 天时自动续期
+		if time.Until(qr.ExpireAt) < model.QRCodeRenewThreshold {
+			newExpire := time.Now().Add(model.DefaultQRCodeTTL)
+			if renewErr := s.qrcodeRepo.UpdateExpireAt(ctx, qr.Token, newExpire); renewErr != nil {
+				logger.Warn("Failed to renew qrcode", zap.Error(renewErr))
+			} else {
+				qr.ExpireAt = newExpire
+			}
+		}
+		return buildQRCodeResponse(qr), nil
+	}
+
+	// 创建新二维码
+	return s.createNewQRCode(ctx, userID, groupID)
+}
+
+// RefreshGroupQRCode 刷新群二维码（使旧码立即失效��仅群主/管理员）
+func (s *groupServiceImpl) RefreshGroupQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
+	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+		}
+		return nil, err
+	}
+	if !member.CanManageGroup() {
+		return nil, errors.NewBusiness(errors.CodeNoAdminPermission, "仅群主或管理员可刷新二维码")
+	}
+
+	// 失效旧码
+	if err := s.qrcodeRepo.InvalidateByGroupID(ctx, groupID); err != nil {
+		logger.Error("Failed to invalidate old qrcode", zap.Error(err))
+		return nil, err
+	}
+
+	return s.createNewQRCode(ctx, userID, groupID)
+}
+
+// JoinGroupByQRCode 扫码加入群组
+func (s *groupServiceImpl) JoinGroupByQRCode(ctx context.Context, userID, token string) (*dto.JoinGroupByQRCodeResponse, error) {
+	qr, err := s.qrcodeRepo.GetByToken(ctx, token)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码无效")
+		}
+		return nil, err
+	}
+
+	if !qr.IsActive {
+		return nil, errors.NewBusiness(errors.CodeGroupQRInvalid, "二维码已失效，请重新获取")
+	}
+	if !qr.IsValid() {
+		return nil, errors.NewBusiness(errors.CodeGroupQRExpired, "二维码已过期，请重新获取")
+	}
+
+	groupID := qr.GroupID
+
+	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+		}
+		return nil, err
+	}
+	if !group.IsActive() {
+		return nil, errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+	}
+	if group.IsFull() {
+		return nil, errors.NewBusiness(errors.CodeGroupMemberLimitReached, "群成员已达上限")
+	}
+
+	isMember, err := s.memberRepo.IsMember(ctx, groupID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if isMember {
+		return nil, errors.NewBusiness(errors.CodeAlreadyGroupMember, "你已是该群成员")
+	}
+
+	// 复用 JoinGroup 中的验证逻辑
+	joinVerify := s.getGroupJoinVerify(ctx, groupID)
+	if joinVerify {
+		// 检查是否已有待处理申请
+		existingReq, _ := s.joinRequestRepo.GetExistingRequest(ctx, groupID, userID)
+		if existingReq != nil {
+			return &dto.JoinGroupByQRCodeResponse{
+				Joined:     false,
+				GroupID:    groupID,
+				NeedVerify: true,
+				RequestID:  &existingReq.ID,
+			}, nil
+		}
+
+		request := &model.GroupJoinRequest{
+			GroupID:   groupID,
+			UserID:    userID,
+			Status:    model.JoinRequestStatusPending,
+			CreatedAt: time.Now(),
+		}
+		if err := s.joinRequestRepo.Create(ctx, request); err != nil {
+			return nil, err
+		}
+		return &dto.JoinGroupByQRCodeResponse{
+			Joined:     false,
+			GroupID:    groupID,
+			NeedVerify: true,
+			RequestID:  &request.ID,
+		}, nil
+	}
+
+	// 直接加入
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		memberRepoTx := s.memberRepo.WithTx(tx)
+		groupRepoTx := s.groupRepo.WithTx(tx)
+
+		if err := memberRepoTx.AddMember(ctx, &model.GroupMember{
+			GroupID:  groupID,
+			UserID:   userID,
+			Role:     model.GroupRoleMember,
+			JoinedAt: time.Now(),
+		}); err != nil {
+			return err
+		}
+		return groupRepoTx.UpdateMemberCount(ctx, groupID, 1)
+	})
+	if err != nil {
+		logger.Error("Failed to join group by qrcode", zap.Error(err))
+		return nil, err
+	}
+
+	s.publishMemberJoinedNotification(groupID, userID, qr.CreatedBy)
+
+	return &dto.JoinGroupByQRCodeResponse{
+		Joined:     true,
+		GroupID:    groupID,
+		NeedVerify: false,
+	}, nil
+}
+
+// createNewQRCode 生成并持久化一条新二维码记录
+func (s *groupServiceImpl) createNewQRCode(ctx context.Context, userID, groupID string) (*dto.GroupQRCodeResponse, error) {
+	qr := &model.GroupQRCode{
+		GroupID:   groupID,
+		Token:     uuid.NewString(),
+		CreatedBy: userID,
+		ExpireAt:  time.Now().Add(model.DefaultQRCodeTTL),
+		IsActive:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := s.qrcodeRepo.Create(ctx, qr); err != nil {
+		logger.Error("Failed to create group qrcode", zap.Error(err))
+		return nil, err
+	}
+	return buildQRCodeResponse(qr), nil
+}
+
+func buildQRCodeResponse(qr *model.GroupQRCode) *dto.GroupQRCodeResponse {
+	return &dto.GroupQRCodeResponse{
+		Token:    qr.Token,
+		DeepLink: fmt.Sprintf("anychat://group/join?token=%s", qr.Token),
+		ExpireAt: qr.ExpireAt.Unix(),
+	}
+}
+
+func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID string) bool {	settings, err := s.settingRepo.GetSettings(ctx, groupID)
 	if err != nil {
 		return true
 	}

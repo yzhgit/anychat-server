@@ -8,6 +8,7 @@ type GroupMember struct {
 	GroupID       string     `gorm:"column:group_id;not null;uniqueIndex:uk_group_user" json:"groupId"`
 	UserID        string     `gorm:"column:user_id;not null;uniqueIndex:uk_group_user" json:"userId"`
 	GroupNickname string     `gorm:"column:group_nickname;size:50" json:"groupNickname"`
+	GroupRemark   string     `gorm:"column:group_remark;size:20" json:"groupRemark"` // 用户为该群设置的备注名，仅对本人可见
 	Role          string     `gorm:"column:role;default:member;size:20" json:"role"`
 	MutedUntil    *time.Time `gorm:"column:muted_until" json:"mutedUntil"`
 	JoinedAt      time.Time  `gorm:"column:joined_at;not null;default:CURRENT_TIMESTAMP" json:"joinedAt"`

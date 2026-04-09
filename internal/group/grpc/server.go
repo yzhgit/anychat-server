@@ -30,8 +30,11 @@ func NewGroupServer(groupService service.GroupService) *GroupServer {
 
 // GetGroupInfo 获取群信息
 func (s *GroupServer) GetGroupInfo(ctx context.Context, req *grouppb.GetGroupInfoRequest) (*grouppb.GetGroupInfoResponse, error) {
-	// 使用空userID调用（内部调用不需要权限检查）
-	resp, err := s.groupService.GetGroupInfo(ctx, "", req.GroupId)
+	userID := ""
+	if req.UserId != nil {
+		userID = *req.UserId
+	}
+	resp, err := s.groupService.GetGroupInfo(ctx, userID, req.GroupId)
 	if err != nil {
 		return nil, convertError(err)
 	}
@@ -39,6 +42,7 @@ func (s *GroupServer) GetGroupInfo(ctx context.Context, req *grouppb.GetGroupInf
 	return &grouppb.GetGroupInfoResponse{
 		GroupId:      resp.GroupID,
 		Name:         resp.Name,
+		DisplayName:  resp.DisplayName,
 		Avatar:       resp.Avatar,
 		Announcement: resp.Announcement,
 		Description:  resp.Description,
@@ -130,6 +134,7 @@ func (s *GroupServer) GetUserGroups(ctx context.Context, req *grouppb.GetUserGro
 		groups = append(groups, &grouppb.GroupInfo{
 			GroupId:     g.GroupID,
 			Name:        g.Name,
+			DisplayName: g.DisplayName,
 			Avatar:      g.Avatar,
 			MemberCount: g.MemberCount,
 			UpdatedAt:   timestamppb.New(g.UpdatedAt),
@@ -467,6 +472,58 @@ func (s *GroupServer) GetGroupSettings(ctx context.Context, req *grouppb.GetGrou
 	}, nil
 }
 
+// UpdateMemberRemark 设置/清空群备注
+func (s *GroupServer) UpdateMemberRemark(ctx context.Context, req *grouppb.UpdateMemberRemarkRequest) (*commonpb.Empty, error) {
+	dtoReq := &dto.UpdateMemberRemarkRequest{Remark: req.Remark}
+	if err := s.groupService.UpdateMemberRemark(ctx, req.UserId, req.GroupId, dtoReq); err != nil {
+		return nil, convertError(err)
+	}
+	return &commonpb.Empty{}, nil
+}
+
+// GetGroupQRCode 获取群二维码
+func (s *GroupServer) GetGroupQRCode(ctx context.Context, req *grouppb.GetGroupQRCodeRequest) (*grouppb.GetGroupQRCodeResponse, error) {
+	resp, err := s.groupService.GetGroupQRCode(ctx, req.UserId, req.GroupId)
+	if err != nil {
+		return nil, convertError(err)
+	}
+	return &grouppb.GetGroupQRCodeResponse{
+		Token:    resp.Token,
+		DeepLink: resp.DeepLink,
+		ExpireAt: resp.ExpireAt,
+	}, nil
+}
+
+// RefreshGroupQRCode 刷新群二维码
+func (s *GroupServer) RefreshGroupQRCode(ctx context.Context, req *grouppb.RefreshGroupQRCodeRequest) (*grouppb.GetGroupQRCodeResponse, error) {
+	resp, err := s.groupService.RefreshGroupQRCode(ctx, req.UserId, req.GroupId)
+	if err != nil {
+		return nil, convertError(err)
+	}
+	return &grouppb.GetGroupQRCodeResponse{
+		Token:    resp.Token,
+		DeepLink: resp.DeepLink,
+		ExpireAt: resp.ExpireAt,
+	}, nil
+}
+
+// JoinGroupByQRCode 扫码加入群组
+func (s *GroupServer) JoinGroupByQRCode(ctx context.Context, req *grouppb.JoinGroupByQRCodeRequest) (*grouppb.JoinGroupByQRCodeResponse, error) {
+	resp, err := s.groupService.JoinGroupByQRCode(ctx, req.UserId, req.Token)
+	if err != nil {
+		return nil, convertError(err)
+	}
+	result := &grouppb.JoinGroupByQRCodeResponse{
+		Joined:     resp.Joined,
+		GroupId:    resp.GroupID,
+		NeedVerify: resp.NeedVerify,
+	}
+	if resp.RequestID != nil {
+		result.RequestId = resp.RequestID
+	}
+	return result, nil
+}
+
 // convertError 将业务错误转换为gRPC错误
 func convertError(err error) error {
 	if bizErr, ok := err.(*errors.Business); ok {
@@ -505,6 +562,8 @@ func convertError(err error) error {
 			return status.Error(codes.FailedPrecondition, bizErr.Message)
 		case errors.CodeGroupQRExpired:
 			return status.Error(codes.FailedPrecondition, bizErr.Message)
+		case errors.CodeGroupQRInvalid:
+			return status.Error(codes.NotFound, bizErr.Message)
 		case errors.CodeParamError:
 			return status.Error(codes.InvalidArgument, bizErr.Message)
 		default:

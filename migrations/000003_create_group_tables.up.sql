@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS group_members (
     group_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(36) NOT NULL,
     group_nickname VARCHAR(50),
+    group_remark VARCHAR(20),           -- 用户为该群设置的备注名，仅对本人可见
     role VARCHAR(20) DEFAULT 'member',  -- owner/admin/member
     muted_until TIMESTAMP,
     joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -77,3 +78,18 @@ CREATE TABLE IF NOT EXISTS group_pinned_messages (
 );
 
 CREATE INDEX idx_group_pinned_messages_group_id ON group_pinned_messages(group_id);
+
+-- 创建群二维码表
+CREATE TABLE IF NOT EXISTS group_qrcodes (
+    id         BIGSERIAL    PRIMARY KEY,
+    group_id   VARCHAR(36)  NOT NULL,
+    token      VARCHAR(64)  NOT NULL UNIQUE,
+    created_by VARCHAR(36)  NOT NULL,
+    expire_at  TIMESTAMP    NOT NULL,
+    is_active  BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_group_qrcodes_group_id ON group_qrcodes(group_id);
+CREATE INDEX idx_group_qrcodes_token    ON group_qrcodes(token);

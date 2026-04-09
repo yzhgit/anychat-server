@@ -34,6 +34,11 @@ type UpdateMemberNicknameRequest struct {
 	Nickname string `json:"nickname" binding:"required,max=50" example:"群内昵称"`
 }
 
+// UpdateMemberRemarkRequest 更新群备注请求（仅对自己可见）
+type UpdateMemberRemarkRequest struct {
+	Remark string `json:"remark" binding:"max=20" example:"产品讨论群"` // 空字符串表示清空备注
+}
+
 // TransferOwnershipRequest 转让群主请求
 type TransferOwnershipRequest struct {
 	NewOwnerID string `json:"newOwnerId" binding:"required" example:"user-456"`
@@ -81,6 +86,7 @@ type MuteMemberRequest struct {
 type GroupResponse struct {
 	GroupID      string    `json:"groupId" example:"group-123"`
 	Name         string    `json:"name" example:"技术交流群"`
+	DisplayName  string    `json:"displayName" example:"产品讨论群"` // 群备注优先，无备注则同 Name
 	Avatar       string    `json:"avatar" example:"https://example.com/avatar.jpg"`
 	Announcement string    `json:"announcement" example:"欢迎加入"`
 	Description  string    `json:"description" example:"群简介"`
@@ -165,6 +171,21 @@ type PinnedMessageResponse struct {
 // PinnedMessageListResponse 群置顶消息列表
 type PinnedMessageListResponse struct {
 	Messages []*PinnedMessageResponse `json:"messages"`
+}
+
+// GroupQRCodeResponse 群二维码响应
+type GroupQRCodeResponse struct {
+	Token    string `json:"token" example:"550e8400-e29b-41d4-a716-446655440000"`
+	DeepLink string `json:"deepLink" example:"anychat://group/join?token=550e8400-e29b-41d4-a716-446655440000"`
+	ExpireAt int64  `json:"expireAt" example:"1754006400"` // Unix 时间戳（秒）
+}
+
+// JoinGroupByQRCodeResponse 扫码加入群响应
+type JoinGroupByQRCodeResponse struct {
+	Joined     bool   `json:"joined" example:"true"`      // true=直接加入，false=已提交申请
+	GroupID    string `json:"groupId" example:"group-123"`
+	NeedVerify bool   `json:"needVerify" example:"false"` // 是否需要审批
+	RequestID  *int64 `json:"requestId,omitempty" example:"123"`
 }
 
 // ========== Shared Types ==========

@@ -44,6 +44,10 @@ const (
 	GroupService_UnmuteMember_FullMethodName         = "/anychat.group.GroupService/UnmuteMember"
 	GroupService_UpdateGroupSettings_FullMethodName  = "/anychat.group.GroupService/UpdateGroupSettings"
 	GroupService_GetGroupSettings_FullMethodName     = "/anychat.group.GroupService/GetGroupSettings"
+	GroupService_UpdateMemberRemark_FullMethodName   = "/anychat.group.GroupService/UpdateMemberRemark"
+	GroupService_GetGroupQRCode_FullMethodName       = "/anychat.group.GroupService/GetGroupQRCode"
+	GroupService_RefreshGroupQRCode_FullMethodName   = "/anychat.group.GroupService/RefreshGroupQRCode"
+	GroupService_JoinGroupByQRCode_FullMethodName    = "/anychat.group.GroupService/JoinGroupByQRCode"
 )
 
 // GroupServiceClient is the client API for GroupService service.
@@ -100,6 +104,14 @@ type GroupServiceClient interface {
 	UpdateGroupSettings(ctx context.Context, in *UpdateGroupSettingsRequest, opts ...grpc.CallOption) (*common.Empty, error)
 	// GetGroupSettings 获取群组设置
 	GetGroupSettings(ctx context.Context, in *GetGroupSettingsRequest, opts ...grpc.CallOption) (*GetGroupSettingsResponse, error)
+	// UpdateMemberRemark 设置/清空群备注（仅对自己可见）
+	UpdateMemberRemark(ctx context.Context, in *UpdateMemberRemarkRequest, opts ...grpc.CallOption) (*common.Empty, error)
+	// GetGroupQRCode 获取群二维码（自动续期或创建）
+	GetGroupQRCode(ctx context.Context, in *GetGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error)
+	// RefreshGroupQRCode 刷新群二维码（使旧码失效）
+	RefreshGroupQRCode(ctx context.Context, in *RefreshGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error)
+	// JoinGroupByQRCode 扫码加入群组
+	JoinGroupByQRCode(ctx context.Context, in *JoinGroupByQRCodeRequest, opts ...grpc.CallOption) (*JoinGroupByQRCodeResponse, error)
 }
 
 type groupServiceClient struct {
@@ -350,6 +362,46 @@ func (c *groupServiceClient) GetGroupSettings(ctx context.Context, in *GetGroupS
 	return out, nil
 }
 
+func (c *groupServiceClient) UpdateMemberRemark(ctx context.Context, in *UpdateMemberRemarkRequest, opts ...grpc.CallOption) (*common.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.Empty)
+	err := c.cc.Invoke(ctx, GroupService_UpdateMemberRemark_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupServiceClient) GetGroupQRCode(ctx context.Context, in *GetGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGroupQRCodeResponse)
+	err := c.cc.Invoke(ctx, GroupService_GetGroupQRCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupServiceClient) RefreshGroupQRCode(ctx context.Context, in *RefreshGroupQRCodeRequest, opts ...grpc.CallOption) (*GetGroupQRCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGroupQRCodeResponse)
+	err := c.cc.Invoke(ctx, GroupService_RefreshGroupQRCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupServiceClient) JoinGroupByQRCode(ctx context.Context, in *JoinGroupByQRCodeRequest, opts ...grpc.CallOption) (*JoinGroupByQRCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(JoinGroupByQRCodeResponse)
+	err := c.cc.Invoke(ctx, GroupService_JoinGroupByQRCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupServiceServer is the server API for GroupService service.
 // All implementations must embed UnimplementedGroupServiceServer
 // for forward compatibility.
@@ -404,6 +456,14 @@ type GroupServiceServer interface {
 	UpdateGroupSettings(context.Context, *UpdateGroupSettingsRequest) (*common.Empty, error)
 	// GetGroupSettings 获取群组设置
 	GetGroupSettings(context.Context, *GetGroupSettingsRequest) (*GetGroupSettingsResponse, error)
+	// UpdateMemberRemark 设置/清空群备注（仅对自己可见）
+	UpdateMemberRemark(context.Context, *UpdateMemberRemarkRequest) (*common.Empty, error)
+	// GetGroupQRCode 获取群二维码（自动续期或创建）
+	GetGroupQRCode(context.Context, *GetGroupQRCodeRequest) (*GetGroupQRCodeResponse, error)
+	// RefreshGroupQRCode 刷新群二维码（使旧码失效）
+	RefreshGroupQRCode(context.Context, *RefreshGroupQRCodeRequest) (*GetGroupQRCodeResponse, error)
+	// JoinGroupByQRCode 扫码加入群组
+	JoinGroupByQRCode(context.Context, *JoinGroupByQRCodeRequest) (*JoinGroupByQRCodeResponse, error)
 	mustEmbedUnimplementedGroupServiceServer()
 }
 
@@ -485,6 +545,18 @@ func (UnimplementedGroupServiceServer) UpdateGroupSettings(context.Context, *Upd
 }
 func (UnimplementedGroupServiceServer) GetGroupSettings(context.Context, *GetGroupSettingsRequest) (*GetGroupSettingsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetGroupSettings not implemented")
+}
+func (UnimplementedGroupServiceServer) UpdateMemberRemark(context.Context, *UpdateMemberRemarkRequest) (*common.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateMemberRemark not implemented")
+}
+func (UnimplementedGroupServiceServer) GetGroupQRCode(context.Context, *GetGroupQRCodeRequest) (*GetGroupQRCodeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGroupQRCode not implemented")
+}
+func (UnimplementedGroupServiceServer) RefreshGroupQRCode(context.Context, *RefreshGroupQRCodeRequest) (*GetGroupQRCodeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RefreshGroupQRCode not implemented")
+}
+func (UnimplementedGroupServiceServer) JoinGroupByQRCode(context.Context, *JoinGroupByQRCodeRequest) (*JoinGroupByQRCodeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method JoinGroupByQRCode not implemented")
 }
 func (UnimplementedGroupServiceServer) mustEmbedUnimplementedGroupServiceServer() {}
 func (UnimplementedGroupServiceServer) testEmbeddedByValue()                      {}
@@ -939,6 +1011,78 @@ func _GroupService_GetGroupSettings_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupService_UpdateMemberRemark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMemberRemarkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).UpdateMemberRemark(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_UpdateMemberRemark_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).UpdateMemberRemark(ctx, req.(*UpdateMemberRemarkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupService_GetGroupQRCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupQRCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).GetGroupQRCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_GetGroupQRCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).GetGroupQRCode(ctx, req.(*GetGroupQRCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupService_RefreshGroupQRCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshGroupQRCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).RefreshGroupQRCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_RefreshGroupQRCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).RefreshGroupQRCode(ctx, req.(*RefreshGroupQRCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupService_JoinGroupByQRCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinGroupByQRCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).JoinGroupByQRCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_JoinGroupByQRCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).JoinGroupByQRCode(ctx, req.(*JoinGroupByQRCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupService_ServiceDesc is the grpc.ServiceDesc for GroupService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1041,6 +1185,22 @@ var GroupService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupSettings",
 			Handler:    _GroupService_GetGroupSettings_Handler,
+		},
+		{
+			MethodName: "UpdateMemberRemark",
+			Handler:    _GroupService_UpdateMemberRemark_Handler,
+		},
+		{
+			MethodName: "GetGroupQRCode",
+			Handler:    _GroupService_GetGroupQRCode_Handler,
+		},
+		{
+			MethodName: "RefreshGroupQRCode",
+			Handler:    _GroupService_RefreshGroupQRCode_Handler,
+		},
+		{
+			MethodName: "JoinGroupByQRCode",
+			Handler:    _GroupService_JoinGroupByQRCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

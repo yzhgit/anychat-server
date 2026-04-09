@@ -19,7 +19,9 @@
 |------|------|------|
 | 群组管理 | [group.md](group.md) | 群组创建、解散、信息、设置 |
 | 群成员管理 | [member.md](member.md) | 成员邀请、移除、角色管理、禁言 |
-| 更新群设置 | [settings.md](settings.md) |入群验证、邀请权限、查看历史、加好友、成员修改权 |
+| 更新群设置 | [settings.md](settings.md) | 入群验证、邀请权限、查看历史、加好友、成员修改权 |
+| 群备注 | [group-remark.md](group-remark.md) | 用户为群设置仅自己可见的别名 |
+| 群二维码 | [group-qrcode.md](group-qrcode.md) | 生成/刷新/扫码加入群的二维码机制 |
 
 ## 3. 数据模型
 

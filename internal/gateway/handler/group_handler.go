@@ -90,6 +90,7 @@ func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 
 	resp, err := h.clientManager.Group().GetGroupInfo(c.Request.Context(), &grouppb.GetGroupInfoRequest{
 		GroupId: groupID,
+		UserId:  &userID,
 	})
 
 	if err != nil {
@@ -97,15 +98,10 @@ func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 		return
 	}
 
-	// Get user's role in the group
-	memberResp, _ := h.clientManager.Group().IsMember(c.Request.Context(), &grouppb.IsMemberRequest{
-		GroupId: groupID,
-		UserId:  userID,
-	})
-
 	result := groupdto.GroupResponse{
 		GroupID:      resp.GroupId,
 		Name:         resp.Name,
+		DisplayName:  resp.DisplayName,
 		Avatar:       resp.Avatar,
 		Announcement: resp.Announcement,
 		Description:  resp.Description,
@@ -118,7 +114,11 @@ func (h *GroupHandler) GetGroupInfo(c *gin.Context) {
 		UpdatedAt:    resp.UpdatedAt.AsTime(),
 	}
 
-	if memberResp != nil && memberResp.IsMember {
+	// 获取用户在群内的角色
+	if memberResp, _ := h.clientManager.Group().IsMember(c.Request.Context(), &grouppb.IsMemberRequest{
+		GroupId: groupID,
+		UserId:  userID,
+	}); memberResp != nil && memberResp.IsMember {
 		result.MyRole = memberResp.Role
 	}
 
@@ -794,4 +794,146 @@ func (h *GroupHandler) GetGroupSettings(c *gin.Context) {
 // Helper function to create int32 pointer
 func int32Ptr(v int32) *int32 {
 	return &v
+}
+
+// UpdateMemberRemark 设置/清空群备注
+// @Summary      设置群备注
+// @Description  为指定群设置仅对自己可见的备注名，传空字符串可清空备注
+// @Tags         群组
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path  string                              true  "群组ID"
+// @Param        request  body  groupdto.UpdateMemberRemarkRequest  true  "备注信息"
+// @Success      200      {object}  response.Response  "设置成功"
+// @Failure      400      {object}  response.Response  "参数错误"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Failure      403      {object}  response.Response  "不是群成员"
+// @Router       /groups/{id}/remark [put]
+func (h *GroupHandler) UpdateMemberRemark(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	groupID := c.Param("id")
+
+	var req groupdto.UpdateMemberRemarkRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	_, err := h.clientManager.Group().UpdateMemberRemark(c.Request.Context(), &grouppb.UpdateMemberRemarkRequest{
+		UserId:  userID,
+		GroupId: groupID,
+		Remark:  req.Remark,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+// GetGroupQRCode 获取群二维码
+// @Summary      获取群二维码
+// @Description  获取当前有效的群二维码，不存在或快过期时自动创建/续期（所有群成员可用）
+// @Tags         群组
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id  path  string  true  "群组ID"
+// @Success      200  {object}  response.Response{data=groupdto.GroupQRCodeResponse}
+// @Failure      401  {object}  response.Response  "未授权"
+// @Failure      403  {object}  response.Response  "不是群成员"
+// @Router       /groups/{id}/qrcode [get]
+func (h *GroupHandler) GetGroupQRCode(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	groupID := c.Param("id")
+
+	resp, err := h.clientManager.Group().GetGroupQRCode(c.Request.Context(), &grouppb.GetGroupQRCodeRequest{
+		UserId:  userID,
+		GroupId: groupID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, groupdto.GroupQRCodeResponse{
+		Token:    resp.Token,
+		DeepLink: resp.DeepLink,
+		ExpireAt: resp.ExpireAt,
+	})
+}
+
+// RefreshGroupQRCode 刷新群二维码
+// @Summary      刷新群二维码
+// @Description  刷新群二维码，使旧码立即失效并生成新码（仅群主或管理员可用）
+// @Tags         群组
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id  path  string  true  "群组ID"
+// @Success      200  {object}  response.Response{data=groupdto.GroupQRCodeResponse}
+// @Failure      401  {object}  response.Response  "未授权"
+// @Failure      403  {object}  response.Response  "无权限"
+// @Router       /groups/{id}/qrcode/refresh [post]
+func (h *GroupHandler) RefreshGroupQRCode(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	groupID := c.Param("id")
+
+	resp, err := h.clientManager.Group().RefreshGroupQRCode(c.Request.Context(), &grouppb.RefreshGroupQRCodeRequest{
+		UserId:  userID,
+		GroupId: groupID,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, groupdto.GroupQRCodeResponse{
+		Token:    resp.Token,
+		DeepLink: resp.DeepLink,
+		ExpireAt: resp.ExpireAt,
+	})
+}
+
+// JoinGroupByQRCode 扫码加入群组
+// @Summary      扫码加入群组
+// @Description  通过二维码 Token 加入群组，根据群设置直接加入或提交申请
+// @Tags         群组
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body  object{token=string}  true  "二维码Token"
+// @Success      200      {object}  response.Response{data=groupdto.JoinGroupByQRCodeResponse}
+// @Failure      400      {object}  response.Response  "二维码无效或已过期"
+// @Failure      401      {object}  response.Response  "未授权"
+// @Router       /groups/join-by-qrcode [post]
+func (h *GroupHandler) JoinGroupByQRCode(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+
+	var body struct {
+		Token string `json:"token" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.ParamError(c, err.Error())
+		return
+	}
+
+	resp, err := h.clientManager.Group().JoinGroupByQRCode(c.Request.Context(), &grouppb.JoinGroupByQRCodeRequest{
+		UserId: userID,
+		Token:  body.Token,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	result := groupdto.JoinGroupByQRCodeResponse{
+		Joined:     resp.Joined,
+		GroupID:    resp.GroupId,
+		NeedVerify: resp.NeedVerify,
+		RequestID:  resp.RequestId,
+	}
+	response.Success(c, result)
 }
