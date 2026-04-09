@@ -71,13 +71,17 @@ CREATE TABLE IF NOT EXISTS group_pinned_messages (
     id BIGSERIAL PRIMARY KEY,
     group_id VARCHAR(36) NOT NULL,
     message_id VARCHAR(64) NOT NULL,
+    message_seq BIGINT,
     pinned_by VARCHAR(36) NOT NULL,
     content TEXT,
+    content_type VARCHAR(32) NOT NULL DEFAULT 'text',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_group_pinned_message UNIQUE (group_id, message_id)
 );
 
 CREATE INDEX idx_group_pinned_messages_group_id ON group_pinned_messages(group_id);
+CREATE INDEX idx_group_pinned_messages_group_updated_at ON group_pinned_messages(group_id, updated_at DESC);
 
 -- 创建群二维码表
 CREATE TABLE IF NOT EXISTS group_qrcodes (

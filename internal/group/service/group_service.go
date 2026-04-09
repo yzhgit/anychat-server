@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -19,6 +20,19 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
+
+const (
+	maxPinnedMessagesPerGroup        = 20
+	defaultPinnedMessageContentType  = "text"
+	systemPinnedMessageOperatorUser  = "system"
+	pinnedMessagePreviewMaxRuneCount = 100
+)
+
+type pinnedMessageSnapshot struct {
+	content     string
+	contentType string
+	messageSeq  *int64
+}
 
 // GroupService 群组服务接口
 type GroupService interface {
@@ -1084,17 +1098,37 @@ func (s *groupServiceImpl) PinGroupMessage(ctx context.Context, userID, groupID,
 		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限置顶消息")
 	}
 
-	content, err := s.getPinnedMessageContent(ctx, groupID, messageID)
+	exists, err := s.pinnedRepo.Exists(ctx, groupID, messageID)
+	if err != nil {
+		logger.Error("Failed to check pinned message existence", zap.Error(err))
+		return err
+	}
+	if !exists {
+		total, err := s.pinnedRepo.CountByGroup(ctx, groupID)
+		if err != nil {
+			logger.Error("Failed to count pinned messages", zap.Error(err))
+			return err
+		}
+		if total >= maxPinnedMessagesPerGroup {
+			return errors.NewBusiness(errors.CodeGroupPinnedLimitExceeded, "已达置顶上限，请先取消部分置顶")
+		}
+	}
+
+	snapshot, err := s.getPinnedMessageSnapshot(ctx, groupID, messageID)
 	if err != nil {
 		return err
 	}
 
+	now := time.Now()
 	record := &model.GroupPinnedMessage{
-		GroupID:   groupID,
-		MessageID: messageID,
-		PinnedBy:  userID,
-		Content:   content,
-		CreatedAt: time.Now(),
+		GroupID:     groupID,
+		MessageID:   messageID,
+		MessageSeq:  snapshot.messageSeq,
+		PinnedBy:    userID,
+		Content:     snapshot.content,
+		ContentType: snapshot.contentType,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 	if err := s.pinnedRepo.Upsert(ctx, record); err != nil {
 		logger.Error("Failed to pin group message", zap.Error(err))
@@ -1107,34 +1141,43 @@ func (s *groupServiceImpl) PinGroupMessage(ctx context.Context, userID, groupID,
 
 // UnpinGroupMessage 取消置顶群消息
 func (s *groupServiceImpl) UnpinGroupMessage(ctx context.Context, userID, groupID, messageID string) error {
-	group, err := s.groupRepo.GetByGroupID(ctx, groupID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+	if userID != "" {
+		group, err := s.groupRepo.GetByGroupID(ctx, groupID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.NewBusiness(errors.CodeGroupNotFound, "群组不存在")
+			}
+			return err
 		}
-		return err
-	}
-	if !group.IsActive() {
-		return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		if !group.IsActive() {
+			return errors.NewBusiness(errors.CodeGroupDissolved, "群组已解散")
+		}
+
+		member, err := s.memberRepo.GetMember(ctx, groupID, userID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
+			}
+			return err
+		}
+		if !member.CanManageGroup() {
+			return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限取消置顶")
+		}
 	}
 
-	member, err := s.memberRepo.GetMember(ctx, groupID, userID)
+	deleted, err := s.pinnedRepo.Delete(ctx, groupID, messageID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return errors.NewBusiness(errors.CodeNotGroupMember, "你不是群成员")
-		}
-		return err
-	}
-	if !member.CanManageGroup() {
-		return errors.NewBusiness(errors.CodeNoAdminPermission, "无权限取消置顶")
-	}
-
-	if err := s.pinnedRepo.Delete(ctx, groupID, messageID); err != nil {
 		logger.Error("Failed to unpin group message", zap.Error(err))
 		return err
 	}
 
-	s.publishGroupMessageUnpinnedNotification(groupID, userID, messageID)
+	if deleted {
+		operatorID := userID
+		if operatorID == "" {
+			operatorID = systemPinnedMessageOperatorUser
+		}
+		s.publishGroupMessageUnpinnedNotification(groupID, operatorID, messageID)
+	}
 	return nil
 }
 
@@ -1168,13 +1211,30 @@ func (s *groupServiceImpl) GetPinnedMessages(ctx context.Context, userID, groupI
 	resp := &dto.PinnedMessageListResponse{
 		Messages: make([]*dto.PinnedMessageResponse, 0, len(records)),
 	}
+	var version int64
 	for _, item := range records {
-		resp.Messages = append(resp.Messages, &dto.PinnedMessageResponse{
-			MessageID: item.MessageID,
-			Content:   item.Content,
-			PinnedBy:  item.PinnedBy,
-			PinnedAt:  item.CreatedAt.Unix(),
-		})
+		msg := &dto.PinnedMessageResponse{
+			MessageID:   item.MessageID,
+			Content:     item.Content,
+			PinnedBy:    item.PinnedBy,
+			PinnedAt:    item.CreatedAt.Unix(),
+			ContentType: item.ContentType,
+			MessageSeq:  item.MessageSeq,
+		}
+		resp.Messages = append(resp.Messages, msg)
+
+		updatedAt := item.UpdatedAt
+		if updatedAt.IsZero() {
+			updatedAt = item.CreatedAt
+		}
+		if ts := updatedAt.Unix(); ts > version {
+			version = ts
+		}
+	}
+	resp.Total = int32(len(resp.Messages))
+	resp.Version = version
+	if len(resp.Messages) > 0 {
+		resp.TopMessage = resp.Messages[0]
 	}
 	return resp, nil
 }
@@ -1555,9 +1615,9 @@ func (s *groupServiceImpl) getGroupJoinVerify(ctx context.Context, groupID strin
 	return settings.JoinVerify
 }
 
-func (s *groupServiceImpl) getPinnedMessageContent(ctx context.Context, groupID, messageID string) (string, error) {
+func (s *groupServiceImpl) getPinnedMessageSnapshot(ctx context.Context, groupID, messageID string) (*pinnedMessageSnapshot, error) {
 	if s.messageClient == nil {
-		return "", nil
+		return nil, errors.NewBusiness(errors.CodeInternalError, "消息服务不可用")
 	}
 
 	msg, err := s.messageClient.GetMessageById(ctx, &messagepb.GetMessageByIdRequest{
@@ -1565,14 +1625,74 @@ func (s *groupServiceImpl) getPinnedMessageContent(ctx context.Context, groupID,
 	})
 	if err != nil {
 		logger.Error("Failed to load pinned message content", zap.String("messageId", messageID), zap.Error(err))
-		return "", errors.NewBusiness(errors.CodeMessageNotFound, "消息不存在")
+		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "消息不存在")
 	}
 
 	if msg.GetConversationType() != "group" || msg.GetConversationId() != groupID {
-		return "", errors.NewBusiness(errors.CodeParamError, "消息不属于该群")
+		return nil, errors.NewBusiness(errors.CodeMessageNotInGroup, "消息不属于该群")
 	}
 
-	return msg.GetContent(), nil
+	if msg.GetStatus() != 0 {
+		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "消息不存在或不可见")
+	}
+
+	contentType := msg.GetContentType()
+	if contentType == "" {
+		contentType = defaultPinnedMessageContentType
+	}
+
+	var seq *int64
+	if messageSeq := msg.GetSequence(); messageSeq > 0 {
+		seq = &messageSeq
+	}
+
+	return &pinnedMessageSnapshot{
+		content:     buildPinnedMessagePreview(msg.GetContent(), contentType),
+		contentType: contentType,
+		messageSeq:  seq,
+	}, nil
+}
+
+func buildPinnedMessagePreview(content, contentType string) string {
+	switch contentType {
+	case "text":
+		var textContent struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal([]byte(content), &textContent); err == nil {
+			text := strings.TrimSpace(textContent.Text)
+			if text != "" {
+				return truncateWithEllipsis(text, pinnedMessagePreviewMaxRuneCount)
+			}
+		}
+		rawText := strings.TrimSpace(content)
+		if rawText != "" {
+			return truncateWithEllipsis(rawText, pinnedMessagePreviewMaxRuneCount)
+		}
+		return "[文本消息]"
+	case "image":
+		return "[图片]"
+	case "video":
+		return "[视频]"
+	case "audio":
+		return "[语音]"
+	case "file":
+		return "[文件]"
+	case "location":
+		return "[位置]"
+	case "card":
+		return "[名片]"
+	default:
+		return "[消息]"
+	}
+}
+
+func truncateWithEllipsis(text string, maxRunes int) string {
+	if maxRunes <= 0 || utf8.RuneCountInString(text) <= maxRunes {
+		return text
+	}
+	runes := []rune(text)
+	return string(runes[:maxRunes]) + "..."
 }
 
 func (s *groupServiceImpl) sendGroupSystemMessage(ctx context.Context, groupID, operatorID, text string) error {

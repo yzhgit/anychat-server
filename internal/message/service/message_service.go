@@ -460,12 +460,40 @@ func (s *messageServiceImpl) RecallMessage(ctx context.Context, messageID, userI
 		return errors.NewBusiness(errors.CodeMessageRecallFailed, "")
 	}
 
-	// 5. 发布撤回通知
+	// 5. 若该消息处于群置顶中，自动取消置顶（失败仅记录日志，不阻塞撤回流程）
+	if err := s.autoUnpinRecalledGroupMessage(ctx, message); err != nil {
+		logger.Warn("Failed to auto-unpin recalled group message",
+			zap.String("messageID", message.MessageID),
+			zap.String("conversationID", message.ConversationID),
+			zap.Error(err))
+	}
+
+	// 6. 发布撤回通知
 	if err := s.publishRecallNotification(ctx, message, userID); err != nil {
 		logger.Error("Failed to publish recall notification", zap.Error(err))
 	}
 
 	return nil
+}
+
+func (s *messageServiceImpl) autoUnpinRecalledGroupMessage(ctx context.Context, msg *model.Message) error {
+	if s.groupClient == nil || msg.ConversationType != model.ConversationTypeGroup {
+		return nil
+	}
+
+	groupID := msg.TargetID
+	if groupID == "" {
+		groupID = msg.ConversationID
+	}
+	if groupID == "" {
+		return nil
+	}
+
+	_, err := s.groupClient.UnpinGroupMessage(ctx, &grouppb.UnpinGroupMessageRequest{
+		GroupId:   groupID,
+		MessageId: msg.MessageID,
+	})
+	return err
 }
 
 // DeleteMessage 删除消息

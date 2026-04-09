@@ -308,10 +308,15 @@ message PinnedMessage {
   string content = 2;
   string pinned_by = 3;
   int64 pinned_at = 4;
+  optional string content_type = 5;
+  optional int64 message_seq = 6;
 }
 
 message GetPinnedMessagesResponse {
   repeated PinnedMessage messages = 1;
+  int32 total = 2;
+  optional PinnedMessage top_message = 3;
+  int64 version = 4;
 }
 
 message SetGroupMuteRequest {

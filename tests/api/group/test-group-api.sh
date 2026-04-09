@@ -570,6 +570,20 @@ test_pin_unpin_message() {
     local list_resp=$(http_get "${API_BASE}/groups/${GROUP_ID}/pins" "$USER1_TOKEN")
     check_response "$list_resp" "0" "获取置顶消息列表"
 
+    local total=$(echo "$list_resp" | jq -r '.data.total // 0')
+    if [ "$total" -ge "1" ]; then
+        print_success "置顶列表 total 字段有效"
+    else
+        print_error "置顶列表 total 字段异常: $total"
+    fi
+
+    local top_message_id=$(echo "$list_resp" | jq -r '.data.topMessage.messageId // empty')
+    if [ "$top_message_id" = "$TEST_PIN_MESSAGE_ID" ]; then
+        print_success "置顶列表 topMessage 返回最新置顶消息"
+    else
+        print_error "置顶列表 topMessage 校验失败，期望=${TEST_PIN_MESSAGE_ID} 实际=${top_message_id}"
+    fi
+
     local unpin_resp=$(http_delete "${API_BASE}/groups/${GROUP_ID}/pin/${TEST_PIN_MESSAGE_ID}" "$USER1_TOKEN")
     check_response "$unpin_resp" "0" "取消置顶消息"
 }

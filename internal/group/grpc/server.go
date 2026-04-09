@@ -391,15 +391,43 @@ func (s *GroupServer) GetPinnedMessages(ctx context.Context, req *grouppb.GetPin
 
 	items := make([]*grouppb.PinnedMessage, 0, len(resp.Messages))
 	for _, m := range resp.Messages {
-		items = append(items, &grouppb.PinnedMessage{
+		item := &grouppb.PinnedMessage{
 			MessageId: m.MessageID,
 			Content:   m.Content,
 			PinnedBy:  m.PinnedBy,
 			PinnedAt:  m.PinnedAt,
-		})
+		}
+		if m.ContentType != "" {
+			item.ContentType = &m.ContentType
+		}
+		if m.MessageSeq != nil {
+			item.MessageSeq = m.MessageSeq
+		}
+		items = append(items, item)
 	}
 
-	return &grouppb.GetPinnedMessagesResponse{Messages: items}, nil
+	var topMessage *grouppb.PinnedMessage
+	if resp.TopMessage != nil {
+		topMessage = &grouppb.PinnedMessage{
+			MessageId: resp.TopMessage.MessageID,
+			Content:   resp.TopMessage.Content,
+			PinnedBy:  resp.TopMessage.PinnedBy,
+			PinnedAt:  resp.TopMessage.PinnedAt,
+		}
+		if resp.TopMessage.ContentType != "" {
+			topMessage.ContentType = &resp.TopMessage.ContentType
+		}
+		if resp.TopMessage.MessageSeq != nil {
+			topMessage.MessageSeq = resp.TopMessage.MessageSeq
+		}
+	}
+
+	return &grouppb.GetPinnedMessagesResponse{
+		Messages:   items,
+		Total:      resp.Total,
+		TopMessage: topMessage,
+		Version:    resp.Version,
+	}, nil
 }
 
 // SetGroupMute 设置全体禁言
@@ -579,6 +607,12 @@ func convertError(err error) error {
 			return status.Error(codes.FailedPrecondition, bizErr.Message)
 		case errors.CodeGroupQRInvalid:
 			return status.Error(codes.NotFound, bizErr.Message)
+		case errors.CodeGroupPinnedLimitExceeded:
+			return status.Error(codes.ResourceExhausted, bizErr.Message)
+		case errors.CodeMessageNotFound:
+			return status.Error(codes.NotFound, bizErr.Message)
+		case errors.CodeMessageNotInGroup:
+			return status.Error(codes.InvalidArgument, bizErr.Message)
 		case errors.CodeParamError:
 			return status.Error(codes.InvalidArgument, bizErr.Message)
 		default:

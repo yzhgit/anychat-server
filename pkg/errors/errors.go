@@ -75,24 +75,25 @@ const (
 
 // Group Service 错误码 (40xxx)
 const (
-	CodeGroupNotFound           = 40101 // 群组不存在
-	CodeGroupDissolved          = 40102 // 群组已解散
-	CodeGroupMemberTooFew       = 40103 // 群成员数量不足
-	CodeGroupMemberLimitReached = 40104 // 群成员已达上限
-	CodeNotGroupMember          = 40105 // 不是群成员
-	CodeAlreadyGroupMember      = 40106 // 已经是群成员
-	CodeNoOwnerPermission       = 40107 // 无群主权限
-	CodeNoAdminPermission       = 40108 // 无管理员权限
-	CodeCannotRemoveOwner       = 40109 // 不能移除群主
-	CodeCannotRemoveAdmin       = 40110 // 不能移除管理员
-	CodeGroupNameSensitive      = 40111 // 群名称包含敏感词
-	CodeAnnouncementSensitive   = 40112 // 群公告包含敏感词
-	CodeJoinRequestNotFound     = 40113 // 入群申请不存在
-	CodeJoinRequestProcessed    = 40114 // 入群申请已处理
-	CodeMemberMuted             = 40115 // 群内已被禁言
-	CodeCannotQuitOwnGroup      = 40116 // 不能退出自己的群
-	CodeGroupQRExpired  = 40117 // 群二维码已过期
-	CodeGroupQRInvalid  = 40118 // 群二维码无效
+	CodeGroupNotFound            = 40101 // 群组不存在
+	CodeGroupDissolved           = 40102 // 群组已解散
+	CodeGroupMemberTooFew        = 40103 // 群成员数量不足
+	CodeGroupMemberLimitReached  = 40104 // 群成员已达上限
+	CodeNotGroupMember           = 40105 // 不是群成员
+	CodeAlreadyGroupMember       = 40106 // 已经是群成员
+	CodeNoOwnerPermission        = 40107 // 无群主权限
+	CodeNoAdminPermission        = 40108 // 无管理员权限
+	CodeCannotRemoveOwner        = 40109 // 不能移除群主
+	CodeCannotRemoveAdmin        = 40110 // 不能移除管理员
+	CodeGroupNameSensitive       = 40111 // 群名称包含敏感词
+	CodeAnnouncementSensitive    = 40112 // 群公告包含敏感词
+	CodeJoinRequestNotFound      = 40113 // 入群申请不存在
+	CodeJoinRequestProcessed     = 40114 // 入群申请已处理
+	CodeMemberMuted              = 40115 // 群内已被禁言
+	CodeCannotQuitOwnGroup       = 40116 // 不能退出自己的群
+	CodeGroupQRExpired           = 40117 // 群二维码已过期
+	CodeGroupQRInvalid           = 40118 // 群二维码无效
+	CodeGroupPinnedLimitExceeded = 40119 // 群置顶数量超限
 )
 
 // Message Service 错误码 (50xxx)
@@ -109,6 +110,7 @@ const (
 	CodeGetUnreadCountFailed    = 50110 // 获取未读数失败
 	CodeSearchMessageFailed     = 50111 // 搜索消息失败
 	CodeInvalidOperation        = 50112 // 无效操作
+	CodeMessageNotInGroup       = 50113 // 消息不属于该群
 )
 
 // File Service 错误码 (70xxx)
@@ -229,24 +231,25 @@ var errorMessages = map[int]string{
 	CodePermissionDenied:      "权限不足",
 	CodeNotFriend:             "不是好友",
 
-	CodeGroupNotFound:           "群组不存在",
-	CodeGroupDissolved:          "群组已解散",
-	CodeGroupMemberTooFew:       "群成员数量不足",
-	CodeGroupMemberLimitReached: "群成员已达上限",
-	CodeNotGroupMember:          "不是群成员",
-	CodeAlreadyGroupMember:      "已经是群成员",
-	CodeNoOwnerPermission:       "无群主权限",
-	CodeNoAdminPermission:       "无管理员权限",
-	CodeCannotRemoveOwner:       "不能移除群主",
-	CodeCannotRemoveAdmin:       "不能移除管理员",
-	CodeGroupNameSensitive:      "群名称包含敏感词",
-	CodeAnnouncementSensitive:   "群公告包含敏感词",
-	CodeJoinRequestNotFound:     "入群申请不存在",
-	CodeJoinRequestProcessed:    "入群申请已处理",
-	CodeMemberMuted:             "群内已被禁言",
-	CodeCannotQuitOwnGroup:      "不能退出自己的群",
-	CodeGroupQRExpired:          "群二维码已过期",
-	CodeGroupQRInvalid:          "群二维码无效",
+	CodeGroupNotFound:            "群组不存在",
+	CodeGroupDissolved:           "群组已解散",
+	CodeGroupMemberTooFew:        "群成员数量不足",
+	CodeGroupMemberLimitReached:  "群成员已达上限",
+	CodeNotGroupMember:           "不是群成员",
+	CodeAlreadyGroupMember:       "已经是群成员",
+	CodeNoOwnerPermission:        "无群主权限",
+	CodeNoAdminPermission:        "无管理员权限",
+	CodeCannotRemoveOwner:        "不能移除群主",
+	CodeCannotRemoveAdmin:        "不能移除管理员",
+	CodeGroupNameSensitive:       "群名称包含敏感词",
+	CodeAnnouncementSensitive:    "群公告包含敏感词",
+	CodeJoinRequestNotFound:      "入群申请不存在",
+	CodeJoinRequestProcessed:     "入群申请已处理",
+	CodeMemberMuted:              "群内已被禁言",
+	CodeCannotQuitOwnGroup:       "不能退出自己的群",
+	CodeGroupQRExpired:           "群二维码已过期",
+	CodeGroupQRInvalid:           "群二维码无效",
+	CodeGroupPinnedLimitExceeded: "已达置顶上限，请先取消部分置顶",
 
 	CodeMessageNotFound:         "消息不存在",
 	CodeMessageSendFailed:       "消息发送失败",
@@ -260,6 +263,7 @@ var errorMessages = map[int]string{
 	CodeGetUnreadCountFailed:    "获取未读数失败",
 	CodeSearchMessageFailed:     "搜索消息失败",
 	CodeInvalidOperation:        "无效操作",
+	CodeMessageNotInGroup:       "消息不属于该群",
 
 	CodeFileNotFound:         "文件不存在",
 	CodeFileAccessDenied:     "无权访问文件",

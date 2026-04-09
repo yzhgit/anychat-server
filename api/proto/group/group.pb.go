@@ -1991,6 +1991,8 @@ type PinnedMessage struct {
 	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	PinnedBy      string                 `protobuf:"bytes,3,opt,name=pinned_by,json=pinnedBy,proto3" json:"pinned_by,omitempty"`
 	PinnedAt      int64                  `protobuf:"varint,4,opt,name=pinned_at,json=pinnedAt,proto3" json:"pinned_at,omitempty"`
+	ContentType   *string                `protobuf:"bytes,5,opt,name=content_type,json=contentType,proto3,oneof" json:"content_type,omitempty"`
+	MessageSeq    *int64                 `protobuf:"varint,6,opt,name=message_seq,json=messageSeq,proto3,oneof" json:"message_seq,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2053,9 +2055,26 @@ func (x *PinnedMessage) GetPinnedAt() int64 {
 	return 0
 }
 
+func (x *PinnedMessage) GetContentType() string {
+	if x != nil && x.ContentType != nil {
+		return *x.ContentType
+	}
+	return ""
+}
+
+func (x *PinnedMessage) GetMessageSeq() int64 {
+	if x != nil && x.MessageSeq != nil {
+		return *x.MessageSeq
+	}
+	return 0
+}
+
 type GetPinnedMessagesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Messages      []*PinnedMessage       `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	TopMessage    *PinnedMessage         `protobuf:"bytes,3,opt,name=top_message,json=topMessage,proto3,oneof" json:"top_message,omitempty"`
+	Version       int64                  `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2095,6 +2114,27 @@ func (x *GetPinnedMessagesResponse) GetMessages() []*PinnedMessage {
 		return x.Messages
 	}
 	return nil
+}
+
+func (x *GetPinnedMessagesResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *GetPinnedMessagesResponse) GetTopMessage() *PinnedMessage {
+	if x != nil {
+		return x.TopMessage
+	}
+	return nil
+}
+
+func (x *GetPinnedMessagesResponse) GetVersion() int64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 type SetGroupMuteRequest struct {
@@ -3185,15 +3225,25 @@ const file_group_group_proto_rawDesc = "" +
 	"message_id\x18\x03 \x01(\tR\tmessageId\"N\n" +
 	"\x18GetPinnedMessagesRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
-	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"\x82\x01\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"\xf1\x01\n" +
 	"\rPinnedMessage\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x01 \x01(\tR\tmessageId\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12\x1b\n" +
 	"\tpinned_by\x18\x03 \x01(\tR\bpinnedBy\x12\x1b\n" +
-	"\tpinned_at\x18\x04 \x01(\x03R\bpinnedAt\"U\n" +
+	"\tpinned_at\x18\x04 \x01(\x03R\bpinnedAt\x12&\n" +
+	"\fcontent_type\x18\x05 \x01(\tH\x00R\vcontentType\x88\x01\x01\x12$\n" +
+	"\vmessage_seq\x18\x06 \x01(\x03H\x01R\n" +
+	"messageSeq\x88\x01\x01B\x0f\n" +
+	"\r_content_typeB\x0e\n" +
+	"\f_message_seq\"\xd9\x01\n" +
 	"\x19GetPinnedMessagesResponse\x128\n" +
-	"\bmessages\x18\x01 \x03(\v2\x1c.anychat.group.PinnedMessageR\bmessages\"c\n" +
+	"\bmessages\x18\x01 \x03(\v2\x1c.anychat.group.PinnedMessageR\bmessages\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\x12B\n" +
+	"\vtop_message\x18\x03 \x01(\v2\x1c.anychat.group.PinnedMessageH\x00R\n" +
+	"topMessage\x88\x01\x01\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x03R\aversionB\x0e\n" +
+	"\f_top_message\"c\n" +
 	"\x13SetGroupMuteRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12\x18\n" +
@@ -3383,70 +3433,71 @@ var file_group_group_proto_depIdxs = []int32{
 	46, // 10: anychat.group.JoinRequest.created_at:type_name -> google.protobuf.Timestamp
 	47, // 11: anychat.group.JoinRequest.user_info:type_name -> anychat.common.UserInfo
 	30, // 12: anychat.group.GetPinnedMessagesResponse.messages:type_name -> anychat.group.PinnedMessage
-	0,  // 13: anychat.group.MuteMemberRequest.type:type_name -> anychat.group.MuteType
-	1,  // 14: anychat.group.GroupService.GetGroupInfo:input_type -> anychat.group.GetGroupInfoRequest
-	3,  // 15: anychat.group.GroupService.GetGroupMembers:input_type -> anychat.group.GetGroupMembersRequest
-	6,  // 16: anychat.group.GroupService.IsMember:input_type -> anychat.group.IsMemberRequest
-	8,  // 17: anychat.group.GroupService.GetUserGroups:input_type -> anychat.group.GetUserGroupsRequest
-	11, // 18: anychat.group.GroupService.CreateGroup:input_type -> anychat.group.CreateGroupRequest
-	13, // 19: anychat.group.GroupService.UpdateGroup:input_type -> anychat.group.UpdateGroupRequest
-	14, // 20: anychat.group.GroupService.DissolveGroup:input_type -> anychat.group.DissolveGroupRequest
-	15, // 21: anychat.group.GroupService.InviteMembers:input_type -> anychat.group.InviteMembersRequest
-	16, // 22: anychat.group.GroupService.RemoveMember:input_type -> anychat.group.RemoveMemberRequest
-	17, // 23: anychat.group.GroupService.QuitGroup:input_type -> anychat.group.QuitGroupRequest
-	18, // 24: anychat.group.GroupService.UpdateMemberRole:input_type -> anychat.group.UpdateMemberRoleRequest
-	19, // 25: anychat.group.GroupService.UpdateMemberNickname:input_type -> anychat.group.UpdateMemberNicknameRequest
-	20, // 26: anychat.group.GroupService.TransferOwnership:input_type -> anychat.group.TransferOwnershipRequest
-	21, // 27: anychat.group.GroupService.JoinGroup:input_type -> anychat.group.JoinGroupRequest
-	23, // 28: anychat.group.GroupService.HandleJoinRequest:input_type -> anychat.group.HandleJoinRequestRequest
-	24, // 29: anychat.group.GroupService.GetJoinRequests:input_type -> anychat.group.GetJoinRequestsRequest
-	27, // 30: anychat.group.GroupService.PinGroupMessage:input_type -> anychat.group.PinGroupMessageRequest
-	28, // 31: anychat.group.GroupService.UnpinGroupMessage:input_type -> anychat.group.UnpinGroupMessageRequest
-	29, // 32: anychat.group.GroupService.GetPinnedMessages:input_type -> anychat.group.GetPinnedMessagesRequest
-	32, // 33: anychat.group.GroupService.SetGroupMute:input_type -> anychat.group.SetGroupMuteRequest
-	33, // 34: anychat.group.GroupService.MuteMember:input_type -> anychat.group.MuteMemberRequest
-	34, // 35: anychat.group.GroupService.UnmuteMember:input_type -> anychat.group.UnmuteMemberRequest
-	35, // 36: anychat.group.GroupService.UpdateGroupSettings:input_type -> anychat.group.UpdateGroupSettingsRequest
-	36, // 37: anychat.group.GroupService.GetGroupSettings:input_type -> anychat.group.GetGroupSettingsRequest
-	38, // 38: anychat.group.GroupService.UpdateMemberRemark:input_type -> anychat.group.UpdateMemberRemarkRequest
-	39, // 39: anychat.group.GroupService.GetGroupQRCode:input_type -> anychat.group.GetGroupQRCodeRequest
-	41, // 40: anychat.group.GroupService.RefreshGroupQRCode:input_type -> anychat.group.RefreshGroupQRCodeRequest
-	42, // 41: anychat.group.GroupService.GetGroupPreviewByQRCode:input_type -> anychat.group.GetGroupPreviewByQRCodeRequest
-	44, // 42: anychat.group.GroupService.JoinGroupByQRCode:input_type -> anychat.group.JoinGroupByQRCodeRequest
-	2,  // 43: anychat.group.GroupService.GetGroupInfo:output_type -> anychat.group.GetGroupInfoResponse
-	4,  // 44: anychat.group.GroupService.GetGroupMembers:output_type -> anychat.group.GetGroupMembersResponse
-	7,  // 45: anychat.group.GroupService.IsMember:output_type -> anychat.group.IsMemberResponse
-	9,  // 46: anychat.group.GroupService.GetUserGroups:output_type -> anychat.group.GetUserGroupsResponse
-	12, // 47: anychat.group.GroupService.CreateGroup:output_type -> anychat.group.CreateGroupResponse
-	48, // 48: anychat.group.GroupService.UpdateGroup:output_type -> anychat.common.Empty
-	48, // 49: anychat.group.GroupService.DissolveGroup:output_type -> anychat.common.Empty
-	48, // 50: anychat.group.GroupService.InviteMembers:output_type -> anychat.common.Empty
-	48, // 51: anychat.group.GroupService.RemoveMember:output_type -> anychat.common.Empty
-	48, // 52: anychat.group.GroupService.QuitGroup:output_type -> anychat.common.Empty
-	48, // 53: anychat.group.GroupService.UpdateMemberRole:output_type -> anychat.common.Empty
-	48, // 54: anychat.group.GroupService.UpdateMemberNickname:output_type -> anychat.common.Empty
-	48, // 55: anychat.group.GroupService.TransferOwnership:output_type -> anychat.common.Empty
-	22, // 56: anychat.group.GroupService.JoinGroup:output_type -> anychat.group.JoinGroupResponse
-	48, // 57: anychat.group.GroupService.HandleJoinRequest:output_type -> anychat.common.Empty
-	25, // 58: anychat.group.GroupService.GetJoinRequests:output_type -> anychat.group.GetJoinRequestsResponse
-	48, // 59: anychat.group.GroupService.PinGroupMessage:output_type -> anychat.common.Empty
-	48, // 60: anychat.group.GroupService.UnpinGroupMessage:output_type -> anychat.common.Empty
-	31, // 61: anychat.group.GroupService.GetPinnedMessages:output_type -> anychat.group.GetPinnedMessagesResponse
-	48, // 62: anychat.group.GroupService.SetGroupMute:output_type -> anychat.common.Empty
-	48, // 63: anychat.group.GroupService.MuteMember:output_type -> anychat.common.Empty
-	48, // 64: anychat.group.GroupService.UnmuteMember:output_type -> anychat.common.Empty
-	48, // 65: anychat.group.GroupService.UpdateGroupSettings:output_type -> anychat.common.Empty
-	37, // 66: anychat.group.GroupService.GetGroupSettings:output_type -> anychat.group.GetGroupSettingsResponse
-	48, // 67: anychat.group.GroupService.UpdateMemberRemark:output_type -> anychat.common.Empty
-	40, // 68: anychat.group.GroupService.GetGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
-	40, // 69: anychat.group.GroupService.RefreshGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
-	43, // 70: anychat.group.GroupService.GetGroupPreviewByQRCode:output_type -> anychat.group.GetGroupPreviewByQRCodeResponse
-	45, // 71: anychat.group.GroupService.JoinGroupByQRCode:output_type -> anychat.group.JoinGroupByQRCodeResponse
-	43, // [43:72] is the sub-list for method output_type
-	14, // [14:43] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	30, // 13: anychat.group.GetPinnedMessagesResponse.top_message:type_name -> anychat.group.PinnedMessage
+	0,  // 14: anychat.group.MuteMemberRequest.type:type_name -> anychat.group.MuteType
+	1,  // 15: anychat.group.GroupService.GetGroupInfo:input_type -> anychat.group.GetGroupInfoRequest
+	3,  // 16: anychat.group.GroupService.GetGroupMembers:input_type -> anychat.group.GetGroupMembersRequest
+	6,  // 17: anychat.group.GroupService.IsMember:input_type -> anychat.group.IsMemberRequest
+	8,  // 18: anychat.group.GroupService.GetUserGroups:input_type -> anychat.group.GetUserGroupsRequest
+	11, // 19: anychat.group.GroupService.CreateGroup:input_type -> anychat.group.CreateGroupRequest
+	13, // 20: anychat.group.GroupService.UpdateGroup:input_type -> anychat.group.UpdateGroupRequest
+	14, // 21: anychat.group.GroupService.DissolveGroup:input_type -> anychat.group.DissolveGroupRequest
+	15, // 22: anychat.group.GroupService.InviteMembers:input_type -> anychat.group.InviteMembersRequest
+	16, // 23: anychat.group.GroupService.RemoveMember:input_type -> anychat.group.RemoveMemberRequest
+	17, // 24: anychat.group.GroupService.QuitGroup:input_type -> anychat.group.QuitGroupRequest
+	18, // 25: anychat.group.GroupService.UpdateMemberRole:input_type -> anychat.group.UpdateMemberRoleRequest
+	19, // 26: anychat.group.GroupService.UpdateMemberNickname:input_type -> anychat.group.UpdateMemberNicknameRequest
+	20, // 27: anychat.group.GroupService.TransferOwnership:input_type -> anychat.group.TransferOwnershipRequest
+	21, // 28: anychat.group.GroupService.JoinGroup:input_type -> anychat.group.JoinGroupRequest
+	23, // 29: anychat.group.GroupService.HandleJoinRequest:input_type -> anychat.group.HandleJoinRequestRequest
+	24, // 30: anychat.group.GroupService.GetJoinRequests:input_type -> anychat.group.GetJoinRequestsRequest
+	27, // 31: anychat.group.GroupService.PinGroupMessage:input_type -> anychat.group.PinGroupMessageRequest
+	28, // 32: anychat.group.GroupService.UnpinGroupMessage:input_type -> anychat.group.UnpinGroupMessageRequest
+	29, // 33: anychat.group.GroupService.GetPinnedMessages:input_type -> anychat.group.GetPinnedMessagesRequest
+	32, // 34: anychat.group.GroupService.SetGroupMute:input_type -> anychat.group.SetGroupMuteRequest
+	33, // 35: anychat.group.GroupService.MuteMember:input_type -> anychat.group.MuteMemberRequest
+	34, // 36: anychat.group.GroupService.UnmuteMember:input_type -> anychat.group.UnmuteMemberRequest
+	35, // 37: anychat.group.GroupService.UpdateGroupSettings:input_type -> anychat.group.UpdateGroupSettingsRequest
+	36, // 38: anychat.group.GroupService.GetGroupSettings:input_type -> anychat.group.GetGroupSettingsRequest
+	38, // 39: anychat.group.GroupService.UpdateMemberRemark:input_type -> anychat.group.UpdateMemberRemarkRequest
+	39, // 40: anychat.group.GroupService.GetGroupQRCode:input_type -> anychat.group.GetGroupQRCodeRequest
+	41, // 41: anychat.group.GroupService.RefreshGroupQRCode:input_type -> anychat.group.RefreshGroupQRCodeRequest
+	42, // 42: anychat.group.GroupService.GetGroupPreviewByQRCode:input_type -> anychat.group.GetGroupPreviewByQRCodeRequest
+	44, // 43: anychat.group.GroupService.JoinGroupByQRCode:input_type -> anychat.group.JoinGroupByQRCodeRequest
+	2,  // 44: anychat.group.GroupService.GetGroupInfo:output_type -> anychat.group.GetGroupInfoResponse
+	4,  // 45: anychat.group.GroupService.GetGroupMembers:output_type -> anychat.group.GetGroupMembersResponse
+	7,  // 46: anychat.group.GroupService.IsMember:output_type -> anychat.group.IsMemberResponse
+	9,  // 47: anychat.group.GroupService.GetUserGroups:output_type -> anychat.group.GetUserGroupsResponse
+	12, // 48: anychat.group.GroupService.CreateGroup:output_type -> anychat.group.CreateGroupResponse
+	48, // 49: anychat.group.GroupService.UpdateGroup:output_type -> anychat.common.Empty
+	48, // 50: anychat.group.GroupService.DissolveGroup:output_type -> anychat.common.Empty
+	48, // 51: anychat.group.GroupService.InviteMembers:output_type -> anychat.common.Empty
+	48, // 52: anychat.group.GroupService.RemoveMember:output_type -> anychat.common.Empty
+	48, // 53: anychat.group.GroupService.QuitGroup:output_type -> anychat.common.Empty
+	48, // 54: anychat.group.GroupService.UpdateMemberRole:output_type -> anychat.common.Empty
+	48, // 55: anychat.group.GroupService.UpdateMemberNickname:output_type -> anychat.common.Empty
+	48, // 56: anychat.group.GroupService.TransferOwnership:output_type -> anychat.common.Empty
+	22, // 57: anychat.group.GroupService.JoinGroup:output_type -> anychat.group.JoinGroupResponse
+	48, // 58: anychat.group.GroupService.HandleJoinRequest:output_type -> anychat.common.Empty
+	25, // 59: anychat.group.GroupService.GetJoinRequests:output_type -> anychat.group.GetJoinRequestsResponse
+	48, // 60: anychat.group.GroupService.PinGroupMessage:output_type -> anychat.common.Empty
+	48, // 61: anychat.group.GroupService.UnpinGroupMessage:output_type -> anychat.common.Empty
+	31, // 62: anychat.group.GroupService.GetPinnedMessages:output_type -> anychat.group.GetPinnedMessagesResponse
+	48, // 63: anychat.group.GroupService.SetGroupMute:output_type -> anychat.common.Empty
+	48, // 64: anychat.group.GroupService.MuteMember:output_type -> anychat.common.Empty
+	48, // 65: anychat.group.GroupService.UnmuteMember:output_type -> anychat.common.Empty
+	48, // 66: anychat.group.GroupService.UpdateGroupSettings:output_type -> anychat.common.Empty
+	37, // 67: anychat.group.GroupService.GetGroupSettings:output_type -> anychat.group.GetGroupSettingsResponse
+	48, // 68: anychat.group.GroupService.UpdateMemberRemark:output_type -> anychat.common.Empty
+	40, // 69: anychat.group.GroupService.GetGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
+	40, // 70: anychat.group.GroupService.RefreshGroupQRCode:output_type -> anychat.group.GetGroupQRCodeResponse
+	43, // 71: anychat.group.GroupService.GetGroupPreviewByQRCode:output_type -> anychat.group.GetGroupPreviewByQRCodeResponse
+	45, // 72: anychat.group.GroupService.JoinGroupByQRCode:output_type -> anychat.group.JoinGroupByQRCodeResponse
+	44, // [44:73] is the sub-list for method output_type
+	15, // [15:44] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_group_group_proto_init() }
@@ -3465,6 +3516,8 @@ func file_group_group_proto_init() {
 	file_group_group_proto_msgTypes[21].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[23].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[25].OneofWrappers = []any{}
+	file_group_group_proto_msgTypes[29].OneofWrappers = []any{}
+	file_group_group_proto_msgTypes[30].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[34].OneofWrappers = []any{}
 	file_group_group_proto_msgTypes[44].OneofWrappers = []any{}
 	type x struct{}

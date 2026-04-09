@@ -162,15 +162,20 @@ type GroupSettingsResponse struct {
 
 // PinnedMessageResponse 群置顶消息
 type PinnedMessageResponse struct {
-	MessageID string `json:"messageId" example:"msg-123"`
-	Content   string `json:"content" example:"消息摘要"`
-	PinnedBy  string `json:"pinnedBy" example:"user-123"`
-	PinnedAt  int64  `json:"pinnedAt" example:"1710000000"`
+	MessageID   string `json:"messageId" example:"msg-123"`
+	Content     string `json:"content" example:"消息摘要"`
+	PinnedBy    string `json:"pinnedBy" example:"user-123"`
+	PinnedAt    int64  `json:"pinnedAt" example:"1710000000"`
+	ContentType string `json:"contentType,omitempty" example:"text"`
+	MessageSeq  *int64 `json:"messageSeq,omitempty" example:"8123"`
 }
 
 // PinnedMessageListResponse 群置顶消息列表
 type PinnedMessageListResponse struct {
-	Messages []*PinnedMessageResponse `json:"messages"`
+	Total      int32                    `json:"total" example:"2"`
+	Version    int64                    `json:"version" example:"1775700000"`
+	TopMessage *PinnedMessageResponse   `json:"topMessage,omitempty"`
+	Messages   []*PinnedMessageResponse `json:"messages"`
 }
 
 // GroupQRCodeResponse 群二维码响应
