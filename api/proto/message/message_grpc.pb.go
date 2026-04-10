@@ -22,6 +22,10 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	MessageService_SendMessage_FullMethodName             = "/anychat.message.MessageService/SendMessage"
 	MessageService_GetMessages_FullMethodName             = "/anychat.message.MessageService/GetMessages"
+	MessageService_GetMessagesBefore_FullMethodName       = "/anychat.message.MessageService/GetMessagesBefore"
+	MessageService_GetMessagesAfter_FullMethodName        = "/anychat.message.MessageService/GetMessagesAfter"
+	MessageService_GetMessagesAroundAnchor_FullMethodName = "/anychat.message.MessageService/GetMessagesAroundAnchor"
+	MessageService_GetFirstUnreadAnchor_FullMethodName    = "/anychat.message.MessageService/GetFirstUnreadAnchor"
 	MessageService_GetMessageById_FullMethodName          = "/anychat.message.MessageService/GetMessageById"
 	MessageService_RecallMessage_FullMethodName           = "/anychat.message.MessageService/RecallMessage"
 	MessageService_DeleteMessage_FullMethodName           = "/anychat.message.MessageService/DeleteMessage"
@@ -45,6 +49,14 @@ type MessageServiceClient interface {
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	// GetMessages 获取消息列表（历史消息）
 	GetMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*GetMessagesResponse, error)
+	// GetMessagesBefore 获取锚点消息前的历史消息
+	GetMessagesBefore(ctx context.Context, in *GetMessagesBeforeRequest, opts ...grpc.CallOption) (*GetMessagesBeforeResponse, error)
+	// GetMessagesAfter 获取锚点消息后的消息
+	GetMessagesAfter(ctx context.Context, in *GetMessagesAfterRequest, opts ...grpc.CallOption) (*GetMessagesAfterResponse, error)
+	// GetMessagesAroundAnchor 获取锚点消息前后窗口
+	GetMessagesAroundAnchor(ctx context.Context, in *GetMessagesAroundAnchorRequest, opts ...grpc.CallOption) (*GetMessagesAroundAnchorResponse, error)
+	// GetFirstUnreadAnchor 获取第一条未读消息锚点
+	GetFirstUnreadAnchor(ctx context.Context, in *GetFirstUnreadAnchorRequest, opts ...grpc.CallOption) (*GetFirstUnreadAnchorResponse, error)
 	// GetMessageById 根据ID获取消息
 	GetMessageById(ctx context.Context, in *GetMessageByIdRequest, opts ...grpc.CallOption) (*Message, error)
 	// RecallMessage 撤回消息
@@ -91,6 +103,46 @@ func (c *messageServiceClient) GetMessages(ctx context.Context, in *GetMessagesR
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetMessagesResponse)
 	err := c.cc.Invoke(ctx, MessageService_GetMessages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) GetMessagesBefore(ctx context.Context, in *GetMessagesBeforeRequest, opts ...grpc.CallOption) (*GetMessagesBeforeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMessagesBeforeResponse)
+	err := c.cc.Invoke(ctx, MessageService_GetMessagesBefore_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) GetMessagesAfter(ctx context.Context, in *GetMessagesAfterRequest, opts ...grpc.CallOption) (*GetMessagesAfterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMessagesAfterResponse)
+	err := c.cc.Invoke(ctx, MessageService_GetMessagesAfter_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) GetMessagesAroundAnchor(ctx context.Context, in *GetMessagesAroundAnchorRequest, opts ...grpc.CallOption) (*GetMessagesAroundAnchorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMessagesAroundAnchorResponse)
+	err := c.cc.Invoke(ctx, MessageService_GetMessagesAroundAnchor_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) GetFirstUnreadAnchor(ctx context.Context, in *GetFirstUnreadAnchorRequest, opts ...grpc.CallOption) (*GetFirstUnreadAnchorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetFirstUnreadAnchorResponse)
+	err := c.cc.Invoke(ctx, MessageService_GetFirstUnreadAnchor_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +269,14 @@ type MessageServiceServer interface {
 	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	// GetMessages 获取消息列表（历史消息）
 	GetMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error)
+	// GetMessagesBefore 获取锚点消息前的历史消息
+	GetMessagesBefore(context.Context, *GetMessagesBeforeRequest) (*GetMessagesBeforeResponse, error)
+	// GetMessagesAfter 获取锚点消息后的消息
+	GetMessagesAfter(context.Context, *GetMessagesAfterRequest) (*GetMessagesAfterResponse, error)
+	// GetMessagesAroundAnchor 获取锚点消息前后窗口
+	GetMessagesAroundAnchor(context.Context, *GetMessagesAroundAnchorRequest) (*GetMessagesAroundAnchorResponse, error)
+	// GetFirstUnreadAnchor 获取第一条未读消息锚点
+	GetFirstUnreadAnchor(context.Context, *GetFirstUnreadAnchorRequest) (*GetFirstUnreadAnchorResponse, error)
 	// GetMessageById 根据ID获取消息
 	GetMessageById(context.Context, *GetMessageByIdRequest) (*Message, error)
 	// RecallMessage 撤回消息
@@ -254,6 +314,18 @@ func (UnimplementedMessageServiceServer) SendMessage(context.Context, *SendMessa
 }
 func (UnimplementedMessageServiceServer) GetMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMessages not implemented")
+}
+func (UnimplementedMessageServiceServer) GetMessagesBefore(context.Context, *GetMessagesBeforeRequest) (*GetMessagesBeforeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMessagesBefore not implemented")
+}
+func (UnimplementedMessageServiceServer) GetMessagesAfter(context.Context, *GetMessagesAfterRequest) (*GetMessagesAfterResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMessagesAfter not implemented")
+}
+func (UnimplementedMessageServiceServer) GetMessagesAroundAnchor(context.Context, *GetMessagesAroundAnchorRequest) (*GetMessagesAroundAnchorResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMessagesAroundAnchor not implemented")
+}
+func (UnimplementedMessageServiceServer) GetFirstUnreadAnchor(context.Context, *GetFirstUnreadAnchorRequest) (*GetFirstUnreadAnchorResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFirstUnreadAnchor not implemented")
 }
 func (UnimplementedMessageServiceServer) GetMessageById(context.Context, *GetMessageByIdRequest) (*Message, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMessageById not implemented")
@@ -341,6 +413,78 @@ func _MessageService_GetMessages_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageServiceServer).GetMessages(ctx, req.(*GetMessagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_GetMessagesBefore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessagesBeforeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).GetMessagesBefore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_GetMessagesBefore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).GetMessagesBefore(ctx, req.(*GetMessagesBeforeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_GetMessagesAfter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessagesAfterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).GetMessagesAfter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_GetMessagesAfter_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).GetMessagesAfter(ctx, req.(*GetMessagesAfterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_GetMessagesAroundAnchor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessagesAroundAnchorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).GetMessagesAroundAnchor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_GetMessagesAroundAnchor_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).GetMessagesAroundAnchor(ctx, req.(*GetMessagesAroundAnchorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_GetFirstUnreadAnchor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFirstUnreadAnchorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).GetFirstUnreadAnchor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_GetFirstUnreadAnchor_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).GetFirstUnreadAnchor(ctx, req.(*GetFirstUnreadAnchorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -557,6 +701,22 @@ var MessageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMessages",
 			Handler:    _MessageService_GetMessages_Handler,
+		},
+		{
+			MethodName: "GetMessagesBefore",
+			Handler:    _MessageService_GetMessagesBefore_Handler,
+		},
+		{
+			MethodName: "GetMessagesAfter",
+			Handler:    _MessageService_GetMessagesAfter_Handler,
+		},
+		{
+			MethodName: "GetMessagesAroundAnchor",
+			Handler:    _MessageService_GetMessagesAroundAnchor_Handler,
+		},
+		{
+			MethodName: "GetFirstUnreadAnchor",
+			Handler:    _MessageService_GetFirstUnreadAnchor_Handler,
 		},
 		{
 			MethodName: "GetMessageById",

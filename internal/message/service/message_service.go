@@ -25,6 +25,10 @@ type MessageService interface {
 	SendMessage(ctx context.Context, req *messagepb.SendMessageRequest) (*messagepb.SendMessageResponse, error)
 	SendTyping(ctx context.Context, req *messagepb.SendTypingRequest) error
 	GetMessages(ctx context.Context, req *messagepb.GetMessagesRequest) (*messagepb.GetMessagesResponse, error)
+	GetMessagesBefore(ctx context.Context, userID string, req *messagepb.GetMessagesBeforeRequest) (*messagepb.GetMessagesBeforeResponse, error)
+	GetMessagesAfter(ctx context.Context, userID string, req *messagepb.GetMessagesAfterRequest) (*messagepb.GetMessagesAfterResponse, error)
+	GetMessagesAroundAnchor(ctx context.Context, userID string, req *messagepb.GetMessagesAroundAnchorRequest) (*messagepb.GetMessagesAroundAnchorResponse, error)
+	GetFirstUnreadAnchor(ctx context.Context, userID string, req *messagepb.GetFirstUnreadAnchorRequest) (*messagepb.GetFirstUnreadAnchorResponse, error)
 	GetMessageById(ctx context.Context, messageID string) (*messagepb.Message, error)
 	RecallMessage(ctx context.Context, messageID, userID string) error
 	DeleteMessage(ctx context.Context, messageID, userID string) error
@@ -84,6 +88,11 @@ type messageServiceImpl struct {
 	notificationPub     notification.Publisher
 	db                  *gorm.DB
 }
+
+const (
+	defaultAnchorWindowLimit = 20
+	maxAnchorWindowLimit     = 100
+)
 
 // NewMessageService creates message service
 func NewMessageService(
@@ -417,6 +426,173 @@ func (s *messageServiceImpl) GetMessages(ctx context.Context, req *messagepb.Get
 		Total:    int64(len(messages)),
 		HasMore:  hasMore,
 	}, nil
+}
+
+// GetMessagesBefore retrieves messages before anchor message
+func (s *messageServiceImpl) GetMessagesBefore(ctx context.Context, userID string, req *messagepb.GetMessagesBeforeRequest) (*messagepb.GetMessagesBeforeResponse, error) {
+	if req.ConversationId == "" || req.AnchorMessageId == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id and anchor_message_id are required")
+	}
+	if err := s.ensureConversationAccessible(ctx, userID, req.ConversationId); err != nil {
+		return nil, err
+	}
+
+	limit := normalizeAnchorWindowLimit(req.Limit)
+
+	anchor, err := s.getAnchorMessage(ctx, req.ConversationId, req.AnchorMessageId)
+	if err != nil {
+		return nil, err
+	}
+
+	messages, hasMore, err := s.fetchBeforeMessages(ctx, req.ConversationId, anchor.Sequence, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &messagepb.GetMessagesBeforeResponse{
+		AnchorMessage: s.modelToProto(anchor),
+		Messages:      s.modelsToProto(messages),
+		HasMore:       hasMore,
+	}, nil
+}
+
+// GetMessagesAfter retrieves messages after anchor message
+func (s *messageServiceImpl) GetMessagesAfter(ctx context.Context, userID string, req *messagepb.GetMessagesAfterRequest) (*messagepb.GetMessagesAfterResponse, error) {
+	if req.ConversationId == "" || req.AnchorMessageId == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id and anchor_message_id are required")
+	}
+	if err := s.ensureConversationAccessible(ctx, userID, req.ConversationId); err != nil {
+		return nil, err
+	}
+
+	limit := normalizeAnchorWindowLimit(req.Limit)
+
+	anchor, err := s.getAnchorMessage(ctx, req.ConversationId, req.AnchorMessageId)
+	if err != nil {
+		return nil, err
+	}
+
+	messages, hasMore, err := s.fetchAfterMessages(ctx, req.ConversationId, anchor.Sequence, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &messagepb.GetMessagesAfterResponse{
+		AnchorMessage: s.modelToProto(anchor),
+		Messages:      s.modelsToProto(messages),
+		HasMore:       hasMore,
+	}, nil
+}
+
+// GetMessagesAroundAnchor retrieves messages around anchor message
+func (s *messageServiceImpl) GetMessagesAroundAnchor(ctx context.Context, userID string, req *messagepb.GetMessagesAroundAnchorRequest) (*messagepb.GetMessagesAroundAnchorResponse, error) {
+	if req.ConversationId == "" || req.AnchorMessageId == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id and anchor_message_id are required")
+	}
+	if err := s.ensureConversationAccessible(ctx, userID, req.ConversationId); err != nil {
+		return nil, err
+	}
+
+	beforeLimit := normalizeAnchorWindowLimit(req.Before)
+	afterLimit := normalizeAnchorWindowLimit(req.After)
+	includeAnchor := true
+	if req.IncludeAnchor != nil {
+		includeAnchor = req.GetIncludeAnchor()
+	}
+
+	anchor, err := s.getAnchorMessage(ctx, req.ConversationId, req.AnchorMessageId)
+	if err != nil {
+		return nil, err
+	}
+
+	beforeMessages, hasMoreBefore, err := s.fetchBeforeMessages(ctx, req.ConversationId, anchor.Sequence, beforeLimit)
+	if err != nil {
+		return nil, err
+	}
+	afterMessages, hasMoreAfter, err := s.fetchAfterMessages(ctx, req.ConversationId, anchor.Sequence, afterLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &messagepb.GetMessagesAroundAnchorResponse{
+		BeforeMessages: s.modelsToProto(beforeMessages),
+		AfterMessages:  s.modelsToProto(afterMessages),
+		HasMoreBefore:  hasMoreBefore,
+		HasMoreAfter:   hasMoreAfter,
+	}
+	if includeAnchor {
+		resp.AnchorMessage = s.modelToProto(anchor)
+	}
+
+	return resp, nil
+}
+
+// GetFirstUnreadAnchor retrieves first unread message anchor
+func (s *messageServiceImpl) GetFirstUnreadAnchor(ctx context.Context, userID string, req *messagepb.GetFirstUnreadAnchorRequest) (*messagepb.GetFirstUnreadAnchorResponse, error) {
+	if req.ConversationId == "" {
+		return nil, errors.NewBusiness(errors.CodeParamError, "conversation_id is required")
+	}
+	if err := s.ensureConversationAccessible(ctx, userID, req.ConversationId); err != nil {
+		return nil, err
+	}
+
+	withContext := req.WithContext != nil && req.GetWithContext()
+	beforeLimit := defaultAnchorWindowLimit
+	afterLimit := defaultAnchorWindowLimit
+	if req.Before != nil {
+		beforeLimit = normalizeAnchorWindowLimit(req.GetBefore())
+	}
+	if req.After != nil {
+		afterLimit = normalizeAnchorWindowLimit(req.GetAfter())
+	}
+
+	lastReadSeq := int64(0)
+	receipt, err := s.readReceiptRepo.GetByConversationAndUser(ctx, req.ConversationId, userID)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		logger.Error("Failed to get read receipt for first unread anchor", zap.Error(err))
+		return nil, errors.NewBusiness(errors.CodeInternalError, "Failed to get read receipt")
+	}
+	if receipt != nil {
+		lastReadSeq = receipt.LastReadSeq
+	}
+
+	startSeq := lastReadSeq + 1
+	unreadMessages, err := s.messageRepo.GetByConversation(ctx, req.ConversationId, startSeq, 0, 1, false)
+	if err != nil {
+		logger.Error("Failed to get first unread anchor", zap.Error(err))
+		return nil, errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve first unread anchor")
+	}
+	if len(unreadMessages) == 0 {
+		return &messagepb.GetFirstUnreadAnchorResponse{
+			Found: false,
+		}, nil
+	}
+
+	anchor := unreadMessages[0]
+	resp := &messagepb.GetFirstUnreadAnchorResponse{
+		Found:         true,
+		AnchorMessage: s.modelToProto(anchor),
+	}
+
+	if !withContext {
+		return resp, nil
+	}
+
+	beforeMessages, hasMoreBefore, err := s.fetchBeforeMessages(ctx, req.ConversationId, anchor.Sequence, beforeLimit)
+	if err != nil {
+		return nil, err
+	}
+	afterMessages, hasMoreAfter, err := s.fetchAfterMessages(ctx, req.ConversationId, anchor.Sequence, afterLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.BeforeMessages = s.modelsToProto(beforeMessages)
+	resp.AfterMessages = s.modelsToProto(afterMessages)
+	resp.HasMoreBefore = hasMoreBefore
+	resp.HasMoreAfter = hasMoreAfter
+
+	return resp, nil
 }
 
 // GetMessageById retrieves message by ID
@@ -911,6 +1087,84 @@ func (s *messageServiceImpl) SearchMessages(ctx context.Context, userID string, 
 		Messages: pbMessages,
 		Total:    total,
 	}, nil
+}
+
+func normalizeAnchorWindowLimit(limit int32) int {
+	if limit <= 0 {
+		return defaultAnchorWindowLimit
+	}
+	if limit > maxAnchorWindowLimit {
+		return maxAnchorWindowLimit
+	}
+	return int(limit)
+}
+
+func (s *messageServiceImpl) getAnchorMessage(ctx context.Context, conversationID, anchorMessageID string) (*model.Message, error) {
+	message, err := s.messageRepo.GetByMessageID(ctx, anchorMessageID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewBusiness(errors.CodeMessageNotFound, "")
+		}
+		logger.Error("Failed to get anchor message", zap.Error(err))
+		return nil, errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve anchor message")
+	}
+
+	if message.ConversationID != conversationID || message.Status != model.MessageStatusNormal {
+		return nil, errors.NewBusiness(errors.CodeMessageNotFound, "")
+	}
+
+	return message, nil
+}
+
+func (s *messageServiceImpl) fetchBeforeMessages(ctx context.Context, conversationID string, anchorSeq int64, limit int) ([]*model.Message, bool, error) {
+	if anchorSeq <= 0 {
+		return []*model.Message{}, false, nil
+	}
+
+	messages, err := s.messageRepo.GetByConversation(ctx, conversationID, 0, anchorSeq-1, limit+1, true)
+	if err != nil {
+		logger.Error("Failed to get before messages", zap.Error(err))
+		return nil, false, errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve messages before anchor")
+	}
+
+	hasMore := false
+	if len(messages) > limit {
+		hasMore = true
+		messages = messages[:limit]
+	}
+	reverseModelMessages(messages)
+
+	return messages, hasMore, nil
+}
+
+func (s *messageServiceImpl) fetchAfterMessages(ctx context.Context, conversationID string, anchorSeq int64, limit int) ([]*model.Message, bool, error) {
+	messages, err := s.messageRepo.GetByConversation(ctx, conversationID, anchorSeq+1, 0, limit+1, false)
+	if err != nil {
+		logger.Error("Failed to get after messages", zap.Error(err))
+		return nil, false, errors.NewBusiness(errors.CodeInternalError, "Failed to retrieve messages after anchor")
+	}
+
+	hasMore := false
+	if len(messages) > limit {
+		hasMore = true
+		messages = messages[:limit]
+	}
+
+	return messages, hasMore, nil
+}
+
+func (s *messageServiceImpl) modelsToProto(messages []*model.Message) []*messagepb.Message {
+	pbMessages := make([]*messagepb.Message, 0, len(messages))
+	for _, msg := range messages {
+		pbMessages = append(pbMessages, s.modelToProto(msg))
+	}
+	return pbMessages
+}
+
+func reverseModelMessages(messages []*model.Message) {
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
 }
 
 func (s *messageServiceImpl) ensureConversationAccessible(ctx context.Context, userID, conversationID string) error {

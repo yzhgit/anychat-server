@@ -15,6 +15,18 @@ service MessageService {
   // GetMessages 获取消息列表（历史消息）
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
 
+  // GetMessagesBefore 获取锚点消息前的历史消息
+  rpc GetMessagesBefore(GetMessagesBeforeRequest) returns (GetMessagesBeforeResponse);
+
+  // GetMessagesAfter 获取锚点消息后的消息
+  rpc GetMessagesAfter(GetMessagesAfterRequest) returns (GetMessagesAfterResponse);
+
+  // GetMessagesAroundAnchor 获取锚点消息前后窗口
+  rpc GetMessagesAroundAnchor(GetMessagesAroundAnchorRequest) returns (GetMessagesAroundAnchorResponse);
+
+  // GetFirstUnreadAnchor 获取第一条未读消息锚点
+  rpc GetFirstUnreadAnchor(GetFirstUnreadAnchorRequest) returns (GetFirstUnreadAnchorResponse);
+
   // GetMessageById 根据ID获取消息
   rpc GetMessageById(GetMessageByIdRequest) returns (Message);
 
@@ -103,6 +115,70 @@ message GetMessagesResponse {
   repeated Message messages = 1;
   int64 total = 2;
   bool has_more = 3;
+}
+
+// GetMessagesBeforeRequest 获取锚点前消息请求
+message GetMessagesBeforeRequest {
+  string conversation_id = 1;
+  string anchor_message_id = 2;
+  int32 limit = 3;
+}
+
+// GetMessagesBeforeResponse 获取锚点前消息响应
+message GetMessagesBeforeResponse {
+  Message anchor_message = 1;
+  repeated Message messages = 2;
+  bool has_more = 3;
+}
+
+// GetMessagesAfterRequest 获取锚点后消息请求
+message GetMessagesAfterRequest {
+  string conversation_id = 1;
+  string anchor_message_id = 2;
+  int32 limit = 3;
+}
+
+// GetMessagesAfterResponse 获取锚点后消息响应
+message GetMessagesAfterResponse {
+  Message anchor_message = 1;
+  repeated Message messages = 2;
+  bool has_more = 3;
+}
+
+// GetMessagesAroundAnchorRequest 获取锚点前后消息窗口请求
+message GetMessagesAroundAnchorRequest {
+  string conversation_id = 1;
+  string anchor_message_id = 2;
+  int32 before = 3;
+  int32 after = 4;
+  optional bool include_anchor = 5;
+}
+
+// GetMessagesAroundAnchorResponse 获取锚点前后消息窗口响应
+message GetMessagesAroundAnchorResponse {
+  Message anchor_message = 1;
+  repeated Message before_messages = 2;
+  repeated Message after_messages = 3;
+  bool has_more_before = 4;
+  bool has_more_after = 5;
+}
+
+// GetFirstUnreadAnchorRequest 获取第一条未读消息锚点请求
+message GetFirstUnreadAnchorRequest {
+  string conversation_id = 1;
+  optional bool with_context = 2;
+  optional int32 before = 3;
+  optional int32 after = 4;
+}
+
+// GetFirstUnreadAnchorResponse 获取第一条未读消息锚点响应
+message GetFirstUnreadAnchorResponse {
+  bool found = 1;
+  Message anchor_message = 2;
+  repeated Message before_messages = 3;
+  repeated Message after_messages = 4;
+  bool has_more_before = 5;
+  bool has_more_after = 6;
 }
 
 // GetMessageByIdRequest 根据ID获取消息请求

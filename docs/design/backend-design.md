@@ -230,6 +230,7 @@ graph TB
 - [消息删除](message/delete.md)
 - [消息编辑](message/edit.md)
 - [已读回执](message/read-receipt.md)
+- [消息查询（锚点模式）](message/query.md)
 - [消息队列架构](message/message-service-architecture.md)
 - [消息队列对比](message/message-queue-comparison.md)
 

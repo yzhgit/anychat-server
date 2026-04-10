@@ -17,6 +17,11 @@ type MessageHandler struct {
 	clientManager *client.Manager
 }
 
+const (
+	defaultMessageAnchorLimit = 20
+	maxMessageAnchorLimit     = 100
+)
+
 // NewMessageHandler creates message handler
 func NewMessageHandler(clientManager *client.Manager) *MessageHandler {
 	return &MessageHandler{
@@ -34,6 +39,27 @@ func (h *MessageHandler) ensureConversationAccessible(c *gin.Context, userID, co
 		return false
 	}
 	return true
+}
+
+func parseMessageAnchorLimit(c *gin.Context, key string, defaultValue int32) (int32, bool) {
+	raw := c.Query(key)
+	if raw == "" {
+		return defaultValue, true
+	}
+
+	value, err := strconv.ParseInt(raw, 10, 32)
+	if err != nil {
+		response.ParamError(c, key+" must be an integer")
+		return 0, false
+	}
+	if value <= 0 {
+		return defaultValue, true
+	}
+	if value > maxMessageAnchorLimit {
+		value = maxMessageAnchorLimit
+	}
+
+	return int32(value), true
 }
 
 type sendMessageRequest struct {
@@ -102,26 +128,24 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// GetMessages get message list
-// @Summary      get message history
-// @Description  Paginate pull messages by conversation ID and sequence range
+// GetMessagesBefore gets messages before anchor message
+// @Summary      get messages before anchor
+// @Description  Query messages before an anchor_message_id in a conversation
 // @Tags         message
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        conversation_id  query     string  true   "conversation ID"
-// @Param        start_seq        query     int64   false  "start sequence"
-// @Param        end_seq          query     int64   false  "end sequence"
-// @Param        limit            query     int32   false  "limit (default 20, max 100)"
-// @Param        reverse          query     bool    false  "reverse order"
-// @Success      200              {object}  response.Response{data=object}  "success"
-// @Failure      400              {object}  response.Response  "parameter error"
-// @Failure      401              {object}  response.Response  "unauthorized"
-// @Failure      500              {object}  response.Response  "server error"
-// @Router       /messages [get]
-func (h *MessageHandler) GetMessages(c *gin.Context) {
+// @Param        conversationId      path      string  true   "conversation ID"
+// @Param        anchor_message_id   query     string  true   "anchor message ID"
+// @Param        limit               query     int32   false  "limit (default 20, max 100)"
+// @Success      200                 {object}  response.Response{data=object}  "success"
+// @Failure      400                 {object}  response.Response  "parameter error"
+// @Failure      401                 {object}  response.Response  "unauthorized"
+// @Failure      500                 {object}  response.Response  "server error"
+// @Router       /conversations/{conversationId}/messages/before [get]
+func (h *MessageHandler) GetMessagesBefore(c *gin.Context) {
 	userID := gwmiddleware.GetUserID(c)
-	conversationID := c.Query("conversation_id")
+	conversationID := c.Param("conversationId")
 	if conversationID == "" {
 		response.ParamError(c, "conversation_id is required")
 		return
@@ -130,47 +154,208 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 		return
 	}
 
-	req := &messagepb.GetMessagesRequest{
+	anchorMessageID := c.Query("anchor_message_id")
+	if anchorMessageID == "" {
+		response.ParamError(c, "anchor_message_id is required")
+		return
+	}
+
+	limit, ok := parseMessageAnchorLimit(c, "limit", defaultMessageAnchorLimit)
+	if !ok {
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetMessagesBefore(ctx, &messagepb.GetMessagesBeforeRequest{
+		ConversationId:  conversationID,
+		AnchorMessageId: anchorMessageID,
+		Limit:           limit,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetMessagesAfter gets messages after anchor message
+// @Summary      get messages after anchor
+// @Description  Query messages after an anchor_message_id in a conversation
+// @Tags         message
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId      path      string  true   "conversation ID"
+// @Param        anchor_message_id   query     string  true   "anchor message ID"
+// @Param        limit               query     int32   false  "limit (default 20, max 100)"
+// @Success      200                 {object}  response.Response{data=object}  "success"
+// @Failure      400                 {object}  response.Response  "parameter error"
+// @Failure      401                 {object}  response.Response  "unauthorized"
+// @Failure      500                 {object}  response.Response  "server error"
+// @Router       /conversations/{conversationId}/messages/after [get]
+func (h *MessageHandler) GetMessagesAfter(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+	if !h.ensureConversationAccessible(c, userID, conversationID) {
+		return
+	}
+
+	anchorMessageID := c.Query("anchor_message_id")
+	if anchorMessageID == "" {
+		response.ParamError(c, "anchor_message_id is required")
+		return
+	}
+
+	limit, ok := parseMessageAnchorLimit(c, "limit", defaultMessageAnchorLimit)
+	if !ok {
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetMessagesAfter(ctx, &messagepb.GetMessagesAfterRequest{
+		ConversationId:  conversationID,
+		AnchorMessageId: anchorMessageID,
+		Limit:           limit,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetMessagesAroundAnchor gets messages around anchor message
+// @Summary      get messages around anchor
+// @Description  Query messages before and after anchor_message_id in one request
+// @Tags         message
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId      path      string  true   "conversation ID"
+// @Param        anchor_message_id   query     string  true   "anchor message ID"
+// @Param        before              query     int32   false  "messages before anchor (default 20, max 100)"
+// @Param        after               query     int32   false  "messages after anchor (default 20, max 100)"
+// @Param        include_anchor      query     bool    false  "include anchor message (default true)"
+// @Success      200                 {object}  response.Response{data=object}  "success"
+// @Failure      400                 {object}  response.Response  "parameter error"
+// @Failure      401                 {object}  response.Response  "unauthorized"
+// @Failure      500                 {object}  response.Response  "server error"
+// @Router       /conversations/{conversationId}/messages/around-anchor [get]
+func (h *MessageHandler) GetMessagesAroundAnchor(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+	if !h.ensureConversationAccessible(c, userID, conversationID) {
+		return
+	}
+
+	anchorMessageID := c.Query("anchor_message_id")
+	if anchorMessageID == "" {
+		response.ParamError(c, "anchor_message_id is required")
+		return
+	}
+
+	beforeLimit, ok := parseMessageAnchorLimit(c, "before", defaultMessageAnchorLimit)
+	if !ok {
+		return
+	}
+	afterLimit, ok := parseMessageAnchorLimit(c, "after", defaultMessageAnchorLimit)
+	if !ok {
+		return
+	}
+
+	includeAnchor := true
+	if includeAnchorStr := c.Query("include_anchor"); includeAnchorStr != "" {
+		parsed, err := strconv.ParseBool(includeAnchorStr)
+		if err != nil {
+			response.ParamError(c, "include_anchor must be a boolean")
+			return
+		}
+		includeAnchor = parsed
+	}
+
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetMessagesAroundAnchor(ctx, &messagepb.GetMessagesAroundAnchorRequest{
+		ConversationId:  conversationID,
+		AnchorMessageId: anchorMessageID,
+		Before:          beforeLimit,
+		After:           afterLimit,
+		IncludeAnchor:   &includeAnchor,
+	})
+	if err != nil {
+		handleGRPCError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetFirstUnreadAnchor gets first unread anchor message
+// @Summary      get first unread anchor
+// @Description  Query first unread message anchor, optionally returning context windows
+// @Tags         message
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        conversationId  path      string  true   "conversation ID"
+// @Param        with_context    query     bool    false  "whether to include before/after context"
+// @Param        before          query     int32   false  "messages before anchor when with_context=true (default 20, max 100)"
+// @Param        after           query     int32   false  "messages after anchor when with_context=true (default 20, max 100)"
+// @Success      200             {object}  response.Response{data=object}  "success"
+// @Failure      400             {object}  response.Response  "parameter error"
+// @Failure      401             {object}  response.Response  "unauthorized"
+// @Failure      500             {object}  response.Response  "server error"
+// @Router       /conversations/{conversationId}/messages/first-unread-anchor [get]
+func (h *MessageHandler) GetFirstUnreadAnchor(c *gin.Context) {
+	userID := gwmiddleware.GetUserID(c)
+	conversationID := c.Param("conversationId")
+	if conversationID == "" {
+		response.ParamError(c, "conversation_id is required")
+		return
+	}
+	if !h.ensureConversationAccessible(c, userID, conversationID) {
+		return
+	}
+
+	var withContext *bool
+	if withContextStr := c.Query("with_context"); withContextStr != "" {
+		parsed, err := strconv.ParseBool(withContextStr)
+		if err != nil {
+			response.ParamError(c, "with_context must be a boolean")
+			return
+		}
+		withContext = &parsed
+	}
+
+	req := &messagepb.GetFirstUnreadAnchorRequest{
 		ConversationId: conversationID,
+		WithContext:    withContext,
 	}
 
-	if startSeqStr := c.Query("start_seq"); startSeqStr != "" {
-		startSeq, err := strconv.ParseInt(startSeqStr, 10, 64)
-		if err != nil {
-			response.ParamError(c, "start_seq must be an integer")
+	if withContext != nil && *withContext {
+		beforeLimit, ok := parseMessageAnchorLimit(c, "before", defaultMessageAnchorLimit)
+		if !ok {
 			return
 		}
-		req.StartSeq = &startSeq
-	}
-
-	if endSeqStr := c.Query("end_seq"); endSeqStr != "" {
-		endSeq, err := strconv.ParseInt(endSeqStr, 10, 64)
-		if err != nil {
-			response.ParamError(c, "end_seq must be an integer")
+		afterLimit, ok := parseMessageAnchorLimit(c, "after", defaultMessageAnchorLimit)
+		if !ok {
 			return
 		}
-		req.EndSeq = &endSeq
+		req.Before = &beforeLimit
+		req.After = &afterLimit
 	}
 
-	if limitStr := c.Query("limit"); limitStr != "" {
-		limit, err := strconv.ParseInt(limitStr, 10, 32)
-		if err != nil {
-			response.ParamError(c, "limit must be an integer")
-			return
-		}
-		req.Limit = int32(limit)
-	}
-
-	if reverseStr := c.Query("reverse"); reverseStr != "" {
-		reverse, err := strconv.ParseBool(reverseStr)
-		if err != nil {
-			response.ParamError(c, "reverse must be a boolean")
-			return
-		}
-		req.Reverse = reverse
-	}
-
-	resp, err := h.clientManager.Message().GetMessages(c.Request.Context(), req)
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetFirstUnreadAnchor(ctx, req)
 	if err != nil {
 		handleGRPCError(c, err)
 		return
@@ -201,7 +386,8 @@ func (h *MessageHandler) GetMessageByID(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.clientManager.Message().GetMessageById(c.Request.Context(), &messagepb.GetMessageByIdRequest{
+	ctx := metadata.AppendToOutgoingContext(c.Request.Context(), "x-user-id", userID)
+	resp, err := h.clientManager.Message().GetMessageById(ctx, &messagepb.GetMessageByIdRequest{
 		MessageId: messageID,
 	})
 	if err != nil {

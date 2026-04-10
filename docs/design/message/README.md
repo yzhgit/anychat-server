@@ -22,7 +22,7 @@
 | 消息编辑 | [edit.md](edit.md) | 已发送消息编辑 |
 | 已读/未读/回执 | [read-receipt.md](read-receipt.md) | 会话已读、逐条已读、未读数、回执 |
 | 正在输入 | [typing.md](typing.md) | 单聊输入状态提示 |
-| HTTP消息查询 | [query.md](query.md) | 历史消息、消息详情、序列号 |
+| HTTP消息查询（锚点模式） | [query.md](query.md) | 基于 message_id 的前后窗口、指定消息跳转、第一条未读锚点 |
 | HTTP消息搜索 | [search.md](search.md) | 关键词搜索消息 |
 | 消息队列架构 | [message-service-architecture.md](message-service-architecture.md) | 服务架构设计 |
 | 消息队列对比 | [message-queue-comparison.md](message-queue-comparison.md) | 技术选型对比 |

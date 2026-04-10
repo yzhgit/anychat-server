@@ -192,7 +192,6 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 			messages := authorized.Group("/messages")
 			{
 				messages.POST("", messageHandler.SendMessage)
-				messages.GET("", messageHandler.GetMessages)
 				messages.GET("/search", messageHandler.SearchMessages)
 				messages.GET("/:messageId", messageHandler.GetMessageByID)
 				messages.POST("/read-triggers", messageHandler.AckReadTriggers)
@@ -206,6 +205,10 @@ func RegisterRoutes(r *gin.Engine, clientManager *client.Manager, jwtManager *jw
 				conversations.GET("", conversationHandler.GetConversations)
 				conversations.GET("/unread/total", conversationHandler.GetTotalUnread)
 				conversations.GET("/:conversationId", conversationHandler.GetConversation)
+				conversations.GET("/:conversationId/messages/before", messageHandler.GetMessagesBefore)
+				conversations.GET("/:conversationId/messages/after", messageHandler.GetMessagesAfter)
+				conversations.GET("/:conversationId/messages/around-anchor", messageHandler.GetMessagesAroundAnchor)
+				conversations.GET("/:conversationId/messages/first-unread-anchor", messageHandler.GetFirstUnreadAnchor)
 				conversations.GET("/:conversationId/messages/unread-count", conversationHandler.GetMessageUnreadCount)
 				conversations.GET("/:conversationId/messages/read-receipts", conversationHandler.GetMessageReadReceipts)
 				conversations.GET("/:conversationId/messages/sequence", conversationHandler.GetMessageSequence)

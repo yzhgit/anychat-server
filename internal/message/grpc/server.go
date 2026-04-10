@@ -105,6 +105,114 @@ func (s *Server) GetMessages(ctx context.Context, req *messagepb.GetMessagesRequ
 	return resp, nil
 }
 
+// GetMessagesBefore retrieves messages before anchor message
+func (s *Server) GetMessagesBefore(ctx context.Context, req *messagepb.GetMessagesBeforeRequest) (*messagepb.GetMessagesBeforeResponse, error) {
+	operatorUserID := getOperatorUserID(ctx)
+	logger.Info("GetMessagesBefore called",
+		zap.String("conversationId", req.ConversationId),
+		zap.String("anchorMessageId", req.AnchorMessageId),
+		zap.String("userId", operatorUserID),
+		zap.Int32("limit", req.Limit))
+
+	if req.ConversationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
+	}
+	if req.AnchorMessageId == "" {
+		return nil, status.Error(codes.InvalidArgument, "anchor_message_id is required")
+	}
+	if operatorUserID == "" {
+		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
+	}
+
+	resp, err := s.messageService.GetMessagesBefore(ctx, operatorUserID, req)
+	if err != nil {
+		logger.Error("Failed to get messages before anchor", zap.Error(err))
+		return nil, toStatusError(err)
+	}
+
+	return resp, nil
+}
+
+// GetMessagesAfter retrieves messages after anchor message
+func (s *Server) GetMessagesAfter(ctx context.Context, req *messagepb.GetMessagesAfterRequest) (*messagepb.GetMessagesAfterResponse, error) {
+	operatorUserID := getOperatorUserID(ctx)
+	logger.Info("GetMessagesAfter called",
+		zap.String("conversationId", req.ConversationId),
+		zap.String("anchorMessageId", req.AnchorMessageId),
+		zap.String("userId", operatorUserID),
+		zap.Int32("limit", req.Limit))
+
+	if req.ConversationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
+	}
+	if req.AnchorMessageId == "" {
+		return nil, status.Error(codes.InvalidArgument, "anchor_message_id is required")
+	}
+	if operatorUserID == "" {
+		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
+	}
+
+	resp, err := s.messageService.GetMessagesAfter(ctx, operatorUserID, req)
+	if err != nil {
+		logger.Error("Failed to get messages after anchor", zap.Error(err))
+		return nil, toStatusError(err)
+	}
+
+	return resp, nil
+}
+
+// GetMessagesAroundAnchor retrieves messages around anchor message
+func (s *Server) GetMessagesAroundAnchor(ctx context.Context, req *messagepb.GetMessagesAroundAnchorRequest) (*messagepb.GetMessagesAroundAnchorResponse, error) {
+	operatorUserID := getOperatorUserID(ctx)
+	logger.Info("GetMessagesAroundAnchor called",
+		zap.String("conversationId", req.ConversationId),
+		zap.String("anchorMessageId", req.AnchorMessageId),
+		zap.String("userId", operatorUserID),
+		zap.Int32("before", req.Before),
+		zap.Int32("after", req.After))
+
+	if req.ConversationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
+	}
+	if req.AnchorMessageId == "" {
+		return nil, status.Error(codes.InvalidArgument, "anchor_message_id is required")
+	}
+	if operatorUserID == "" {
+		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
+	}
+
+	resp, err := s.messageService.GetMessagesAroundAnchor(ctx, operatorUserID, req)
+	if err != nil {
+		logger.Error("Failed to get messages around anchor", zap.Error(err))
+		return nil, toStatusError(err)
+	}
+
+	return resp, nil
+}
+
+// GetFirstUnreadAnchor retrieves first unread message anchor
+func (s *Server) GetFirstUnreadAnchor(ctx context.Context, req *messagepb.GetFirstUnreadAnchorRequest) (*messagepb.GetFirstUnreadAnchorResponse, error) {
+	operatorUserID := getOperatorUserID(ctx)
+	logger.Info("GetFirstUnreadAnchor called",
+		zap.String("conversationId", req.ConversationId),
+		zap.String("userId", operatorUserID))
+
+	if req.ConversationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "conversation_id is required")
+	}
+	if operatorUserID == "" {
+		return nil, status.Error(codes.InvalidArgument, "x-user-id metadata is required")
+	}
+
+	resp, err := s.messageService.GetFirstUnreadAnchor(ctx, operatorUserID, req)
+	if err != nil {
+		logger.Error("Failed to get first unread anchor", zap.Error(err))
+		return nil, toStatusError(err)
+	}
+
+	return resp, nil
+}
+
 // GetMessageById retrieves message by ID
 func (s *Server) GetMessageById(ctx context.Context, req *messagepb.GetMessageByIdRequest) (*messagepb.Message, error) {
 	logger.Info("GetMessageById called", zap.String("messageId", req.MessageId))
