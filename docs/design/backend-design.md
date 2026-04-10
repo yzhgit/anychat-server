@@ -274,7 +274,7 @@ graph TB
 
 **详细设计**:
 - [推送服务](push/push.md)
-- [推送接口](push-notification-interfaces.md)
+- [推送接口](push-notification.md)
 
 ---
 
@@ -1173,7 +1173,7 @@ Gateway Service作为推送通知的核心枢纽，负责：
 - NATS吞吐: > 100万 msg/s
 
 **详细设计文档**:
-请参阅 `docs/design/push-notification-interfaces.md` 查看各服务的完整推送通知接口定义、NATS配置示例和实现代码示例。
+请参阅 `docs/design/push-notification.md` 查看各服务的完整推送通知接口定义、NATS配置示例和实现代码示例。
 
 **架构对比分析**:
 关于消息队列选型和架构方案对比，请参阅：

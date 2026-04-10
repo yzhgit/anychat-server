@@ -16,7 +16,7 @@
 | 功能 | 文档 | 说明 |
 |------|------|------|
 | 推送服务 | [push.md](push.md) | 离线推送设计 |
-| 推送接口 | [push-notification-interfaces.md](../push-notification-interfaces.md) | 完整接口定义 |
+| 推送接口 | [push-notification.md](../push-notification.md) | 完整接口定义 |
 
 ## 3. 数据模型
 
