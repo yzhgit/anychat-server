@@ -4,23 +4,23 @@ package anychat.common;
 
 option go_package = "github.com/anychat/server/api/proto/common;commonpb";
 
-// Empty 空消息
+// Empty empty message
 message Empty {}
 
-// PaginationRequest 分页请求
+// PaginationRequest pagination request
 message PaginationRequest {
-  int32 page = 1;       // 页码，从1开始
-  int32 page_size = 2;  // 每页大小
+  int32 page = 1;       // page number, starting from 1
+  int32 page_size = 2;  // page size
 }
 
-// PaginationResponse 分页响应
+// PaginationResponse pagination response
 message PaginationResponse {
-  int64 total = 1;      // 总记录数
-  int32 page = 2;       // 当前页码
-  int32 page_size = 3;  // 每页大小
+  int64 total = 1;      // total record count
+  int32 page = 2;       // current page number
+  int32 page_size = 3;  // page size
 }
 
-// UserInfo 用户基本信息（跨服务共享）
+// UserInfo basic user info (shared across services)
 message UserInfo {
   string user_id = 1;
   string nickname = 2;
@@ -29,9 +29,9 @@ message UserInfo {
   optional string email = 5;
 }
 
-// TokenInfo Token信息（跨服务共享）
+// TokenInfo token info (shared across services)
 message TokenInfo {
   string access_token = 1;
   string refresh_token = 2;
-  int64 expires_in = 3;  // 过期时间（秒）
+  int64 expires_in = 3;  // expiration time (seconds)
 }

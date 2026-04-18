@@ -9,53 +9,53 @@ import "message/message.proto";
 
 option go_package = "github.com/anychat/server/api/proto/sync;syncpb";
 
-// SyncService 数据同步服务
-// 负责多端增量同步，聚合 friend/group/conversation/message 服务的数据
+// SyncService data synchronization service
+// Handles multi-device incremental sync and aggregates data from friend/group/conversation/message services
 service SyncService {
-  // Sync 全量/增量同步
-  // 客户端登录或从后台恢复时调用，返回自 last_sync_time 后的所有变更
+  // Sync full/incremental synchronization
+  // Called when the client logs in or resumes from background, returning all changes after last_sync_time
   rpc Sync(SyncRequest) returns (SyncResponse);
 
-  // SyncMessages 消息补齐
-  // 针对每个会话，按序列号拉取离线消息
+  // SyncMessages message backfill
+  // Pull offline messages by sequence number for each conversation
   rpc SyncMessages(SyncMessagesRequest) returns (SyncMessagesResponse);
 }
 
-// ConversationSeq 会话的最新已知序列号
+// ConversationSeq latest known sequence number of a conversation
 message ConversationSeq {
   string conversation_id = 1;
   anychat.message.ConversationType conversation_type = 2;  // 1-single/2-group
   int64 last_seq = 3;
 }
 
-// SyncRequest 同步请求
+// SyncRequest synchronization request
 message SyncRequest {
   string user_id = 1;
-  // 上次同步时间（Unix 秒），0 表示全量同步
+  // last sync time (Unix seconds), 0 means full sync
   int64 last_sync_time = 2;
-  // 需要补齐消息的会话列表（只同步有新消息的会话）
+  // list of conversations that need message backfill (only conversations with new messages)
   repeated ConversationSeq conversation_seqs = 3;
 }
 
-// SyncFriendData 好友增量数据
+// SyncFriendData incremental friend data
 message SyncFriendData {
   repeated anychat.friend.Friend friends = 1;
   int64 total = 2;
 }
 
-// SyncGroupData 群组增量数据
+// SyncGroupData incremental group data
 message SyncGroupData {
   repeated anychat.group.GroupInfo groups = 1;
   int64 total = 2;
 }
 
-// SyncConversationData 会话增量数据
+// SyncConversationData incremental conversation data
 message SyncConversationData {
   repeated anychat.conversation.Conversation conversations = 1;
   bool has_more = 2;
 }
 
-// ConversationMessages 单个会话的新消息
+// ConversationMessages new messages for a single conversation
 message ConversationMessages {
   string conversation_id = 1;
   anychat.message.ConversationType conversation_type = 2;
@@ -63,25 +63,25 @@ message ConversationMessages {
   bool has_more = 4;
 }
 
-// SyncResponse 同步响应
+// SyncResponse synchronization response
 message SyncResponse {
   SyncFriendData friends = 1;
   SyncGroupData groups = 2;
   SyncConversationData conversation_data = 3;
   repeated ConversationMessages conversations = 4;
-  // 本次同步的服务器时间戳，客户端保存作为下次同步的 last_sync_time
+  // server timestamp for this sync, stored by client as next last_sync_time
   int64 sync_time = 5;
 }
 
-// SyncMessagesRequest 消息补齐请求
+// SyncMessagesRequest message backfill request
 message SyncMessagesRequest {
   string user_id = 1;
   repeated ConversationSeq conversation_seqs = 2;
-  // 每个会话最多返回的消息数，默认 50
+  // maximum number of messages returned per conversation, default 50
   int32 limit_per_conversation = 3;
 }
 
-// SyncMessagesResponse 消息补齐响应
+// SyncMessagesResponse message backfill response
 message SyncMessagesResponse {
   repeated ConversationMessages conversations = 1;
 }

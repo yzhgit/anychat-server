@@ -6,54 +6,54 @@ import "common/common.proto";
 
 option go_package = "github.com/anychat/server/api/proto/calling;callingpb";
 
-// CallingService 音视频服务接口（实现无关，当前由 LiveKit 提供）
+// CallingService audio/video service interface (implementation-agnostic, currently provided by LiveKit)
 service CallingService {
-  // ── 一对一通话 ──────────────────────────────────────────
-  // InitiateCall 发起通话（返回 Calling Token 供主叫方加入 Room）
+  // ── 1:1 calls ──────────────────────────────────────────
+  // InitiateCall initiate a call (returns Calling token for caller to join room)
   rpc InitiateCall(InitiateCallRequest) returns (InitiateCallResponse);
-  // JoinCall 接听通话（返回 Calling Token 供被叫方加入 Room）
+  // JoinCall answer a call (returns Calling token for callee to join room)
   rpc JoinCall(JoinCallRequest) returns (JoinCallResponse);
-  // RejectCall 拒绝通话
+  // RejectCall reject a call
   rpc RejectCall(RejectCallRequest) returns (common.Empty);
-  // EndCall 挂断通话
+  // EndCall end a call
   rpc EndCall(EndCallRequest) returns (common.Empty);
-  // GetCallSession 获取通话会话详情
+  // GetCallSession get call session details
   rpc GetCallSession(GetCallSessionRequest) returns (CallSession);
-  // ListCallLogs 获取通话记录
+  // ListCallLogs get call logs
   rpc ListCallLogs(ListCallLogsRequest) returns (ListCallLogsResponse);
 
-  // ── 会议室 ────────────────────────────────────────────
-  // CreateMeeting 创建会议室
+  // ── meeting rooms ────────────────────────────────────────────
+  // CreateMeeting create meeting room
   rpc CreateMeeting(CreateMeetingRequest) returns (CreateMeetingResponse);
-  // JoinMeeting 加入会议室（返回 Calling Token）
+  // JoinMeeting join meeting room (returns Calling token)
   rpc JoinMeeting(JoinMeetingRequest) returns (JoinMeetingResponse);
-  // EndMeeting 结束会议室
+  // EndMeeting end meeting room
   rpc EndMeeting(EndMeetingRequest) returns (common.Empty);
-  // GetMeeting 获取会议室信息
+  // GetMeeting get meeting room info
   rpc GetMeeting(GetMeetingRequest) returns (MeetingRoom);
-  // ListMeetings 列举活跃会议室
+  // ListMeetings list active meeting rooms
   rpc ListMeetings(ListMeetingsRequest) returns (ListMeetingsResponse);
 }
 
-// ── 通话相关消息 ─────────────────────────────────────────
+// ── call-related messages ─────────────────────────────────────────
 
-// CallType 通话类型
+// CallType call type
 enum CallType {
-  CALL_TYPE_AUDIO = 0; // 语音通话
-  CALL_TYPE_VIDEO = 1; // 视频通话
+  CALL_TYPE_AUDIO = 0; // audio call
+  CALL_TYPE_VIDEO = 1; // video call
 }
 
-// CallStatus 通话状态
+// CallStatus call status
 enum CallStatus {
-  CALL_STATUS_RINGING   = 0; // 振铃中
-  CALL_STATUS_CONNECTED = 1; // 已接通
-  CALL_STATUS_ENDED     = 2; // 已结束
-  CALL_STATUS_REJECTED  = 3; // 已拒绝
-  CALL_STATUS_MISSED    = 4; // 未接
-  CALL_STATUS_CANCELLED = 5; // 已取消
+  CALL_STATUS_RINGING   = 0; // ringing
+  CALL_STATUS_CONNECTED = 1; // connected
+  CALL_STATUS_ENDED     = 2; // ended
+  CALL_STATUS_REJECTED  = 3; // rejected
+  CALL_STATUS_MISSED    = 4; // missed
+  CALL_STATUS_CANCELLED = 5; // cancelled
 }
 
-// CallSession 通话会话
+// CallSession call session
 message CallSession {
   string call_id      = 1;
   string caller_id    = 2;
@@ -61,10 +61,10 @@ message CallSession {
   CallType call_type  = 4;
   CallStatus status   = 5;
   string room_name    = 6;
-  int64 started_at    = 7; // Unix 秒
+  int64 started_at    = 7; // Unix seconds
   int64 connected_at  = 8;
   int64 ended_at      = 9;
-  int32 duration      = 10; // 通话时长（秒）
+  int32 duration      = 10; // call duration (seconds)
   int64 created_at    = 11;
 }
 
@@ -77,17 +77,17 @@ message InitiateCallRequest {
 message InitiateCallResponse {
   string call_id   = 1;
   string room_name = 2;
-  string token     = 3; // Calling JWT，主叫方使用
+  string token     = 3; // Calling JWT, used by caller
 }
 
 message JoinCallRequest {
   string call_id = 1;
-  string user_id = 2; // 被叫方 ID
+  string user_id = 2; // callee ID
 }
 
 message JoinCallResponse {
   string room_name = 1;
-  string token     = 2; // Calling JWT，被叫方使用
+  string token     = 2; // Calling JWT, used by callee
 }
 
 message RejectCallRequest {
@@ -102,7 +102,7 @@ message EndCallRequest {
 
 message GetCallSessionRequest {
   string call_id = 1;
-  string user_id = 2; // 用于鉴权（必须是参与者）
+  string user_id = 2; // used for authorization (must be a participant)
 }
 
 message ListCallLogsRequest {
@@ -116,20 +116,20 @@ message ListCallLogsResponse {
   int64 total = 2;
 }
 
-// ── 会议室相关消息 ───────────────────────────────────────
+// ── meeting room-related messages ───────────────────────────────────────
 
-// MeetingStatus 会议状态
+// MeetingStatus meeting status
 enum MeetingStatus {
   MEETING_STATUS_ACTIVE = 0;
   MEETING_STATUS_ENDED  = 1;
 }
 
-// MeetingRoom 会议室
+// MeetingRoom meeting room
 message MeetingRoom {
   string room_id          = 1;
   string creator_id       = 2;
   string title            = 3;
-  string room_name        = 4; // Calling Room 名称
+  string room_name        = 4; // Calling room name
   bool   has_password     = 5;
   int32  max_participants = 6;
   MeetingStatus status    = 7;
@@ -141,19 +141,19 @@ message MeetingRoom {
 message CreateMeetingRequest {
   string creator_id       = 1;
   string title            = 2;
-  string password         = 3; // 可选，不设则公开
-  int32  max_participants = 4; // 0 = 不限
+  string password         = 3; // optional, public if not set
+  int32  max_participants = 4; // 0 = unlimited
 }
 
 message CreateMeetingResponse {
   MeetingRoom meeting = 1;
-  string token        = 2; // 创建者的 Calling JWT
+  string token        = 2; // creator's Calling JWT
 }
 
 message JoinMeetingRequest {
   string user_id  = 1;
   string room_id  = 2;
-  string password = 3; // 若会议室有密码则必填
+  string password = 3; // required if meeting has a password
 }
 
 message JoinMeetingResponse {
@@ -163,7 +163,7 @@ message JoinMeetingResponse {
 
 message EndMeetingRequest {
   string room_id    = 1;
-  string creator_id = 2; // 只有创建者可结束
+  string creator_id = 2; // only creator can end
 }
 
 message GetMeetingRequest {

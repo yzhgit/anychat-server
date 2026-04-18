@@ -7,57 +7,57 @@ import "common/common.proto";
 
 option go_package = "github.com/anychat/server/api/proto/message;messagepb";
 
-// MessageService 消息服务
+// MessageService message service
 service MessageService {
-  // SendMessage 发送消息（单聊/群聊）
+  // SendMessage send message (single/group chat)
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
 
-  // GetMessages 获取消息列表（历史消息）
+  // GetMessages get message list (history messages)
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
 
-  // GetMessagesBefore 获取锚点消息前的历史消息
+  // GetMessagesBefore get history messages before anchor message
   rpc GetMessagesBefore(GetMessagesBeforeRequest) returns (GetMessagesBeforeResponse);
 
-  // GetMessagesAfter 获取锚点消息后的消息
+  // GetMessagesAfter get messages after anchor message
   rpc GetMessagesAfter(GetMessagesAfterRequest) returns (GetMessagesAfterResponse);
 
-  // GetMessagesAroundAnchor 获取锚点消息前后窗口
+  // GetMessagesAroundAnchor get window around anchor message
   rpc GetMessagesAroundAnchor(GetMessagesAroundAnchorRequest) returns (GetMessagesAroundAnchorResponse);
 
-  // GetFirstUnreadAnchor 获取第一条未读消息锚点
+  // GetFirstUnreadAnchor get first unread message anchor
   rpc GetFirstUnreadAnchor(GetFirstUnreadAnchorRequest) returns (GetFirstUnreadAnchorResponse);
 
-  // GetMessageById 根据ID获取消息
+  // GetMessageById get message by ID
   rpc GetMessageById(GetMessageByIdRequest) returns (Message);
 
-  // RecallMessage 撤回消息
+  // RecallMessage recall message
   rpc RecallMessage(RecallMessageRequest) returns (common.Empty);
 
-  // DeleteMessage 删除消息
+  // DeleteMessage delete message
   rpc DeleteMessage(DeleteMessageRequest) returns (common.Empty);
 
-  // MarkAsRead 标记消息已读
+  // MarkAsRead mark message as read
   rpc MarkAsRead(MarkAsReadRequest) returns (common.Empty);
 
-  // MarkMessagesRead 按消息ID批量标记已读
+  // MarkMessagesRead batch mark as read by message IDs
   rpc MarkMessagesRead(MarkMessagesReadRequest) returns (MarkMessagesReadResponse);
 
-  // AckReadTriggers 阅后即焚阅读触发回执
+  // AckReadTriggers burn-after-reading trigger acknowledgment
   rpc AckReadTriggers(AckReadTriggersRequest) returns (AckReadTriggersResponse);
 
-  // GetUnreadCount 获取未读消息数
+  // GetUnreadCount get unread message count
   rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse);
 
-  // GetReadReceipts 获取已读回执信息
+  // GetReadReceipts get read receipt info
   rpc GetReadReceipts(GetReadReceiptsRequest) returns (GetReadReceiptsResponse);
 
-  // GetConversationSequence 获取会话当前序列号
+  // GetConversationSequence get current conversation sequence
   rpc GetConversationSequence(GetConversationSequenceRequest) returns (GetConversationSequenceResponse);
 
-  // SearchMessages 搜索消息
+  // SearchMessages search messages
   rpc SearchMessages(SearchMessagesRequest) returns (SearchMessagesResponse);
 
-  // SendTyping 发送正在输入状态（单聊）
+  // SendTyping send typing status (single chat)
   rpc SendTyping(SendTypingRequest) returns (common.Empty);
 }
 
@@ -78,7 +78,7 @@ enum ContentType {
   CONTENT_TYPE_CARD = 7;
 }
 
-// Message 消息
+// Message message
 message Message {
   string message_id = 1;
   string conversation_id = 2;
@@ -89,18 +89,18 @@ message Message {
   int64 sequence = 7;
   optional string reply_to = 8;
   repeated string at_users = 9;
-  int32 status = 10;  // 0-正常 1-撤回 2-删除
-  google.protobuf.Timestamp expire_time = 13;  // 消息过期时间,为空表示永不过期
-  optional string target_id = 14;  // single为对方用户ID，group为群ID
+  int32 status = 10;  // 0-normal 1-recalled 2-deleted
+  google.protobuf.Timestamp expire_time = 13;  // message expiration time; empty means never expires
+  optional string target_id = 14;  // for single chat: peer user ID; for group chat: group ID
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
 
-  // 扩展字段（用于客户端显示）
+  // extended fields (for client display)
   optional common.UserInfo sender_info = 20;
   optional Message reply_to_message = 21;
 }
 
-// SendMessageRequest 发送消息请求
+// SendMessageRequest send message request
 message SendMessageRequest {
   string sender_id = 1;
   string conversation_id = 2;
@@ -108,61 +108,61 @@ message SendMessageRequest {
   string content = 4;  // JSON string
   optional string reply_to = 5;
   repeated string at_users = 6;
-  string local_id = 7;  // 客户端本地ID（用于发送幂等）
+  string local_id = 7;  // client local ID (for send idempotency)
 }
 
-// SendMessageResponse 发送消息响应
+// SendMessageResponse send message response
 message SendMessageResponse {
   string message_id = 1;
   int64 sequence = 2;
   google.protobuf.Timestamp timestamp = 3;
 }
 
-// GetMessagesRequest 获取消息列表请求
+// GetMessagesRequest get message list request
 message GetMessagesRequest {
   string conversation_id = 1;
-  optional int64 start_seq = 2;  // 起始序列号
-  optional int64 end_seq = 3;  // 结束序列号
-  int32 limit = 4;  // 数量限制
-  bool reverse = 5;  // 是否倒序（从新到旧）
+  optional int64 start_seq = 2;  // start sequence number
+  optional int64 end_seq = 3;  // end sequence number
+  int32 limit = 4;  // count limit
+  bool reverse = 5;  // reverse order (new to old)
 }
 
-// GetMessagesResponse 获取消息列表响应
+// GetMessagesResponse get message list response
 message GetMessagesResponse {
   repeated Message messages = 1;
   int64 total = 2;
   bool has_more = 3;
 }
 
-// GetMessagesBeforeRequest 获取锚点前消息请求
+// GetMessagesBeforeRequest get messages before anchor request
 message GetMessagesBeforeRequest {
   string conversation_id = 1;
   string anchor_message_id = 2;
   int32 limit = 3;
 }
 
-// GetMessagesBeforeResponse 获取锚点前消息响应
+// GetMessagesBeforeResponse get messages before anchor response
 message GetMessagesBeforeResponse {
   Message anchor_message = 1;
   repeated Message messages = 2;
   bool has_more = 3;
 }
 
-// GetMessagesAfterRequest 获取锚点后消息请求
+// GetMessagesAfterRequest get messages after anchor request
 message GetMessagesAfterRequest {
   string conversation_id = 1;
   string anchor_message_id = 2;
   int32 limit = 3;
 }
 
-// GetMessagesAfterResponse 获取锚点后消息响应
+// GetMessagesAfterResponse get messages after anchor response
 message GetMessagesAfterResponse {
   Message anchor_message = 1;
   repeated Message messages = 2;
   bool has_more = 3;
 }
 
-// GetMessagesAroundAnchorRequest 获取锚点前后消息窗口请求
+// GetMessagesAroundAnchorRequest get window around anchor request
 message GetMessagesAroundAnchorRequest {
   string conversation_id = 1;
   string anchor_message_id = 2;
@@ -171,7 +171,7 @@ message GetMessagesAroundAnchorRequest {
   optional bool include_anchor = 5;
 }
 
-// GetMessagesAroundAnchorResponse 获取锚点前后消息窗口响应
+// GetMessagesAroundAnchorResponse get window around anchor response
 message GetMessagesAroundAnchorResponse {
   Message anchor_message = 1;
   repeated Message before_messages = 2;
@@ -180,7 +180,7 @@ message GetMessagesAroundAnchorResponse {
   bool has_more_after = 5;
 }
 
-// GetFirstUnreadAnchorRequest 获取第一条未读消息锚点请求
+// GetFirstUnreadAnchorRequest get first unread anchor request
 message GetFirstUnreadAnchorRequest {
   string conversation_id = 1;
   optional bool with_context = 2;
@@ -188,7 +188,7 @@ message GetFirstUnreadAnchorRequest {
   optional int32 after = 4;
 }
 
-// GetFirstUnreadAnchorResponse 获取第一条未读消息锚点响应
+// GetFirstUnreadAnchorResponse get first unread anchor response
 message GetFirstUnreadAnchorResponse {
   bool found = 1;
   Message anchor_message = 2;
@@ -198,80 +198,80 @@ message GetFirstUnreadAnchorResponse {
   bool has_more_after = 6;
 }
 
-// GetMessageByIdRequest 根据ID获取消息请求
+// GetMessageByIdRequest get message by ID request
 message GetMessageByIdRequest {
   string message_id = 1;
 }
 
-// RecallMessageRequest 撤回消息请求
+// RecallMessageRequest recall message request
 message RecallMessageRequest {
-  string message_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string message_id = 1;  // operator user is provided via x-user-id metadata in the call chain
 }
 
-// DeleteMessageRequest 删除消息请求
+// DeleteMessageRequest delete message request
 message DeleteMessageRequest {
-  string message_id = 1;  // 删除者由调用链路透传的x-user-id元数据提供
+  string message_id = 1;  // deleter user is provided via x-user-id metadata in the call chain
 }
 
-// MarkAsReadRequest 标记已读请求
+// MarkAsReadRequest mark as read request
 message MarkAsReadRequest {
-  string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string conversation_id = 1;  // operator user is provided via x-user-id metadata in the call chain
   int64 last_read_seq = 2;
   optional string last_read_message_id = 3;
 }
 
-// MarkMessagesReadRequest 按消息ID批量标记已读请求
+// MarkMessagesReadRequest batch mark as read by message IDs request
 message MarkMessagesReadRequest {
-  string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string conversation_id = 1;  // operator user is provided via x-user-id metadata in the call chain
   repeated string message_ids = 2;
   optional int64 client_read_at = 3;
   optional string idempotency_key = 4;
 }
 
-// MarkMessagesReadResponse 按消息ID批量标记已读响应
+// MarkMessagesReadResponse batch mark as read response
 message MarkMessagesReadResponse {
   repeated string accepted_ids = 1;
   repeated string ignored_ids = 2;
   int64 advanced_last_read_seq = 3;
 }
 
-// ReadTriggerEvent 阅后即焚阅读触发事件
+// ReadTriggerEvent burn-after-reading trigger event
 message ReadTriggerEvent {
   string message_id = 1;
   optional int64 client_at = 2;
   optional string idempotency_key = 3;
 }
 
-// AckReadTriggersRequest 批量上报阅读触发
+// AckReadTriggersRequest batch report read triggers
 message AckReadTriggersRequest {
-  repeated ReadTriggerEvent events = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  repeated ReadTriggerEvent events = 1;  // operator user is provided via x-user-id metadata in the call chain
 }
 
-// AckReadTriggersResponse 批量上报结果
+// AckReadTriggersResponse batch report result
 message AckReadTriggersResponse {
   repeated string success_ids = 1;
   repeated string ignored_ids = 2;
 }
 
-// GetUnreadCountRequest 获取未读数请求
+// GetUnreadCountRequest get unread count request
 message GetUnreadCountRequest {
-  string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string conversation_id = 1;  // operator user is provided via x-user-id metadata in the call chain
   optional int64 last_read_seq = 2;
 }
 
-// GetUnreadCountResponse 获取未读数响应
+// GetUnreadCountResponse get unread count response
 message GetUnreadCountResponse {
   int64 unread_count = 1;
   int64 last_message_seq = 2;
   optional Message last_message = 3;
 }
 
-// GetReadReceiptsRequest 获取已读回执请求
+// GetReadReceiptsRequest get read receipts request
 message GetReadReceiptsRequest {
-  string conversation_id = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string conversation_id = 1;  // operator user is provided via x-user-id metadata in the call chain
 }
 
-// ReadReceipt 已读回执
+// ReadReceipt read receipt
 message ReadReceipt {
   string user_id = 1;
   int64 last_read_seq = 2;
@@ -280,37 +280,37 @@ message ReadReceipt {
   optional common.UserInfo user_info = 5;
 }
 
-// GetReadReceiptsResponse 获取已读回执响应
+// GetReadReceiptsResponse get read receipts response
 message GetReadReceiptsResponse {
   repeated ReadReceipt receipts = 1;
 }
 
-// GetConversationSequenceRequest 获取会话序列号请求
+// GetConversationSequenceRequest get conversation sequence request
 message GetConversationSequenceRequest {
   string conversation_id = 1;
 }
 
-// GetConversationSequenceResponse 获取会话序列号响应
+// GetConversationSequenceResponse get conversation sequence response
 message GetConversationSequenceResponse {
   int64 current_seq = 1;
 }
 
-// SearchMessagesRequest 搜索消息请求
+// SearchMessagesRequest search messages request
 message SearchMessagesRequest {
-  string keyword = 1;  // 操作用户由调用链路透传的x-user-id元数据提供
+  string keyword = 1;  // operator user is provided via x-user-id metadata in the call chain
   optional string conversation_id = 2;
   optional ContentType content_type = 3;
   int32 limit = 4;
   int32 offset = 5;
 }
 
-// SearchMessagesResponse 搜索消息响应
+// SearchMessagesResponse search messages response
 message SearchMessagesResponse {
   repeated Message messages = 1;
   int64 total = 2;
 }
 
-// SendTypingRequest 发送输入状态请求
+// SendTypingRequest send typing status request
 message SendTypingRequest {
   string conversation_id = 1;
   string from_user_id = 2;

@@ -35,55 +35,55 @@ enum FriendRequestQueryType {
   FRIEND_REQUEST_QUERY_TYPE_SENT = 2;
 }
 
-// FriendService 好友服务
+// FriendService friend service
 service FriendService {
-  // GetFriendList 获取好友列表
+  // GetFriendList get friend list
   rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
 
-  // SendFriendRequest 发送好友申请
+  // SendFriendRequest send friend request
   rpc SendFriendRequest(SendFriendRequestRequest) returns (SendFriendRequestResponse);
 
-  // HandleFriendRequest 处理好友申请（接受/拒绝）
+  // HandleFriendRequest handle friend request (accept/reject)
   rpc HandleFriendRequest(HandleFriendRequestRequest) returns (common.Empty);
 
-  // GetFriendRequests 获取好友申请列表
+  // GetFriendRequests get friend request list
   rpc GetFriendRequests(GetFriendRequestsRequest) returns (GetFriendRequestsResponse);
 
-  // DeleteFriend 删除好友
+  // DeleteFriend delete friend
   rpc DeleteFriend(DeleteFriendRequest) returns (common.Empty);
 
-  // UpdateRemark 更新好友备注
+  // UpdateRemark update friend remark
   rpc UpdateRemark(UpdateRemarkRequest) returns (common.Empty);
 
-  // AddToBlacklist 添加到黑名单
+  // AddToBlacklist add to blacklist
   rpc AddToBlacklist(AddToBlacklistRequest) returns (common.Empty);
 
-  // RemoveFromBlacklist 从黑名单移除
+  // RemoveFromBlacklist remove from blacklist
   rpc RemoveFromBlacklist(RemoveFromBlacklistRequest) returns (common.Empty);
 
-  // GetBlacklist 获取黑名单列表
+  // GetBlacklist get blacklist
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
 
-  // IsFriend 检查是否是好友（供其他服务调用）
+  // IsFriend check whether users are friends (for other services)
   rpc IsFriend(IsFriendRequest) returns (IsFriendResponse);
 
-  // IsBlocked 检查是否被拉黑（供其他服务调用）
+  // IsBlocked check whether blocked (for other services)
   rpc IsBlocked(IsBlockedRequest) returns (IsBlockedResponse);
 
-  // BatchCheckFriend 批量检查好友关系
+  // BatchCheckFriend batch check friend relationships
   rpc BatchCheckFriend(BatchCheckFriendRequest) returns (BatchCheckFriendResponse);
 }
 
-// Friend 好友信息
+// Friend friend info
 message Friend {
   string user_id = 1;
   string remark = 2;
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
-  common.UserInfo user_info = 5;  // 用户基本信息（从user-service获取）
+  common.UserInfo user_info = 5;  // basic user info (from user-service)
 }
 
-// FriendRequest 好友申请
+// FriendRequest friend request
 message FriendRequest {
   int64 id = 1;
   string from_user_id = 2;
@@ -92,31 +92,31 @@ message FriendRequest {
   FriendRequestSource source = 5;
   FriendRequestStatus status = 6;
   google.protobuf.Timestamp created_at = 7;
-  common.UserInfo from_user_info = 8;  // 申请人信息
+  common.UserInfo from_user_info = 8;  // requester info
 }
 
-// BlacklistItem 黑名单项
+// BlacklistItem blacklist item
 message BlacklistItem {
   int64 id = 1;
   string user_id = 2;
   string blocked_user_id = 3;
   google.protobuf.Timestamp created_at = 4;
-  common.UserInfo blocked_user_info = 5;  // 被拉黑用户信息
+  common.UserInfo blocked_user_info = 5;  // blocked user info
 }
 
-// GetFriendListRequest 获取好友列表请求
+// GetFriendListRequest get friend list request
 message GetFriendListRequest {
   string user_id = 1;
-  optional int64 last_update_time = 2;  // 增量同步
+  optional int64 last_update_time = 2;  // incremental sync
 }
 
-// GetFriendListResponse 获取好友列表响应
+// GetFriendListResponse get friend list response
 message GetFriendListResponse {
   repeated Friend friends = 1;
   int64 total = 2;
 }
 
-// SendFriendRequestRequest 发送好友申请请求
+// SendFriendRequestRequest send friend request request
 message SendFriendRequestRequest {
   string from_user_id = 1;
   string to_user_id = 2;
@@ -124,96 +124,96 @@ message SendFriendRequestRequest {
   FriendRequestSource source = 4;
 }
 
-// SendFriendRequestResponse 发送好友申请响应
+// SendFriendRequestResponse send friend request response
 message SendFriendRequestResponse {
   int64 request_id = 1;
-  bool auto_accepted = 2;  // 是否自动通过
+  bool auto_accepted = 2;  // whether auto-accepted
 }
 
-// HandleFriendRequestRequest 处理好友申请请求
+// HandleFriendRequestRequest handle friend request request
 message HandleFriendRequestRequest {
-  string user_id = 1;  // 当前用户ID（申请接收方）
+  string user_id = 1;  // current user ID (request recipient)
   int64 request_id = 2;
   FriendRequestAction action = 3;
 }
 
-// GetFriendRequestsRequest 获取好友申请列表请求
+// GetFriendRequestsRequest get friend request list request
 message GetFriendRequestsRequest {
   string user_id = 1;
   FriendRequestQueryType request_type = 2;
 }
 
-// GetFriendRequestsResponse 获取好友申请列表响应
+// GetFriendRequestsResponse get friend request list response
 message GetFriendRequestsResponse {
   repeated FriendRequest requests = 1;
   int64 total = 2;
 }
 
-// DeleteFriendRequest 删除好友请求
+// DeleteFriendRequest delete friend request
 message DeleteFriendRequest {
   string user_id = 1;
   string friend_id = 2;
 }
 
-// UpdateRemarkRequest 更新备注请求
+// UpdateRemarkRequest update remark request
 message UpdateRemarkRequest {
   string user_id = 1;
   string friend_id = 2;
   string remark = 3;
 }
 
-// AddToBlacklistRequest 添加黑名单请求
+// AddToBlacklistRequest add to blacklist request
 message AddToBlacklistRequest {
   string user_id = 1;
   string blocked_user_id = 2;
 }
 
-// RemoveFromBlacklistRequest 移除黑名单请求
+// RemoveFromBlacklistRequest remove from blacklist request
 message RemoveFromBlacklistRequest {
   string user_id = 1;
   string blocked_user_id = 2;
 }
 
-// GetBlacklistRequest 获取黑名单请求
+// GetBlacklistRequest get blacklist request
 message GetBlacklistRequest {
   string user_id = 1;
 }
 
-// GetBlacklistResponse 获取黑名单响应
+// GetBlacklistResponse get blacklist response
 message GetBlacklistResponse {
   repeated BlacklistItem items = 1;
   int64 total = 2;
 }
 
-// IsFriendRequest 检查好友关系请求
+// IsFriendRequest check friend relationship request
 message IsFriendRequest {
   string user_id = 1;
   string friend_id = 2;
 }
 
-// IsFriendResponse 检查好友关系响应
+// IsFriendResponse check friend relationship response
 message IsFriendResponse {
   bool is_friend = 1;
 }
 
-// IsBlockedRequest 检查黑名单请求
+// IsBlockedRequest check blacklist request
 message IsBlockedRequest {
   string user_id = 1;
   string target_user_id = 2;
 }
 
-// IsBlockedResponse 检查黑名单响应
+// IsBlockedResponse check blacklist response
 message IsBlockedResponse {
   bool is_blocked = 1;
 }
 
-// BatchCheckFriendRequest 批量检查好友关系请求
+// BatchCheckFriendRequest batch check friend relationship request
 message BatchCheckFriendRequest {
   string user_id = 1;
   repeated string friend_ids = 2;
 }
 
-// BatchCheckFriendResponse 批量检查好友关系响应
+// BatchCheckFriendResponse batch check friend relationship response
 message BatchCheckFriendResponse {
   map<string, bool> results = 1;  // friend_id -> is_friend
 }

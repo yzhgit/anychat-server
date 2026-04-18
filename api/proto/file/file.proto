@@ -4,7 +4,7 @@ package file;
 
 option go_package = "github.com/anychat/server/api/proto/file;file";
 
-// FileType 文件类型
+// FileType file type
 enum FileType {
   FILE_TYPE_UNSPECIFIED = 0;
   FILE_TYPE_IMAGE = 1;
@@ -14,14 +14,14 @@ enum FileType {
   FILE_TYPE_LOG = 5;
 }
 
-// FileStatus 文件状态
+// FileStatus file status
 enum FileStatus {
   FILE_STATUS_DELETED = 0;
   FILE_STATUS_ACTIVE = 1;
   FILE_STATUS_PROCESSING = 2;
 }
 
-// UploadStatus 分片上传状态
+// UploadStatus multipart upload status
 enum UploadStatus {
   UPLOAD_STATUS_UNSPECIFIED = 0;
   UPLOAD_STATUS_PENDING = 1;
@@ -30,31 +30,31 @@ enum UploadStatus {
   UPLOAD_STATUS_FAILED = 4;
 }
 
-// FileService 文件服务
+// FileService file service
 service FileService {
-  // GenerateUploadToken 生成上传凭证
+  // GenerateUploadToken generate upload token
   rpc GenerateUploadToken(GenerateUploadTokenRequest) returns (GenerateUploadTokenResponse);
 
-  // CompleteUpload 完成上传
+  // CompleteUpload complete upload
   rpc CompleteUpload(CompleteUploadRequest) returns (FileInfo);
 
-  // GenerateDownloadURL 生成下载链接
+  // GenerateDownloadURL generate download URL
   rpc GenerateDownloadURL(GenerateDownloadURLRequest) returns (GenerateDownloadURLResponse);
 
-  // GetFileInfo 获取文件信息
+  // GetFileInfo get file info
   rpc GetFileInfo(GetFileInfoRequest) returns (FileInfo);
 
-  // DeleteFile 删除文件
+  // DeleteFile delete file
   rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
 
-  // ListUserFiles 列出用户文件
+  // ListUserFiles list user files
   rpc ListUserFiles(ListUserFilesRequest) returns (ListUserFilesResponse);
 
-  // BatchGetFileInfo 批量获取文件信息
+  // BatchGetFileInfo batch get file info
   rpc BatchGetFileInfo(BatchGetFileInfoRequest) returns (BatchGetFileInfoResponse);
 }
 
-// FileInfo 文件信息
+// FileInfo file info
 message FileInfo {
   string file_id = 1;
   string user_id = 2;
@@ -73,69 +73,69 @@ message FileInfo {
   optional string thumbnail_url = 15;
 }
 
-// GenerateUploadTokenRequest 生成上传凭证请求
+// GenerateUploadTokenRequest generate upload token request
 message GenerateUploadTokenRequest {
   string user_id = 1;
   string file_name = 2;
   int64 file_size = 3;
   string mime_type = 4;
   FileType file_type = 5;
-  optional int32 expires_hours = 6;  // 文件过期时间（小时），0表示永不过期
+  optional int32 expires_hours = 6;  // file expiration time (hours), 0 means never expires
 }
 
-// GenerateUploadTokenResponse 生成上传凭证响应
+// GenerateUploadTokenResponse generate upload token response
 message GenerateUploadTokenResponse {
   string file_id = 1;
   string upload_url = 2;
-  int64 expires_in = 3;  // URL有效期（秒）
+  int64 expires_in = 3;  // URL validity (seconds)
 }
 
-// CompleteUploadRequest 完成上传请求
+// CompleteUploadRequest complete upload request
 message CompleteUploadRequest {
   string file_id = 1;
   string user_id = 2;
 }
 
-// GenerateDownloadURLRequest 生成下载链接请求
+// GenerateDownloadURLRequest generate download URL request
 message GenerateDownloadURLRequest {
   string file_id = 1;
   string user_id = 2;
-  optional int32 expires_minutes = 3;  // URL有效期（分钟），默认60分钟
+  optional int32 expires_minutes = 3;  // URL validity (minutes), default 60
 }
 
-// GenerateDownloadURLResponse 生成下载链接响应
+// GenerateDownloadURLResponse generate download URL response
 message GenerateDownloadURLResponse {
   string download_url = 1;
-  int64 expires_in = 2;  // URL有效期（秒）
+  int64 expires_in = 2;  // URL validity (seconds)
   optional string thumbnail_url = 3;
 }
 
-// GetFileInfoRequest 获取文件信息请求
+// GetFileInfoRequest get file info request
 message GetFileInfoRequest {
   string file_id = 1;
   string user_id = 2;
 }
 
-// DeleteFileRequest 删除文件请求
+// DeleteFileRequest delete file request
 message DeleteFileRequest {
   string file_id = 1;
   string user_id = 2;
 }
 
-// DeleteFileResponse 删除文件响应
+// DeleteFileResponse delete file response
 message DeleteFileResponse {
   bool success = 1;
 }
 
-// ListUserFilesRequest 列出用户文件请求
+// ListUserFilesRequest list user files request
 message ListUserFilesRequest {
   string user_id = 1;
-  optional FileType file_type = 2;  // 可选：按文件类型过滤
+  optional FileType file_type = 2;  // optional: filter by file type
   int32 page = 3;
   int32 page_size = 4;
 }
 
-// ListUserFilesResponse 列出用户文件响应
+// ListUserFilesResponse list user files response
 message ListUserFilesResponse {
   repeated FileInfo files = 1;
   int64 total = 2;
@@ -143,13 +143,13 @@ message ListUserFilesResponse {
   int32 page_size = 4;
 }
 
-// BatchGetFileInfoRequest 批量获取文件信息请求
+// BatchGetFileInfoRequest batch get file info request
 message BatchGetFileInfoRequest {
   repeated string file_ids = 1;
   string user_id = 2;
 }
 
-// BatchGetFileInfoResponse 批量获取文件信息响应
+// BatchGetFileInfoResponse batch get file info response
 message BatchGetFileInfoResponse {
   repeated FileInfo files = 1;
 }

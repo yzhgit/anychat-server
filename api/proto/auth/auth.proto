@@ -32,49 +32,49 @@ enum VerificationPurpose {
   VERIFICATION_PURPOSE_CHANGE_EMAIL = 7;
 }
 
-// AuthService 认证服务
+// AuthService authentication service
 service AuthService {
-  // SendVerificationCode 发送验证码
+  // SendVerificationCode send verification code
   rpc SendVerificationCode(SendVerificationCodeRequest) returns (SendVerificationCodeResponse);
 
-  // Register 用户注册
+  // Register user registration
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
-  // Login 用户登录
+  // Login user login
   rpc Login(LoginRequest) returns (LoginResponse);
 
-  // Logout 用户登出
+  // Logout user logout
   rpc Logout(LogoutRequest) returns (common.Empty);
 
-  // RefreshToken 刷新访问令牌
+  // RefreshToken refresh access token
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
 
-  // ChangePassword 修改密码
+  // ChangePassword change password
   rpc ChangePassword(ChangePasswordRequest) returns (common.Empty);
 
-  // ResetPassword 重置密码（忘记密码）
+  // ResetPassword reset password (forgot password)
   rpc ResetPassword(ResetPasswordRequest) returns (common.Empty);
 
-  // ValidateToken 验证Token（供gateway调用）
+  // ValidateToken validate token (called by gateway)
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
 }
 
-// SendVerificationCodeRequest 发送验证码请求
+// SendVerificationCodeRequest send verification code request
 message SendVerificationCodeRequest {
-  string target = 1;                        // 手机号或邮箱
+  string target = 1;                        // phone number or email
   VerificationTargetType target_type = 2;  // 1-sms 2-email
   VerificationPurpose purpose = 3;         // 1-register 2-login 3-reset_password 4-bind_phone 5-change_phone 6-bind_email 7-change_email
   string device_id = 4;
   string ip_address = 5;
 }
 
-// SendVerificationCodeResponse 发送验证码响应
+// SendVerificationCodeResponse send verification code response
 message SendVerificationCodeResponse {
   string code_id = 1;
   int64 expires_in = 2;
 }
 
-// RegisterRequest 注册请求
+// RegisterRequest registration request
 message RegisterRequest {
   optional string phone_number = 1;
   optional string email = 2;
@@ -83,10 +83,10 @@ message RegisterRequest {
   optional string nickname = 5;
   DeviceType device_type = 6;  // 1-ios 2-android 3-web 4-pc 5-h5
   string device_id = 7;
-  string client_version = 8;  // 客户端版本号，用于客户端升级判断
+  string client_version = 8;  // client version, used for upgrade checks
 }
 
-// RegisterResponse 注册响应
+// RegisterResponse registration response
 message RegisterResponse {
   string user_id = 1;
   string access_token = 2;
@@ -94,17 +94,17 @@ message RegisterResponse {
   int64 expires_in = 4;
 }
 
-// LoginRequest 登录请求
+// LoginRequest login request
 message LoginRequest {
-  string account = 1;      // 手机号或邮箱
+  string account = 1;      // phone number or email
   string password = 2;
   DeviceType device_type = 3;  // 1-ios 2-android 3-web 4-pc 5-h5
   string device_id = 4;
-  string client_version = 5;  // 客户端版本号，用于客户端升级判断
-  string ip_address = 6;     // 客户端IP地址
+  string client_version = 5;  // client version, used for upgrade checks
+  string ip_address = 6;     // client IP address
 }
 
-// LoginResponse 登录响应
+// LoginResponse login response
 message LoginResponse {
   string user_id = 1;
   string access_token = 2;
@@ -113,45 +113,45 @@ message LoginResponse {
   common.UserInfo user = 5;
 }
 
-// LogoutRequest 登出请求
+// LogoutRequest logout request
 message LogoutRequest {
-  string user_id = 1;      // 由gateway从JWT提取
+  string user_id = 1;      // extracted from JWT by gateway
   string device_id = 2;
 }
 
-// RefreshTokenRequest 刷新Token请求
+// RefreshTokenRequest refresh token request
 message RefreshTokenRequest {
   string refresh_token = 1;
 }
 
-// RefreshTokenResponse 刷新Token响应
+// RefreshTokenResponse refresh token response
 message RefreshTokenResponse {
   string access_token = 1;
   string refresh_token = 2;
   int64 expires_in = 3;
 }
 
-// ChangePasswordRequest 修改密码请求
+// ChangePasswordRequest change password request
 message ChangePasswordRequest {
-  string user_id = 1;       // 由gateway从JWT提取
-  string device_id = 2;     // 当前设备ID，用于排除强制下线
+  string user_id = 1;       // extracted from JWT by gateway
+  string device_id = 2;     // current device ID, used to exclude forced logout
   string old_password = 3;
   string new_password = 4;
 }
 
-// ResetPasswordRequest 重置密码请求
+// ResetPasswordRequest reset password request
 message ResetPasswordRequest {
-  string account = 1;       // 手机号或邮箱
-  string verify_code = 2;   // 验证码
-  string new_password = 3; // 新密码
+  string account = 1;       // phone number or email
+  string verify_code = 2;   // verification code
+  string new_password = 3; // new password
 }
 
-// ValidateTokenRequest 验证Token请求
+// ValidateTokenRequest validate token request
 message ValidateTokenRequest {
   string access_token = 1;
 }
 
-// ValidateTokenResponse 验证Token响应
+// ValidateTokenResponse validate token response
 message ValidateTokenResponse {
   bool valid = 1;
   string user_id = 2;

@@ -29,38 +29,38 @@ enum VersionStatus {
   VERSION_STATUS_ARCHIVED = 3;
 }
 
-// VersionService 版本服务
+// VersionService version service
 service VersionService {
-  // CheckVersion 检测版本更新
+  // CheckVersion check for version updates
   rpc CheckVersion(CheckVersionRequest) returns (CheckVersionResponse);
   
-  // GetLatestVersion 获取最新版本
+  // GetLatestVersion get latest version
   rpc GetLatestVersion(GetLatestVersionRequest) returns (GetLatestVersionResponse);
   
-  // ListVersions 获取版本列表
+  // ListVersions get version list
   rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
   
-  // CreateVersion 创建版本（管理后台）
+  // CreateVersion create version (admin backend)
   rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
   
-  // GetVersion 获取版本详情
+  // GetVersion get version details
   rpc GetVersion(GetVersionRequest) returns (GetVersionResponse);
   
-  // DeleteVersion 删除版本
+  // DeleteVersion delete version
   rpc DeleteVersion(DeleteVersionRequest) returns (common.Empty);
   
-  // ReportVersion 上报版本（客户端启动时）
+  // ReportVersion report version (when client starts)
   rpc ReportVersion(ReportVersionRequest) returns (common.Empty);
 }
 
-// CheckVersionRequest 版本检测请求
+// CheckVersionRequest version check request
 message CheckVersionRequest {
-  Platform platform = 1;   // 平台
-  string version = 2;    // 当前版本号，如 1.0.0
-  int32 build_number = 3; // 构建号（iOS/Android）
+  Platform platform = 1;   // platform
+  string version = 2;    // current version, e.g. 1.0.0
+  int32 build_number = 3; // build number (iOS/Android)
 }
 
-// CheckVersionResponse 版本检测响应
+// CheckVersionResponse version check response
 message CheckVersionResponse {
   bool has_update = 1;
   string latest_version = 2;
@@ -71,7 +71,7 @@ message CheckVersionResponse {
   UpdateInfo update_info = 7;
 }
 
-// UpdateInfo 更新信息
+// UpdateInfo update info
 message UpdateInfo {
   string title = 1;
   string content = 2;
@@ -80,18 +80,18 @@ message UpdateInfo {
   string file_hash = 5;
 }
 
-// GetLatestVersionRequest 获取最新版本请求
+// GetLatestVersionRequest get latest version request
 message GetLatestVersionRequest {
   Platform platform = 1;
   ReleaseType release_type = 2;
 }
 
-// GetLatestVersionResponse 获取最新版本响应
+// GetLatestVersionResponse get latest version response
 message GetLatestVersionResponse {
   VersionInfo version = 1;
 }
 
-// VersionInfo 版本信息
+// VersionInfo version info
 message VersionInfo {
   int64 id = 1;
   Platform platform = 2;
@@ -111,7 +111,7 @@ message VersionInfo {
   string published_at = 15;
 }
 
-// ListVersionsRequest 获取版本列表请求
+// ListVersionsRequest get version list request
 message ListVersionsRequest {
   Platform platform = 1;
   ReleaseType release_type = 2;
@@ -119,13 +119,13 @@ message ListVersionsRequest {
   int32 page_size = 4;
 }
 
-// ListVersionsResponse 获取版本列表响应
+// ListVersionsResponse get version list response
 message ListVersionsResponse {
   int32 total = 1;
   repeated VersionInfo versions = 2;
 }
 
-// CreateVersionRequest 创建版本请求
+// CreateVersionRequest create version request
 message CreateVersionRequest {
   Platform platform = 1;
   string version = 2;
@@ -142,29 +142,29 @@ message CreateVersionRequest {
   string file_hash = 13;
 }
 
-// CreateVersionResponse 创建版本响应
+// CreateVersionResponse create version response
 message CreateVersionResponse {
   int64 id = 1;
   Platform platform = 2;
   string version = 3;
 }
 
-// GetVersionRequest 获取版本详情请求
+// GetVersionRequest get version details request
 message GetVersionRequest {
   int64 id = 1;
 }
 
-// GetVersionResponse 获取版本详情响应
+// GetVersionResponse get version details response
 message GetVersionResponse {
   VersionInfo version = 1;
 }
 
-// DeleteVersionRequest 删除版本请求
+// DeleteVersionRequest delete version request
 message DeleteVersionRequest {
   int64 id = 1;
 }
 
-// ReportVersionRequest 上报版本请求
+// ReportVersionRequest report version request
 message ReportVersionRequest {
   Platform platform = 1;
   string version = 2;

@@ -32,105 +32,105 @@ enum MessageContentType {
   MESSAGE_CONTENT_TYPE_CARD = 7;
 }
 
-// GroupService 群组服务
+// GroupService group service
 service GroupService {
-  // ========== 内部服务调用接口 ==========
+  // ========== Internal service APIs ==========
 
-  // GetGroupInfo 获取群信息（供Message Service调用）
+  // GetGroupInfo get group info (called by Message Service)
   rpc GetGroupInfo(GetGroupInfoRequest) returns (GetGroupInfoResponse);
 
-  // GetGroupMembers 获取群成员列表（供Message Service调用）
+  // GetGroupMembers get group member list (called by Message Service)
   rpc GetGroupMembers(GetGroupMembersRequest) returns (GetGroupMembersResponse);
 
-  // IsMember 检查是否为群成员（供Message Service调用）
+  // IsMember check whether user is a group member (called by Message Service)
   rpc IsMember(IsMemberRequest) returns (IsMemberResponse);
 
-  // GetUserGroups 获取用户加入的群列表（支持增量同步）
+  // GetUserGroups get list of groups joined by user (supports incremental sync)
   rpc GetUserGroups(GetUserGroupsRequest) returns (GetUserGroupsResponse);
 
-  // ========== Gateway HTTP API调用接口 ==========
+  // ========== Gateway HTTP APIs ==========
 
-  // CreateGroup 创建群组
+  // CreateGroup create group
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
 
-  // UpdateGroup 更新群信息
+  // UpdateGroup update group info
   rpc UpdateGroup(UpdateGroupRequest) returns (common.Empty);
 
-  // DissolveGroup 解散群组
+  // DissolveGroup dissolve group
   rpc DissolveGroup(DissolveGroupRequest) returns (common.Empty);
 
-  // InviteMembers 邀请成员
+  // InviteMembers invite members
   rpc InviteMembers(InviteMembersRequest) returns (common.Empty);
 
-  // RemoveMember 移除成员
+  // RemoveMember remove member
   rpc RemoveMember(RemoveMemberRequest) returns (common.Empty);
 
-  // QuitGroup 退出群组
+  // QuitGroup quit group
   rpc QuitGroup(QuitGroupRequest) returns (common.Empty);
 
-  // UpdateMemberRole 更新成员角色
+  // UpdateMemberRole update member role
   rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (common.Empty);
 
-  // UpdateMemberNickname 更新群昵称
+  // UpdateMemberNickname update group nickname
   rpc UpdateMemberNickname(UpdateMemberNicknameRequest) returns (common.Empty);
 
-  // TransferOwnership 转让群主
+  // TransferOwnership transfer group ownership
   rpc TransferOwnership(TransferOwnershipRequest) returns (common.Empty);
 
-  // JoinGroup 加入群组（申请或直接加入）
+  // JoinGroup join group (by request or direct join)
   rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse);
 
-  // HandleJoinRequest 处理入群申请
+  // HandleJoinRequest handle join group request
   rpc HandleJoinRequest(HandleJoinRequestRequest) returns (common.Empty);
 
-  // GetJoinRequests 获取入群申请列表
+  // GetJoinRequests get join group request list
   rpc GetJoinRequests(GetJoinRequestsRequest) returns (GetJoinRequestsResponse);
 
-  // PinGroupMessage 置顶群消息
+  // PinGroupMessage pin group message
   rpc PinGroupMessage(PinGroupMessageRequest) returns (common.Empty);
 
-  // UnpinGroupMessage 取消置顶群消息
+  // UnpinGroupMessage unpin group message
   rpc UnpinGroupMessage(UnpinGroupMessageRequest) returns (common.Empty);
 
-  // GetPinnedMessages 获取群置顶消息列表
+  // GetPinnedMessages get pinned group message list
   rpc GetPinnedMessages(GetPinnedMessagesRequest) returns (GetPinnedMessagesResponse);
 
-  // SetGroupMute 设置全体禁言
+  // SetGroupMute set global group mute
   rpc SetGroupMute(SetGroupMuteRequest) returns (common.Empty);
 
-  // MuteMember 禁言成员
+  // MuteMember mute member
   rpc MuteMember(MuteMemberRequest) returns (common.Empty);
 
-  // UnmuteMember 解除禁言
+  // UnmuteMember unmute member
   rpc UnmuteMember(UnmuteMemberRequest) returns (common.Empty);
 
-  // UpdateGroupSettings 更新群组设置
+  // UpdateGroupSettings update group settings
   rpc UpdateGroupSettings(UpdateGroupSettingsRequest) returns (common.Empty);
 
-  // GetGroupSettings 获取群组设置
+  // GetGroupSettings get group settings
   rpc GetGroupSettings(GetGroupSettingsRequest) returns (GetGroupSettingsResponse);
 
-  // UpdateMemberRemark 设置/清空群备注（仅对自己可见）
+  // UpdateMemberRemark set/clear group remark (visible only to self)
   rpc UpdateMemberRemark(UpdateMemberRemarkRequest) returns (common.Empty);
 
-  // GetGroupQRCode 获取群二维码（自动续期或创建）
+  // GetGroupQRCode get group QR code (auto-renew or create)
   rpc GetGroupQRCode(GetGroupQRCodeRequest) returns (GetGroupQRCodeResponse);
 
-  // RefreshGroupQRCode 刷新群二维码（使旧码失效）
+  // RefreshGroupQRCode refresh group QR code (invalidate old code)
   rpc RefreshGroupQRCode(RefreshGroupQRCodeRequest) returns (GetGroupQRCodeResponse);
 
-  // GetGroupPreviewByQRCode 通过二维码获取群信息预览
+  // GetGroupPreviewByQRCode get group preview by QR code
   rpc GetGroupPreviewByQRCode(GetGroupPreviewByQRCodeRequest) returns (GetGroupPreviewByQRCodeResponse);
 
-  // JoinGroupByQRCode 扫码加入群组
+  // JoinGroupByQRCode join group by scanning QR code
   rpc JoinGroupByQRCode(JoinGroupByQRCodeRequest) returns (JoinGroupByQRCodeResponse);
 }
 
-// ========== 内部调用消息 ==========
+// ========== Internal call messages ==========
 
 message GetGroupInfoRequest {
   string group_id = 1;
-  optional string user_id = 2;  // 若传入，则 display_name 会反映该用户设置的群备注
+  optional string user_id = 2;  // if provided, display_name reflects this user's group remark
 }
 
 message GetGroupInfoResponse {
@@ -147,7 +147,7 @@ message GetGroupInfoResponse {
   int32 status = 10;
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
-  string display_name = 14;  // 展示名：群备注优先，无备注则同 name
+  string display_name = 14;  // display name: group remark first, or name if no remark
 }
 
 message GetGroupMembersRequest {
@@ -199,10 +199,10 @@ message GroupInfo {
   string avatar = 3;
   int32 member_count = 4;
   google.protobuf.Timestamp updated_at = 5;
-  string display_name = 6;  // 展示名：群备注优先，无备注则同 name
+  string display_name = 6;  // display name: group remark first, or name if no remark
 }
 
-// ========== Gateway调用消息 ==========
+// ========== Gateway call messages ==========
 
 message CreateGroupRequest {
   string user_id = 1;
@@ -395,15 +395,15 @@ message GetGroupSettingsResponse {
   bool show_member_nickname = 7 [deprecated = true];
 }
 
-// ========== 群备注消息 ==========
+// ========== Group remark messages ==========
 
 message UpdateMemberRemarkRequest {
   string user_id = 1;
   string group_id = 2;
-  string remark = 3;  // 空字符串表示清空备注
+  string remark = 3;  // empty string means clear remark
 }
 
-// ========== 群二维码消息 ==========
+// ========== Group QR code messages ==========
 
 message GetGroupQRCodeRequest {
   string user_id = 1;
@@ -412,8 +412,8 @@ message GetGroupQRCodeRequest {
 
 message GetGroupQRCodeResponse {
   string token = 1;
-  string deep_link = 2;  // 如 anychat://group/join?token=xxx
-  int64 expire_at = 3;   // Unix 时间戳（秒）
+  string deep_link = 2;  // e.g. anychat://group/join?token=xxx
+  int64 expire_at = 3;   // Unix timestamp (seconds)
 }
 
 message RefreshGroupQRCodeRequest {
@@ -439,8 +439,8 @@ message JoinGroupByQRCodeRequest {
 }
 
 message JoinGroupByQRCodeResponse {
-  bool joined = 1;               // true=直接加入，false=已提交申请
+  bool joined = 1;               // true=joined directly, false=request submitted
   string group_id = 2;
   bool need_verify = 3;
-  optional int64 request_id = 4; // need_verify=true 时有效
+  optional int64 request_id = 4; // valid when need_verify=true
 }

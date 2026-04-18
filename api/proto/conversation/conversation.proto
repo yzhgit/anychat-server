@@ -7,39 +7,39 @@ import "common/common.proto";
 
 option go_package = "github.com/anychat/server/api/proto/conversation;conversationpb";
 
-// ConversationService 会话管理服务
+// ConversationService conversation management service
 service ConversationService {
-  // GetConversations 获取用户会话列表（支持增量同步）
+  // GetConversations get user conversation list (supports incremental sync)
   rpc GetConversations(GetConversationsRequest) returns (GetConversationsResponse);
 
-  // GetConversation 获取单个会话详情
+  // GetConversation get single conversation details
   rpc GetConversation(GetConversationRequest) returns (Conversation);
 
-  // CreateOrUpdateConversation 创建或更新会话（消息到达时由消息服务调用）
+  // CreateOrUpdateConversation create or update conversation (called by message service when messages arrive)
   rpc CreateOrUpdateConversation(CreateOrUpdateConversationRequest) returns (Conversation);
 
-  // DeleteConversation 删除会话
+  // DeleteConversation delete conversation
   rpc DeleteConversation(DeleteConversationRequest) returns (common.Empty);
 
-  // SetPinned 设置会话置顶/取消置顶
+  // SetPinned pin/unpin conversation
   rpc SetPinned(SetPinnedRequest) returns (common.Empty);
 
-  // SetMuted 设置会话免打扰/取消免打扰
+  // SetMuted enable/disable do-not-disturb for conversation
   rpc SetMuted(SetMutedRequest) returns (common.Empty);
 
-  // ClearUnread 清除会话未读数（标记已读）
+  // ClearUnread clear conversation unread count (mark as read)
   rpc ClearUnread(ClearUnreadRequest) returns (common.Empty);
 
-  // GetTotalUnread 获取用户所有会话的总未读数
+  // GetTotalUnread get total unread count across all user conversations
   rpc GetTotalUnread(GetTotalUnreadRequest) returns (GetTotalUnreadResponse);
 
-  // IncrUnread 增加会话未读数（消息到达时由消息服务调用）
+  // IncrUnread increment conversation unread count (called by message service when messages arrive)
   rpc IncrUnread(IncrUnreadRequest) returns (common.Empty);
 
-  // SetBurnAfterReading 设置阅后即焚时长（秒），0表示取消
+  // SetBurnAfterReading set burn-after-reading duration (seconds), 0 means disable
   rpc SetBurnAfterReading(SetBurnAfterReadingRequest) returns (common.Empty);
 
-  // SetAutoDelete 设置自动删除时长（秒），0表示取消
+  // SetAutoDelete set auto-delete duration (seconds), 0 means disable
   rpc SetAutoDelete(SetAutoDeleteRequest) returns (common.Empty);
 }
 
@@ -50,114 +50,114 @@ enum ConversationType {
   CONVERSATION_TYPE_SYSTEM = 3;
 }
 
-// Conversation 会话
+// Conversation conversation
 message Conversation {
   string conversation_id = 1;
   ConversationType conversation_type = 2;             // 1-single/2-group/3-system
   string user_id = 3;
-  string target_id = 4;                          // 单聊为对方用户ID，群聊为群ID
+  string target_id = 4;                          // for single chat: peer user ID; for group chat: group ID
   string last_message_id = 5;
   string last_message_content = 6;
   google.protobuf.Timestamp last_message_time = 7;
   int32 unread_count = 8;
   bool is_pinned = 9;
   bool is_muted = 10;
-  google.protobuf.Timestamp pin_time = 11;       // 置顶时间（用于排序）
-  int32 burn_after_reading = 14;                 // 阅后即焚时长(秒),0表示未启用
-  int32 auto_delete_duration = 15;               // 自动删除时长(秒),0表示未启用
+  google.protobuf.Timestamp pin_time = 11;       // pin timestamp (for sorting)
+  int32 burn_after_reading = 14;                 // burn-after-reading duration (seconds), 0 means disabled
+  int32 auto_delete_duration = 15;               // auto-delete duration (seconds), 0 means disabled
   google.protobuf.Timestamp created_at = 12;
   google.protobuf.Timestamp updated_at = 13;
 }
 
-// GetConversationsRequest 获取会话列表请求
+// GetConversationsRequest get conversation list request
 message GetConversationsRequest {
   string user_id = 1;
   int32 limit = 2;
-  optional int64 updated_before = 3;             // Unix时间戳，用于增量同步（仅返回此时间之前更新的会话）
+  optional int64 updated_before = 3;             // Unix timestamp for incremental sync (returns only conversations updated before this time)
 }
 
-// GetConversationsResponse 获取会话列表响应
+// GetConversationsResponse get conversation list response
 message GetConversationsResponse {
   repeated Conversation conversations = 1;
   bool has_more = 2;
 }
 
-// GetConversationRequest 获取单个会话请求
+// GetConversationRequest get single conversation request
 message GetConversationRequest {
   string user_id = 1;
   string conversation_id = 2;
 }
 
-// GetConversationByUserAndTargetRequest 根据用户ID、会话类型和目标ID获取会话请求
+// GetConversationByUserAndTargetRequest get conversation by user ID, conversation type, and target ID request
 message GetConversationByUserAndTargetRequest {
   string user_id = 1;
   ConversationType conversation_type = 2;  // 1-single/2-group
   string target_id = 3;
 }
 
-// CreateOrUpdateConversationRequest 创建或更新会话请求
+// CreateOrUpdateConversationRequest create or update conversation request
 message CreateOrUpdateConversationRequest {
   ConversationType conversation_type = 1;             // 1-single/2-group/3-system
   string user_id = 2;
   string target_id = 3;
   string last_message_id = 4;
   string last_message_content = 5;
-  int64 last_message_timestamp = 6;              // Unix时间戳（秒）
+  int64 last_message_timestamp = 6;              // Unix timestamp (seconds)
 }
 
-// DeleteConversationRequest 删除会话请求
+// DeleteConversationRequest delete conversation request
 message DeleteConversationRequest {
   string user_id = 1;
   string conversation_id = 2;
 }
 
-// SetPinnedRequest 设置置顶请求
+// SetPinnedRequest set pin request
 message SetPinnedRequest {
   string user_id = 1;
   string conversation_id = 2;
   bool pinned = 3;
 }
 
-// SetMutedRequest 设置免打扰请求
+// SetMutedRequest set do-not-disturb request
 message SetMutedRequest {
   string user_id = 1;
   string conversation_id = 2;
   bool muted = 3;
 }
 
-// ClearUnreadRequest 清除未读数请求
+// ClearUnreadRequest clear unread count request
 message ClearUnreadRequest {
   string user_id = 1;
   string conversation_id = 2;
 }
 
-// GetTotalUnreadRequest 获取总未读数请求
+// GetTotalUnreadRequest get total unread count request
 message GetTotalUnreadRequest {
   string user_id = 1;
 }
 
-// GetTotalUnreadResponse 获取总未读数响应
+// GetTotalUnreadResponse get total unread count response
 message GetTotalUnreadResponse {
   int32 total_unread = 1;
 }
 
-// IncrUnreadRequest 增加未读数请求
+// IncrUnreadRequest increment unread count request
 message IncrUnreadRequest {
   string user_id = 1;
   string conversation_id = 2;
   int32 count = 3;
 }
 
-// SetBurnAfterReadingRequest 设置阅后即焚请求
+// SetBurnAfterReadingRequest set burn-after-reading request
 message SetBurnAfterReadingRequest {
   string user_id = 1;
   string conversation_id = 2;
-  int32 duration = 3;  // 秒,0表示取消
+  int32 duration = 3;  // seconds, 0 means disable
 }
 
-// SetAutoDeleteRequest 设置自动删除请求
+// SetAutoDeleteRequest set auto-delete request
 message SetAutoDeleteRequest {
   string user_id = 1;
   string conversation_id = 2;
-  int32 duration = 3;  // 秒,0表示取消
+  int32 duration = 3;  // seconds, 0 means disable
 }
